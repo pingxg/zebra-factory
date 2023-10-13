@@ -21,6 +21,7 @@ import mysql.connector
 from datetime import date
 import os
 from dotenv import load_dotenv
+from collections import defaultdict
 
 load_dotenv()  # take environment variables from .env.
 app = Flask(__name__)
@@ -45,8 +46,16 @@ def index():
     if selected_date:
         cursor.execute(f"SELECT * FROM salmon_orders WHERE date =  %s",(selected_date,))
         order_details = cursor.fetchall()
+        grouped_orders = defaultdict(list)
+        totals = {}  # Dictionary to store the total for each product group
 
-    return render_template('index.html', orders=order_details, selected_date=selected_date)
+        for order in order_details:
+            grouped_orders[order[3]].append(order)
+            if order[3] not in totals:
+                totals[order[3]] = 0
+            totals[order[3]] += int(order[5])
+    return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals)
+    # return render_template('index.html', orders=order_details, selected_date=selected_date)
 
 @socketio.on('new_order_added')
 def handle_new_order(data):
