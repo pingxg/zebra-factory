@@ -41,12 +41,12 @@ def index():
     selected_customer = request.form.get('selected_customer')
 
     # Fetch distinct customers for the selected date
-    cursor.execute("SELECT DISTINCT customer FROM orders WHERE date = %s", (selected_date,))
+    cursor.execute("SELECT DISTINCT customer FROM salmon_orders WHERE date = %s", (selected_date,))
     customers = cursor.fetchall()
 
     order_details = None
     if selected_customer:
-        cursor.execute("SELECT details FROM orders WHERE date = %s AND customer = %s", (selected_date, selected_customer))
+        cursor.execute("SELECT product, quantaty, price FROM orders WHERE date = %s AND customer = %s", (selected_date, selected_customer))
         order_details = cursor.fetchone()
 
     return render_template('index.html', order=order_details, customers=customers, selected_date=selected_date)
