@@ -1,9 +1,5 @@
-from flask import Flask
 import win32print
 import win32api
-
-
-app = Flask(__name__)
 
 
 def print_zebra(zpl_data=None, printer_name='zebra'):
@@ -22,7 +18,6 @@ def print_zebra(zpl_data=None, printer_name='zebra'):
         win32print.ClosePrinter(hprinter)
 
 
-
 def print_document(filename, printer_name="EPSON25CEF5 (ET-2810 Series)"):
     if printer_name is None:
         printer_name = win32print.GetDefaultPrinter()
@@ -32,6 +27,7 @@ def print_document(filename, printer_name="EPSON25CEF5 (ET-2810 Series)"):
     
     # Use the Windows shell to print the document
     win32api.ShellExecute(0, "print", filename, None, ".", 0)
+
 
 
 
@@ -63,17 +59,3 @@ zpl_data = """^XA  ; Start of label
 
 ^XZ  ; End of label
 """
-
-
-
-
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    # 当收到webhook通知时，执行打印文档功能
-    # print_zebra(zpl_data)
-
-    print_document("C:\Users\PingxinGao\Downloads\Nihtisilta 4, 02630 Espoo.pdf")
-    return "Received", 200
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=6000)
