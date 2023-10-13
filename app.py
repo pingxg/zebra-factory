@@ -20,7 +20,9 @@ from flask_socketio import SocketIO, emit
 import mysql.connector
 from datetime import date
 import os
+from dotenv import load_dotenv
 
+load_dotenv()  # take environment variables from .env.
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
@@ -38,25 +40,31 @@ cursor = cnx.cursor()
 @app.route('/', methods=['GET', 'POST'])
 def index():
     selected_date = request.form.get('selected_date', date.today())  # Default to today's date
-    selected_customer = request.form.get('selected_customer')
-
-    # Fetch distinct customers for the selected date
-    cursor.execute("SELECT DISTINCT customer FROM salmon_orders WHERE date = %s", (selected_date,))
-    customers = cursor.fetchall()
 
     order_details = None
-    if selected_customer:
-        cursor.execute("SELECT product, quantity, price FROM salmon_orders WHERE date = %s AND customer = %s", (selected_date, selected_customer))
-        order_details = cursor.fetchone()
+    if selected_date:
+        cursor.execute(f"SELECT * FROM salmon_orders WHERE date =  %s",(selected_date,))
+        order_details = cursor.fetchall()
 
-    return render_template('index.html', order=order_details, customers=customers, selected_date=selected_date)
+    return render_template('index.html', orders=order_details, selected_date=selected_date)
 
 @socketio.on('new_order_added')
 def handle_new_order(data):
     # When a new order is added, notify all connected clients
     emit('refresh_data', {'message': 'A new order has been added!'}, broadcast=True)
 
+@app.route('/order/<int:order_id>', methods=['GET'])
+def order_detail(order_id):
+    # Fetch order details based on the provided order_id
+    cursor.execute("SELECT * FROM salmon_orders WHERE id = %s", (order_id,))
+    order = cursor.fetchall()
+
+    if not order:
+        return "Order not found", 404
+
+    return render_template('order_detail.html', order=order)
+
 
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)

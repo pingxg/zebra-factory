@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salmon Factory</title>
+    <title>Salmon</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 
@@ -21,38 +21,39 @@
 <body class="bg-gray-100 h-screen font-sans">
     <div class="container mx-auto p-4 md:p-12">
         <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col my-2">
-            <h2 class="font-bold text-2xl mb-2">Order Details</h2>
+            <h2 class="font-bold text-4xl mb-4 text-center">Order Details</h2>
             
-            <form action="/" method="post">
-                <div class="mb-4">
-                    <label class="block text-grey-darker text-sm font-bold mb-2" for="selected_date">
-                        Date:
+            <form action="/" method="post" class="mb-4">
+                <div class="mb-4 flex items-center">
+                    <label class="text-grey-darker text-sm font-bold mr-2" for="selected_date">
+                        Order Date:
                     </label>
-                    <input type="date" id="selected_date" name="selected_date" value="{{ selected_date }}" class="border px-3 py-2 text-grey-darker">
+                    <input type="date" id="selected_date" name="selected_date" value="{{ selected_date }}" class="border px-3 py-2 text-grey-darker flex-grow">
                 </div>
-    
-                <div class="mb-4">
-                    <label class="block text-grey-darker text-sm font-bold mb-2" for="selected_customer">
-                        Customer:
-                    </label>
-                    <select id="selected_customer" name="selected_customer" class="border px-3 py-2 text-grey-darker">
-                        {% for customer in customers %}
-                        <option value="{{ customer[0] }}">{{ customer[0] }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-    
-                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
+                
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
                     Fetch Order
                 </button>
             </form>
     
-            {% if order %}
-            <div>
-                <label class="block text-grey-darker text-sm font-bold mb-2" for="details">
-                    Order Details:
-                </label>
-                <p class="border px-3 py-2 text-grey-darker">{{ order[0] }}</p>
+            {% if orders %}
+            <div class="flex grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                {% for order in orders %}
+                <div class="flex items-center justify-center h-full">
+                    <a href="{{ url_for('order_detail', order_id=order[0]) }}" class="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 p-3 md:p-4 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex flex-col justify-center">
+                        <div class="space-y-1">
+                            <p class="text-white font-semibold text-sm sm:text-base">{{ order[1] }}</p>
+                            <p class="text-gray-300 text-xs sm:text-sm">{{ order[3] }}</p>
+                            <p class="text-gray-400 text-xs sm:text-sm">{{ order[5] }}</p>
+                        </div>
+                    </a>
+                    
+                    
+                    
+
+
+                </div>
+                {% endfor %}
             </div>
             {% endif %}
         </div>
