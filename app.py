@@ -46,7 +46,7 @@ def index():
 
     order_details = None
     if selected_customer:
-        cursor.execute("SELECT product, quantaty, price FROM salmon_orders WHERE date = %s AND customer = %s", (selected_date, selected_customer))
+        cursor.execute("SELECT product, quantity, price FROM salmon_orders WHERE date = %s AND customer = %s", (selected_date, selected_customer))
         order_details = cursor.fetchone()
 
     return render_template('index.html', order=order_details, customers=customers, selected_date=selected_date)
