@@ -84,13 +84,36 @@ def order_detail(order_id):
 
         show_toast = True
 
-    cursor.execute("SELECT id, customer, date, product, COALESCE(price * 1.14, 0) AS price, quantity FROM salmon_orders WHERE id = %s", (order_id,))
-    order = cursor.fetchall()
+    # cursor.execute("SELECT id, customer, date, product, COALESCE(price * 1.14, 0) AS price, quantity FROM salmon_orders WHERE id = %s", (order_id,))
+    # order = cursor.fetchall()
 
-    if not order:
+    # if not order:
+    #     return "Order not found", 404
+
+    # Query to join salmon_orders with salmon_order_weight to get total produced amount and order details
+    query = """
+        SELECT o.id, o.customer, o.date, o.product, COALESCE(o.price * 1.14, 0) AS price, o.quantity, COALESCE(SUM(w.quantity), 0) AS total_produced
+        FROM salmon_orders o
+        LEFT JOIN salmon_order_weight w ON o.id = w.order_id
+        WHERE o.id = %s
+        GROUP BY o.id, o.customer, o.date, o.product, o.price, o.quantity
+    """
+    
+    cursor.execute(query, (order_id,))
+    order_with_total_produced = cursor.fetchall()
+
+    # Fetch exact weight details for the order
+    cursor.execute("SELECT id, quantity, production_time FROM salmon_order_weight WHERE order_id = %s ORDER BY production_time ASC", (order_id,))
+    weight_details = cursor.fetchall()
+
+
+
+
+    if not order_with_total_produced:
         return "Order not found", 404
 
-    return render_template('order_detail.html', order=order, show_toast=show_toast)
+
+    return render_template('order_detail.html', order=order_with_total_produced, show_toast=show_toast, weight_details=weight_details)
 
 
 
