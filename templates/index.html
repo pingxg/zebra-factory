@@ -3,38 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salmon</title>
+    <title>Salmon Production</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script type="text/javascript">
+        var socket = io.connect('https://zebra-factory.onrender.com');
+        socket.on('refresh_data', function(data) {
+            alert(data.message);
+            // Optionally, you can refresh the page to get the latest data
+            location.reload();
+        });
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr("#selected_date", {
+            dateFormat: "Y-m-d",
+        });
+    });
+    </script>
 </head>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-<script type="text/javascript">
-    var socket = io.connect('https://zebra-factory.onrender.com');
-
-    socket.on('refresh_data', function(data) {
-        alert(data.message);
-        // Optionally, you can refresh the page to get the latest data
-        location.reload();
-    });
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    flatpickr("#selected_date", {
-        dateFormat: "Y-m-d",
-    });
-});
-</script>
-
 
 <body class="bg-gray-100 font-sans">
     <div class="container mx-auto p-4 md:p-12">
         <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col my-2">
             <h2 class="font-bold text-3xl mb-4 text-center">Salmon Production</h2>
-                
             <form action="/" method="post" class="mb-6 bg-gradient-to-r from-gray-100 to-gray-200 p-4 rounded-lg shadow-md">
                 <div class="mb-4 flex items-center">
                     <label class="text-gray-600 text-lg font-semibold mr-2" for="selected_date">
@@ -42,8 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </label>
                     <input type="date" id="selected_date" name="selected_date" value="{{ selected_date }}" class="border border-gray-300 px-3 py-2 text-gray-700 flex-grow rounded">
                 </div>
-                
-                <button type="submit" class="text-2xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-lg w-full transition duration-300 ease-in-out transform hover:scale-102">
+                <button type="submit" class="text-2xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg w-full transition duration-300 ease-in-out transform hover:scale-102">
                     Fetch Order
                 </button>
             </form>
@@ -73,12 +66,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 {% endfor %}
+            {% else %}
+            <div class="mt-6 p-4 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg shadow-md text-center">
+                <h4 class="font-bold text-xl mb-4">No Orders</h3>
+                <p class="text-gray-600">Please select a different date or check back later.</p>
+            </div>
             {% endif %}
-        
         </div>
     </div>
 </body>
-
-
 
 </html>

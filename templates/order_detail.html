@@ -1,13 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- ... (meta tags, title, and other headers) ... -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salmon Production</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script type="text/javascript">
+        var socket = io.connect('https://zebra-factory.onrender.com');
+        socket.on('refresh_data', function(data) {
+            alert(data.message);
+            // Optionally, you can refresh the page to get the latest data
+            location.reload();
+        });
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr("#selected_date", {
+            dateFormat: "Y-m-d",
+        });
+    });
+    function showToast() {
+    const toast = document.getElementById('toast');
+    const closeBtn = document.getElementById('toastClose');
+    
+    toast.style.opacity = '1';
+    toast.style.transform = 'translate(-50%, 0)';
+    
+    closeBtn.onclick = function() {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translate(-50%, -100%)';
+    };
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translate(-50%, -100%)';
+    }, 3000);  // Toast will be visible for 3 seconds
+}
+
+
+    </script>
+            
+    {% if show_toast %}
+    <script>
+        window.onload = function() {
+            showToast();
+        };
+    </script>
+    {% endif %}
 </head>
+<style>
+    #toast {
+    transform: translate(-50%, -100%);
+}
+
+</style>
 <body>
-    <h1>Order Details for ID: {{ order.id }}</h1>
-    <p>Customer: {{ order.customer }}</p>
-    <p>Date: {{ order.date }}</p>
-    <p>Details: {{ order.details }}</p>
-    <!-- ... (add more fields as needed) ... -->
+    <div class="container mx-auto p-4 md:p-12">
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col my-2">
+            <h2 class="font-bold text-3xl mb-4 text-center bg-gradient-to-r from-gray-100 to-gray-200 p-4 rounded-lg shadow-md">Order Details</h2>
+            
+            <!-- Order Details -->
+            <div class="mb-6 bg-gradient-to-r from-gray-100 to-gray-200 p-6 rounded-lg shadow-md">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 class="text-xl font-semibold text-gray-700">Order ID:</h3>
+                    <span class="text-lg text-gray-600">{{ order[0][0] }}</span>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-700">Customer:</h3>
+                    <span class="text-lg text-gray-600">{{ order[0][1] }}</span>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-700">Date:</h3>
+                    <span class="text-lg text-gray-600">{{ order[0][2] }}</span>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-700">Product Type:</h3>
+                    <span class="text-lg text-gray-600">{{ order[0][3] }}</span>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-700">Price (VAT14):</h3>
+                    <span class="text-lg text-gray-600">{{ "%.2f"|format(order[0][4]) }} €/kg</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-semibold text-gray-700">Amount:</h3>
+                    <span class="text-lg text-gray-600">{{ order[0][5]|int }} kg</span>
+                </div>
+            </div>
+            
+            <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 p-4 bg-gradient-to-r from-indigo-400 to-blue-400 text-white rounded-lg shadow-xl opacity-0 transition-all duration-500 ease-in-out max-w-xs w-full">
+                <i class="fas fa-check-circle mr-2"></i> Scale reading added successfully!
+                <button id="toastClose" class="absolute top-1/2 right-4 transform -translate-y-1/2 text-2xl leading-none hover:text-gray-100">&times;</button>
+            </div>
+            
+            
+            
+            <form action="{{ url_for('order_detail', order_id=order[0][0]) }}" method="post">
+                <div class="mb-4">
+                    <label for="scale_reading" class="block text-gray-600 font-semibold mb-2">Scale Reading:</label>
+                    <input type="number" step="0.01" id="scale_reading" name="scale_reading" class="border border-gray-300 px-3 py-2 text-gray-700 w-full rounded" placeholder="Enter scale reading">
+                </div>
+                <button type="submit" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-lg w-full transition duration-300 ease-in-out transform hover:scale-102">Add Reading</button>
+            </form>
+
+
+            <!-- Display Scale Reading (if available) -->
+            {% if scale_reading %}
+                <div class="mt-4 bg-gradient-to-r from-gray-100 to-gray-200 p-4 rounded-lg shadow-md">
+                    <p><span class="text-gray-600 font-semibold">Last Scale Reading:</span> {{ scale_reading }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    
 </body>
 </html>
