@@ -36,7 +36,7 @@
                     </label>
                     <input type="date" id="selected_date" name="selected_date" value="{{ selected_date }}" class="border border-gray-300 px-3 py-2 text-gray-700 flex-grow rounded">
                 </div>
-                <button type="submit" class="text-2xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg w-full transition duration-300 ease-in-out transform hover:scale-102">
+                <button type="submit" class="text-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg w-full transition duration-300 ease-in-out transform hover:scale-102">
                     Fetch Order
                 </button>
             </form>
@@ -57,7 +57,7 @@
                                                 {{ order[3] }}
                                             </p>
                                             <p class="text-gray-400 text-base sm:text-xl">
-                                                {{ order[5]|int }}
+                                                {{ order[6] }} / {{ order[5]|int }} kg
                                             </p>
                                         </div>
                                     </a>

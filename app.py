@@ -32,10 +32,11 @@ db_config = {
     'host': os.environ.get('db_host'),
     'database': os.environ.get('db_name'),
     'port': os.environ.get('db_port'),
+    'autocommit':True,
 
 }
 cnx = mysql.connector.connect(**db_config)
-cursor = cnx.cursor()
+# cursor = cnx.cursor()
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -43,8 +44,22 @@ def index():
 
     order_details = None
     if selected_date:
-        cursor.execute("SELECT * FROM salmon_orders WHERE date = %s",(selected_date,))
-        order_details = cursor.fetchall()
+        query = """
+	    SELECT o.id, o.customer, o.date, o.product, COALESCE(o.price * 1.14, 0) AS price, o.quantity, COALESCE(SUM(w.quantity), 0) AS total_produced
+        FROM salmon_orders o
+        LEFT JOIN salmon_order_weight w ON o.id = w.order_id
+        WHERE o.date = %s
+        GROUP BY o.id, o.customer, o.date, o.product, o.price, o.quantity
+        """
+        # query = "SELECT * FROM salmon_orders WHERE date = %s"
+        # cursor.execute(,(selected_date,))
+        # cursor.execute(query,(selected_date,))
+        # order_details = cursor.fetchall()
+        # cursor.close()
+        with cnx.cursor() as cursor:
+            cursor.execute(query,(selected_date,))
+            order_details = cursor.fetchall()
+
         grouped_orders = defaultdict(list)
         totals = {}  # Dictionary to store the total for each product group
 
@@ -60,17 +75,6 @@ def handle_new_order(data):
     # When a new order is added, notify all connected clients
     emit('refresh_data', {'message': 'A new order has been added!'}, broadcast=True)
 
-# @app.route('/order/<int:order_id>', methods=['GET'])
-# def order_detail(order_id):
-#     # Fetch order details based on the provided order_id
-#     cursor.execute("SELECT id, customer, date, product, COALESCE(price * 1.14, 0) AS price, quantity FROM salmon_orders WHERE id = %s", (order_id,))
-#     order = cursor.fetchall()
-
-#     if not order:
-#         return "Order not found", 404
-
-#     return render_template('order_detail.html', order=order)
-
 
 @app.route('/order/<int:order_id>', methods=['GET', 'POST'])
 def order_detail(order_id):
@@ -78,17 +82,14 @@ def order_detail(order_id):
 
     if request.method == 'POST':
         scale_reading = float(request.form['scale_reading'])
-        
-        cursor.execute("INSERT INTO salmon_order_weight (order_id, quantity, production_time) VALUES (%s, %s, %s)", (order_id, scale_reading, datetime.now(pytz.timezone(os.environ.get('time_zone')))))
-        cnx.commit()
+        query = "INSERT INTO salmon_order_weight (order_id, quantity, production_time) VALUES (%s, %s, %s)"
 
+
+        with cnx.cursor() as cursor:
+            cursor.execute(query,(order_id, scale_reading, datetime.now(pytz.timezone(os.environ.get('time_zone')))))
+            order_with_total_produced = cursor.fetchall()
+            cnx.commit()
         show_toast = True
-
-    # cursor.execute("SELECT id, customer, date, product, COALESCE(price * 1.14, 0) AS price, quantity FROM salmon_orders WHERE id = %s", (order_id,))
-    # order = cursor.fetchall()
-
-    # if not order:
-    #     return "Order not found", 404
 
     # Query to join salmon_orders with salmon_order_weight to get total produced amount and order details
     query = """
@@ -98,13 +99,15 @@ def order_detail(order_id):
         WHERE o.id = %s
         GROUP BY o.id, o.customer, o.date, o.product, o.price, o.quantity
     """
-    
-    cursor.execute(query, (order_id,))
-    order_with_total_produced = cursor.fetchall()
 
-    # Fetch exact weight details for the order
-    cursor.execute("SELECT id, quantity, production_time FROM salmon_order_weight WHERE order_id = %s ORDER BY production_time ASC", (order_id,))
-    weight_details = cursor.fetchall()
+    weight_detail_query = "SELECT id, quantity, production_time FROM salmon_order_weight WHERE order_id = %s ORDER BY production_time ASC"
+
+
+    with cnx.cursor() as cursor:
+        cursor.execute(query, (order_id,))
+        order_with_total_produced = cursor.fetchall()
+        cursor.execute(weight_detail_query, (order_id,))
+        weight_details = cursor.fetchall()
 
 
 
