@@ -58,6 +58,18 @@
     transform: translate(-50%, -100%);
 }
 
+:root {
+    --min-font-size: 0.8rem; /* Set the minimum font size you want */
+    --max-font-size: 1.5rem; /* Set the maximum font size you want */
+    --viewport-min: 320px; /* Typically the width of a phone in portrait mode */
+    --viewport-max: 1200px; /* Typically the width of a desktop */
+}
+
+.dynamic-font {
+    font-size: clamp(var(--min-font-size), 4vw, var(--max-font-size));
+}
+
+
 </style>
 <body>
     <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 p-4 bg-gradient-to-r from-indigo-400 to-blue-400 text-white rounded-lg shadow-xl opacity-0 transition-all duration-500 ease-in-out max-w-xs w-full">
@@ -72,12 +84,12 @@
             <!-- Order Details -->
             <div class="mb-6 bg-gradient-to-r from-gray-100 to-gray-200 p-6 rounded-lg shadow-md">
                 <div class="flex justify-between items-center mb-4 border-b pb-2">
-                    <h3 class="text-xl font-semibold text-gray-700">Order ID:</h3>
-                    <span class="text-lg text-gray-600">{{ order[0][0] }}</span>
+                    <h3 class="dynamic-font text-xl font-semibold text-gray-700">Order ID:</h3>
+                    <span class="dynamic-font text-lg text-gray-600">{{ order[0][0] }}</span>
                 </div>
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-semibold text-gray-700">Customer:</h3>
-                    <span class="text-lg text-gray-600">{{ order[0][1] }}</span>
+                    <h3 class="dynamic-font text-xl font-semibold text-gray-700">Customer:</h3>
+                    <span class="dynamic-font text-lg text-gray-600">{{ order[0][1] }}</span>
                 </div>
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-semibold text-gray-700">Date:</h3>
