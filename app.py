@@ -33,15 +33,13 @@ db_config = {
     'database': os.environ.get('db_name'),
     'port': os.environ.get('db_port'),
     'autocommit':True,
-
 }
+
 cnx = mysql.connector.connect(**db_config)
-# cursor = cnx.cursor()
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     selected_date = request.form.get('selected_date', date.today())  # Default to today's date
-
     order_details = None
     if selected_date:
         query = """
@@ -51,11 +49,6 @@ def index():
         WHERE o.date = %s
         GROUP BY o.id, o.customer, o.date, o.product, o.price, o.quantity
         """
-        # query = "SELECT * FROM salmon_orders WHERE date = %s"
-        # cursor.execute(,(selected_date,))
-        # cursor.execute(query,(selected_date,))
-        # order_details = cursor.fetchall()
-        # cursor.close()
         with cnx.cursor() as cursor:
             cursor.execute(query,(selected_date,))
             order_details = cursor.fetchall()
@@ -84,7 +77,6 @@ def order_detail(order_id):
         scale_reading = float(request.form['scale_reading'])
         query = "INSERT INTO salmon_order_weight (order_id, quantity, production_time) VALUES (%s, %s, %s)"
 
-
         with cnx.cursor() as cursor:
             cursor.execute(query,(order_id, scale_reading, datetime.now(pytz.timezone(os.environ.get('time_zone')))))
             order_with_total_produced = cursor.fetchall()
@@ -110,15 +102,10 @@ def order_detail(order_id):
         weight_details = cursor.fetchall()
 
 
-
-
     if not order_with_total_produced:
         return "Order not found", 404
 
-
     return render_template('order_detail.html', order=order_with_total_produced, show_toast=show_toast, weight_details=weight_details)
-
-
 
 
 if __name__ == '__main__':
