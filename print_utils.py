@@ -114,7 +114,6 @@ def create_directory_if_not_exists(directory_path):
 
 
 def pdf_render_print(order_id, folder_path="temp"):
-    delete_directory(folder_path)
     create_directory_if_not_exists(folder_path)
 
     if not order_id:
@@ -180,9 +179,6 @@ def pdf_render_print(order_id, folder_path="temp"):
         print_document(os.path.join(folder_path, f"{random_hash}.pdf"))
     else:
         print(f"Print failed due to unable to generate PDF file.")
-
-# pdf_render_print(152)
-
 
 
 
