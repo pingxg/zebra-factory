@@ -14,6 +14,13 @@ app.config['SECRET_KEY'] = os.environ.get('secret_key')
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+
+
+@app.route('/emit_print_event', methods=['POST'])
+def emit_print():
+    socketio.emit('print', {'data': 'some_data'})  # You can replace 'some_data' with actual data if needed
+    return jsonify({'status': 'Print event emitted'})
+
 # @app.route('/request-print', methods=['POST'])
 # def request_print():
 #     # Emit a 'print' event to any connected client
