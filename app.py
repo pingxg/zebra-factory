@@ -14,16 +14,30 @@ app.config['SECRET_KEY'] = os.environ.get('secret_key')
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+# @app.route('/request-print', methods=['POST'])
+# def request_print():
+#     # Emit a 'print' event to any connected client
+#     socketio.emit('print', {'message': 'Print command received!'})
+#     return jsonify({'status': 'sent'})
+
+# @socketio.on('new_print_request')
+# def handle_print_request(data):
+#     print('Print request received:', data)
+#     # You can add any server-side handling here, or emit another event to all clients to actually perform the print
+#     emit('perform_print', {'command': 'print'}, broadcast=True)
 
 
-# @app.route('/', methods=['GET', 'POST'])
-# def index():
-#     if request.method == 'POST':
-#         data = request.form.get('data')
-#         # Emit a 'print' event to any connected client
-#         socketio.emit('print', {'data': data})
-#         return jsonify({'status': 'sent'})
-#     return render_template('index.html')
+# @app.route('/request-print', methods=['POST'])
+# def request_print():
+#     # Emit a 'print' event to any connected client
+#     socketio.emit('print', {'message': 'Print command received!'})
+#     return jsonify({'status': 'sent'})
+
+# @socketio.on('new_order_added')
+# def handle_new_order(data):
+#     # When a new order is added, notify all connected clients
+#     emit('refresh_data', {'message': 'A new order has been added!'}, broadcast=True)
+
 
 
 
@@ -65,10 +79,6 @@ def index():
             totals[order[3]] += int(order[5])
     return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals)
 
-# @socketio.on('new_order_added')
-# def handle_new_order(data):
-#     # When a new order is added, notify all connected clients
-#     emit('refresh_data', {'message': 'A new order has been added!'}, broadcast=True)
 
 
 @app.route('/order/<int:order_id>', methods=['GET', 'POST'])
