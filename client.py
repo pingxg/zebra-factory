@@ -1,15 +1,14 @@
+import os
 import socketio
-from print_utils import print_document, print_zebra
-
+from print_utils import pdf_render_print
 
 sio = socketio.Client()
 
 
 @sio.on('print')
 def on_print(data):
-    print("Received data:", data['order_id'])
-    # print_zebra(data['data'])
-    # print_document("C:/Users/PingxinGao/Downloads/Nihtisilta 4, 02630 Espoo.pdf")
+    print("Received order ID:", data['order_id'])
+    pdf_render_print(data['order_id'])
 
-sio.connect('https://zebra-factory.onrender.com')
+sio.connect(os.environ.get('link'))
 sio.wait()

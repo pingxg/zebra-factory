@@ -4,4 +4,9 @@ flask
 mysql-connector-python
 python-dotenv
 pytz
-Flask-Caching
+pandas
+sqlalchemy
+mysqlclient
+html2image
+Pillow
+Jinja2

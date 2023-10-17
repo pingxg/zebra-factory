@@ -30,7 +30,7 @@ db_config = {
     'password': os.environ.get('db_password'),
     'host': os.environ.get('db_host'),
     'database': os.environ.get('db_name'),
-    'port': os.environ.get('db_port'),
+    'port': str(os.environ.get('db_port')),
     'autocommit':True,
 }
 
