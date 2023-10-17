@@ -165,8 +165,13 @@
     {% endif %}
     <script>
         function emitPrintEvent() {
+            const orderId = "{{ order[0][0] }}";  // Extract order_id from the Jinja2 template
             fetch('/emit_print_event', {
-                method: 'POST'
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ order_id: orderId })
             })
             .then(response => response.json())
             .then(data => {

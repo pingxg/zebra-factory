@@ -11,42 +11,18 @@ import pytz
 load_dotenv()  # take environment variables from .env.
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('secret_key')
-
 socketio = SocketIO(app, cors_allowed_origins="*")
-
 
 
 @app.route('/emit_print_event', methods=['POST'])
 def emit_print():
-    socketio.emit('print', {'data': 'some_data'})  # You can replace 'some_data' with actual data if needed
+    data = request.json
+    order_id = data.get('order_id')
+    
+    print("Order ID:", order_id)  # Just for debugging; you can remove this later
+
+    socketio.emit('print', {'order_id': order_id})
     return jsonify({'status': 'Print event emitted'})
-
-# @app.route('/request-print', methods=['POST'])
-# def request_print():
-#     # Emit a 'print' event to any connected client
-#     socketio.emit('print', {'message': 'Print command received!'})
-#     return jsonify({'status': 'sent'})
-
-# @socketio.on('new_print_request')
-# def handle_print_request(data):
-#     print('Print request received:', data)
-#     # You can add any server-side handling here, or emit another event to all clients to actually perform the print
-#     emit('perform_print', {'command': 'print'}, broadcast=True)
-
-
-# @app.route('/request-print', methods=['POST'])
-# def request_print():
-#     # Emit a 'print' event to any connected client
-#     socketio.emit('print', {'message': 'Print command received!'})
-#     return jsonify({'status': 'sent'})
-
-# @socketio.on('new_order_added')
-# def handle_new_order(data):
-#     # When a new order is added, notify all connected clients
-#     emit('refresh_data', {'message': 'A new order has been added!'}, broadcast=True)
-
-
-
 
 # Setup MySQL connection
 db_config = {
@@ -129,12 +105,8 @@ def order_detail(order_id):
 
 @app.route('/weight/<int:weight_id>/edit', methods=['GET', 'POST'])
 def edit_weight(weight_id):
-    print("Edit weight endpoint called")  # Add this line
-
     edit_weight = request.form.get('edit_weight')
     order_id = request.args.get('order_id')
-    print(f"Received weight: {edit_weight}, order_id: {order_id}")  # Add this line
-
 
     if request.method == 'POST':
         # Update weight in the database

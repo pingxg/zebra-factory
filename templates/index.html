@@ -22,38 +22,7 @@
             dateFormat: "Y-m-d",
         });
     });
-    function calculateStrokeOffset(progress) {
-    const circumference = 2 * Math.PI * 50; // The circle's circumference (radius is 50)
-    return circumference * (1 - progress);
-}
-
     </script>
-<style>
-    /* .border-gradient {
-        border-image: linear-gradient(to right, yellow 0%, green 100%);
-        border-image-slice: 1;
-        border-radius: 10px;
-    } */
-
-    .border-gradient-not-start {
-        border-image: linear-gradient(to top right, #4B5563, #1F2937, #000000);
-        border-image-slice: 1;
-    }
-
-    .border-gradient-in-progress {
-        border-image: linear-gradient(to bottom left, #D946EF, #EF4444, #F59E0B);
-        border-image-slice: 1;
-    }
-
-    .border-gradient-complete {
-        border-image: linear-gradient(to bottom left, #10B981, #65A30D);
-        border-image-slice: 1;
-
-    }
-
-
-</style>
-
 </head>
 
 <body class="bg-gray-100 font-sans">
@@ -80,23 +49,6 @@
                     <div class="my-6 p-4 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg shadow-md">
                         <h3 class="font-bold text-2xl mb-4 text-center">{{ product }}: {{ totals[product] }} kg</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 mb-4">
-                            <!-- {% for order in product_orders %}
-                                <div>
-                                    <a href="{{ url_for('order_detail', order_id=order[0]) }}" class="block bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 p-3 md:p-4 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex flex-col justify-between">
-                                        <div class="text-white font-semibold text-base sm:text-lg">
-                                            {{ order[1] }}
-                                        </div>
-                                        <div class="flex justify-between items-end">
-                                            <p class="text-gray-300 text-base sm:text-xl">
-                                                {{ order[3] }}
-                                            </p>
-                                            <p class="text-gray-400 text-base sm:text-xl">
-                                                {{ order[6] }} / {{ order[5]|int }} kg
-                                            </p>
-                                        </div>
-                                    </a>
-                                </div>
-                            {% endfor %} -->
                             {% for order in product_orders %}
                             <div>
                                 <a href="{{ url_for('order_detail', order_id=order[0]) }}" 
@@ -122,8 +74,6 @@
                                 </a>
                             </div>
                         {% endfor %}
-                        
-                        
                         </div>
                     </div>
                 {% endfor %}
