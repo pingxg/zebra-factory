@@ -110,5 +110,32 @@ def order_detail(order_id):
     return render_template('order_detail.html', order=order_with_total_produced, show_toast=show_toast, weight_details=weight_details)
 
 
+@app.route('/weight/<int:weight_id>/edit', methods=['GET', 'POST'])
+def edit_weight(weight_id):
+    print("Edit weight endpoint called")  # Add this line
+
+    edit_weight = request.form.get('edit_weight')
+    order_id = request.args.get('order_id')
+    print(f"Received weight: {edit_weight}, order_id: {order_id}")  # Add this line
+
+
+    if request.method == 'POST':
+        # Update weight in the database
+        query = "UPDATE salmon_order_weight SET quantity = %s, production_time = %s WHERE id = %s"
+        with cnx.cursor() as cursor:
+            cursor.execute(query, (edit_weight, datetime.now(pytz.timezone(os.environ.get('time_zone'))), weight_id))
+            cnx.commit()
+        return jsonify(success=True)
+
+
+@app.route('/weight/<int:weight_id>/delete', methods=['POST'])
+def delete_weight(weight_id):
+    order_id = request.args.get('order_id')  # get order_id from the URL parameters
+    query = "DELETE FROM salmon_order_weight WHERE id = %s LIMIT 1"
+    with cnx.cursor() as cursor:
+        cursor.execute(query, (weight_id,))
+        cnx.commit()
+    return redirect(url_for('order_detail', order_id=order_id))
+
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000)
