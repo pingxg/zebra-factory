@@ -55,7 +55,7 @@
                                     class="rounded-border block p-3 md:p-4 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex flex-col justify-between
                                     {% if order[6] == 0 %} 
                                     bg-gradient-to-bl from-gray-900 to-gray-600 bg-gradient-to-r
-                                    {% elif order[6] > 0 and order[6] < order[5]|int %} 
+                                    {% elif order[6] > 0 and order[6] < order[5]|float*0.9 %}
                                     bg-gradient-to-l from-red-800 via-yellow-600 to-yellow-500
                                     {% else %} 
                                     bg-gradient-to-tr from-green-500 to-green-700

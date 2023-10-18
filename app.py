@@ -13,6 +13,10 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('secret_key')
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+def to_float(s):
+    return float(s)
+
+app.jinja_env.filters['float'] = to_float
 
 @app.route('/emit_print_event', methods=['POST'])
 def emit_print():
@@ -110,9 +114,11 @@ def edit_weight(weight_id):
 
     if request.method == 'POST':
         # Update weight in the database
-        query = "UPDATE salmon_order_weight SET quantity = %s, production_time = %s WHERE id = %s"
+        # query = "UPDATE salmon_order_weight SET quantity = %s, production_time = %s WHERE id = %s"
+        query = "UPDATE salmon_order_weight SET quantity = %s WHERE id = %s"
         with cnx.cursor() as cursor:
-            cursor.execute(query, (edit_weight, datetime.now(pytz.timezone(os.environ.get('time_zone'))), weight_id))
+            # cursor.execute(query, (edit_weight, datetime.now(pytz.timezone(os.environ.get('time_zone'))), weight_id))
+            cursor.execute(query, (edit_weight, weight_id))
             cnx.commit()
         return jsonify(success=True)
 
