@@ -45,15 +45,15 @@ def print_zebra(zpl_data=None, printer_name='zebra'):
         win32print.ClosePrinter(hprinter)
 
 
-def print_document(filename, printer_name="EPSON25CEF5 (ET-2810 Series)"):
-    if printer_name is None:
-        printer_name = win32print.GetDefaultPrinter()
-    
-    # Set the printer to the specified one
-    win32print.SetDefaultPrinter(printer_name)
-    
-    # Use the Windows shell to print the document
-    win32api.ShellExecute(0, "print", filename, None, ".", 0)
+
+def print_document(pdf_path, printer_name="EPSON25CEF5 (ET-2810 Series)"):
+    # Path to Adobe Reader or Adobe Acrobat. Adjust if it's located differently on your system.
+    acrobat_path = "C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe"
+
+    # Command to send to the shell
+    cmd = f'"{acrobat_path}" /N /T "{pdf_path}" "{printer_name}"'
+
+    win32api.WinExec(cmd)
 
 
 
@@ -144,7 +144,7 @@ def pdf_render_print(order_id, folder_path="temp"):
     delivery_note_data = {}
     for column in df.columns:
         if column == 'delivered' and len(df)>1:
-            delivery_note_data[column] = df[column].sum()
+            delivery_note_data[column] = round(df[column].sum(),2)
         else:
             delivery_note_data[column] = df[column].iloc[0]
 
@@ -165,7 +165,7 @@ def pdf_render_print(order_id, folder_path="temp"):
     if os.path.isfile(os.path.join(folder_path, f"{random_hash}.pdf")):
         print_document(os.path.join(folder_path, f"{random_hash}.pdf"))
         zebra_print_list = zebra_generator(df)
-        for i in zebra_print_list():
+        for i in zebra_print_list:
             print_zebra(zpl_data=i)
         pass
     else:
