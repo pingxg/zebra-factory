@@ -137,46 +137,53 @@ def pdf_render_print(order_id, folder_path="temp"):
             WHERE
                 o.id = :order_id;
         """)
+    try:
+        result = session.execute(query, {'order_id': order_id})
+        df = pd.DataFrame(result.fetchall(), columns=result.keys())
+        df['expiry_date'] = df['date'] + pd.Timedelta(days=6)
+        df['date'] = pd.to_datetime(df['date'])
+        df['expiry_date'] = pd.to_datetime(df['expiry_date'])
+        df['date'] = df['date'].dt.strftime("%Y.%m.%d, %a")
+        df['expiry_date'] = df['expiry_date'].dt.strftime("%Y.%m.%d, %a")
+        delivery_note_data = {}
+        for column in df.columns:
+            if column == 'delivered' and len(df)>1:
+                delivery_note_data[column] = round(df[column].sum(),2)
+            else:
+                delivery_note_data[column] = df[column].iloc[0]
 
-    # df = pd.read_sql(query, engine)
-    result = session.execute(query, {'order_id': order_id})
-    df = pd.DataFrame(result.fetchall(), columns=result.keys())
-    session.close()
-
-    df['expiry_date'] = df['date'] + pd.Timedelta(days=6)
-    df['date'] = pd.to_datetime(df['date'])
-    df['expiry_date'] = pd.to_datetime(df['expiry_date'])
-    df['date'] = df['date'].dt.strftime("%Y.%m.%d, %a")
-    df['expiry_date'] = df['expiry_date'].dt.strftime("%Y.%m.%d, %a")
-    delivery_note_data = {}
-    for column in df.columns:
-        if column == 'delivered' and len(df)>1:
-            delivery_note_data[column] = round(df[column].sum(),2)
+        env = Environment(loader=FileSystemLoader('.'))
+        template = env.get_template('templates/salmon_delivery_template.html')
+        rendered_html = template.render(delivery_note_data)
+        hti = Html2Image(
+            size=(2142, 3000),
+            # custom_flags=['--no-sandbox', '--headless', '--disable-gpu', '--disable-software-rasterizer', '--disable-dev-shm-usage'],
+            output_path=folder_path
+            )
+        # hti.browser_executable = "/usr/bin/google-chrome"
+        random_hash = generate_random_hash()
+        image_name = f'{random_hash}.png'
+        image_path = f'{folder_path}/{image_name}'
+        hti.screenshot(html_str=rendered_html, save_as=image_name)
+        images_to_pdf(image_path, output_dir='temp', repetition=2)
+        if os.path.isfile(os.path.join(folder_path, f"{random_hash}.pdf")):
+            print_document(os.path.join(folder_path, f"{random_hash}.pdf"))
+            zebra_print_list = zebra_generator(df)
+            for i in zebra_print_list:
+                print_zebra(zpl_data=i)
+            pass
         else:
-            delivery_note_data[column] = df[column].iloc[0]
+            print(f"Print failed due to unable to generate PDF file.")
 
-    env = Environment(loader=FileSystemLoader('.'))
-    template = env.get_template('templates/salmon_delivery_template.html')
-    rendered_html = template.render(delivery_note_data)
-    hti = Html2Image(
-        size=(2142, 3000),
-        # custom_flags=['--no-sandbox', '--headless', '--disable-gpu', '--disable-software-rasterizer', '--disable-dev-shm-usage'],
-        output_path=folder_path
-        )
-    # hti.browser_executable = "/usr/bin/google-chrome"
-    random_hash = generate_random_hash()
-    image_name = f'{random_hash}.png'
-    image_path = f'{folder_path}/{image_name}'
-    hti.screenshot(html_str=rendered_html, save_as=image_name)
-    images_to_pdf(image_path, output_dir='temp', repetition=2)
-    if os.path.isfile(os.path.join(folder_path, f"{random_hash}.pdf")):
-        print_document(os.path.join(folder_path, f"{random_hash}.pdf"))
-        zebra_print_list = zebra_generator(df)
-        for i in zebra_print_list:
-            print_zebra(zpl_data=i)
-        pass
-    else:
-        print(f"Print failed due to unable to generate PDF file.")
+    except Exception as e:
+        # If there's any error, rollback the session
+        session.rollback()
+        print(f"Error executing query: {e}")
+
+    finally:
+        # Close the session properly
+        session.close()
+
     return df
 
 def zebra_generator(df):
