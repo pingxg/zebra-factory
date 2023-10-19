@@ -84,17 +84,19 @@ def index():
             if order[3] not in totals:
                 totals[order[3]] = 0
             totals[order[3]] += int(order[5])
+        # Ensure connection is closed
+        connection.close()
     return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals)
 
 
 @app.route('/order/<int:order_id>', methods=['GET', 'POST'])
 def order_detail(order_id):
+    connection = db.get_connection()
 
     if request.method == 'POST':
         scale_reading = float(request.form['scale_reading'])
         query = "INSERT INTO salmon_order_weight (order_id, quantity, production_time) VALUES (%s, %s, %s)"
 
-        connection = db.get_connection()
         with connection:
             cursor = db.get_cursor(connection)
             cursor.execute(query,(order_id, scale_reading, datetime.now(pytz.timezone(os.environ.get('time_zone')))))
@@ -115,7 +117,6 @@ def order_detail(order_id):
     weight_detail_query = "SELECT id, quantity, production_time FROM salmon_order_weight WHERE order_id = %s ORDER BY production_time ASC"
 
 
-    connection = db.get_connection()
     with connection:
         cursor = db.get_cursor(connection)
         cursor.execute(query, (order_id,))
@@ -125,7 +126,9 @@ def order_detail(order_id):
 
     if not order_with_total_produced:
         return "Order not found", 404
-
+    
+    # Ensure connection is closed
+    connection.close()
     return render_template('order_detail.html', order=order_with_total_produced, show_toast=show_toast, weight_details=weight_details)
 
 
@@ -143,7 +146,8 @@ def edit_weight(weight_id):
             cursor = db.get_cursor(connection)
             # cursor.execute(query, (edit_weight, datetime.now(pytz.timezone(os.environ.get('time_zone'))), weight_id))
             cursor.execute(query, (edit_weight, weight_id))
-            # cnx.commit()
+        # Ensure connection is closed
+        connection.close()
         return jsonify(success=True)
 
 
@@ -155,7 +159,8 @@ def delete_weight(weight_id):
     with connection:
         cursor = db.get_cursor(connection)
         cursor.execute(query, (weight_id,))
-
+    # Ensure connection is closed
+    connection.close()
     return redirect(url_for('order_detail', order_id=order_id))
 
 if __name__ == '__main__':
