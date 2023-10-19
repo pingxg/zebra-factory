@@ -195,7 +195,7 @@ def zebra_generator(df):
     ; Add Producer info
     ^FO460,40^A0N,15,20^FDProducer^FS
     ^FO460,60^A0N,25,25^FDFirewok Finland Oy^FS
-    ^FO460,85^A0N,15,20^FDY-Tunnus: 3163404-9^FS
+    ^FO460,85^A0N,15,20^FDY-tunnus: 3163404-9^FS
     ^FO460,100^A0N,15,20^FDNihtisillantie 3B, 02630 Espoo^FS
     ^FO460,115^A0N,15,20^FDPuh: +358 45 7831 9456^FS
 

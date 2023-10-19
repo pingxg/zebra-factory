@@ -8,21 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    <script type="text/javascript">
-        var socket = io.connect('https://zebra-factory.onrender.com');
-        socket.on('refresh_data', function(data) {
-            alert(data.message);
-            // Optionally, you can refresh the page to get the latest data
-            location.reload();
-        });
-    </script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        flatpickr("#selected_date", {
-            dateFormat: "Y-m-d",
-        });
-    });
-    </script>
+    <script src="/static/js/indexScripts.js" defer></script>
 </head>
 
 <body class="bg-gray-100 font-sans">

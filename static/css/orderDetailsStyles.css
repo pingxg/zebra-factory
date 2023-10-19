@@ -1,0 +1,4 @@
+#toast, #errorToast, #printToast {
+    z-index: 9999;
+    transform: translate(-50%, -100%);
+}
