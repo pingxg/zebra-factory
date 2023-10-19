@@ -1,10 +1,12 @@
 import os
+import time
+
 import socketio
 import logging
 from print_utils import pdf_render_print
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+# Set up logging with timestamp
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 sio = socketio.Client()
@@ -32,15 +34,32 @@ def on_print(data):
     else:
         logger.warning("Received 'print' event without order ID.")
 
+@sio.on('keepalive_response')
+def on_keepalive_response():
+    """Callback for handling the server's response to our keepalive message."""
+    logger.info("Received keepalive response from server.")
+
+def keepalive_loop():
+    """Continuously send keepalive messages to the server."""
+    while True:
+        time.sleep(10)  # Send a keepalive message every 10 seconds
+        sio.emit('keepalive', {})
+
 def main():
     """Main function to start the client."""
     link = os.environ.get('link')
     if not link:
         logger.error("Environment variable 'link' not set.")
         return
-    
+
     try:
         sio.connect(link)
+        
+        # Start the keepalive loop in a separate thread
+        import threading
+        keepalive_thread = threading.Thread(target=keepalive_loop)
+        keepalive_thread.start()
+
         sio.wait()
     except Exception as e:
         logger.error(f"Error connecting to server: {e}")
