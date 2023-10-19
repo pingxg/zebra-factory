@@ -1,7 +1,6 @@
 flask-socketio
 eventlet
 flask
-mysql-connector-python
 python-dotenv
 pytz
 pandas
