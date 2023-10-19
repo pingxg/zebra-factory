@@ -1,73 +1,61 @@
+# Standard Libraries
+import os
+from datetime import date, datetime
+from collections import defaultdict
+
+# Third-party Libraries
 from flask import Flask, render_template, request, jsonify, redirect, session, url_for
 from flask_socketio import SocketIO, emit
 import mysql.connector
-from datetime import date
-from datetime import datetime
-import os
-from dotenv import load_dotenv
-from collections import defaultdict
 import pytz
-import time
+from dotenv import load_dotenv
 
-load_dotenv()  # take environment variables from .env.
+# Configuration
+load_dotenv()  # Load environment variables from .env
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('secret_key')
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-def to_float(s):
-    return float(s)
+# Custom Jinja2 Filters
+app.jinja_env.filters['float'] = float
 
-app.jinja_env.filters['float'] = to_float
-
-@app.route('/emit_print_event', methods=['POST'])
-def emit_print():
-    data = request.json
-    order_id = data.get('order_id')
-    
-    print("Order ID:", order_id)  # Just for debugging; you can remove this later
-
-    socketio.emit('print', {'order_id': order_id})
-    return jsonify({'status': 'Print event emitted'})
-
-
-
-# Database class to manage reconnections
+# Database Management
 class Database:
     def __init__(self, config):
         self.config = config
-        self.connection = self.connect()
+        self.pool = self.create_pool()
 
-    def connect(self):
-        retries = 5
-        for _ in range(retries):
-            try:
-                return mysql.connector.connect(**self.config)
-            except mysql.connector.Error:
-                time.sleep(1)  # Wait for 1 second before retrying
-        raise Exception("Failed to connect to the database after multiple attempts")
+    def create_pool(self):
+        return mysql.connector.pooling.MySQLConnectionPool(pool_name="mypool",
+                                                            pool_size=5,
+                                                            **self.config)
 
-    def get_cursor(self):
-        try:
-            return self.connection.cursor()
-        except (mysql.connector.errors.OperationalError, mysql.connector.errors.InterfaceError):
-            # If connection is lost, reconnect and try again
-            self.connection = self.connect()
-            return self.connection.cursor()
+    def get_connection(self):
+        return self.pool.get_connection()
+
+    def get_cursor(self, connection):
+        return connection.cursor()
 
 
-
-# Setup MySQL connection
 db_config = {
     'user': os.environ.get('db_user'),
     'password': os.environ.get('db_password'),
     'host': os.environ.get('db_host'),
     'database': os.environ.get('db_name'),
     'port': str(os.environ.get('db_port')),
-    'autocommit':True,
+    'autocommit': True,
 }
-
-# cnx = mysql.connector.connect(**db_config)
 db = Database(db_config)
+
+
+# Routes
+@app.route('/emit_print_event', methods=['POST'])
+def emit_print():
+    data = request.json
+    order_id = data.get('order_id')
+    socketio.emit('print', {'order_id': order_id})
+    return jsonify({'status': 'Print event emitted'})
+
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -82,8 +70,9 @@ def index():
         WHERE o.date = %s
         GROUP BY o.id, o.customer, o.date, o.product, o.price, o.quantity
         """
-        # with cnx.cursor() as cursor:
-        with db.get_cursor() as cursor:
+        connection = db.get_connection()
+        with connection:
+            cursor = db.get_cursor(connection)
             cursor.execute(query,(selected_date,))
             order_details = cursor.fetchall()
 
@@ -98,7 +87,6 @@ def index():
     return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals)
 
 
-
 @app.route('/order/<int:order_id>', methods=['GET', 'POST'])
 def order_detail(order_id):
 
@@ -106,12 +94,11 @@ def order_detail(order_id):
         scale_reading = float(request.form['scale_reading'])
         query = "INSERT INTO salmon_order_weight (order_id, quantity, production_time) VALUES (%s, %s, %s)"
 
-        # with cnx.cursor() as cursor:
-        with db.get_cursor() as cursor:
+        connection = db.get_connection()
+        with connection:
+            cursor = db.get_cursor(connection)
             cursor.execute(query,(order_id, scale_reading, datetime.now(pytz.timezone(os.environ.get('time_zone')))))
-            # order_with_total_produced = cursor.fetchall()
-            # cnx.commit()
-            db.connection.commit()
+
         session['show_toast'] = True
         return redirect(url_for('order_detail', order_id=order_id))
     show_toast = session.pop('show_toast', False)
@@ -128,8 +115,9 @@ def order_detail(order_id):
     weight_detail_query = "SELECT id, quantity, production_time FROM salmon_order_weight WHERE order_id = %s ORDER BY production_time ASC"
 
 
-    # with cnx.cursor() as cursor:
-    with db.get_cursor() as cursor:
+    connection = db.get_connection()
+    with connection:
+        cursor = db.get_cursor(connection)
         cursor.execute(query, (order_id,))
         order_with_total_produced = cursor.fetchall()
         cursor.execute(weight_detail_query, (order_id,))
@@ -150,12 +138,12 @@ def edit_weight(weight_id):
         # Update weight in the database
         # query = "UPDATE salmon_order_weight SET quantity = %s, production_time = %s WHERE id = %s"
         query = "UPDATE salmon_order_weight SET quantity = %s WHERE id = %s"
-        # with cnx.cursor() as cursor:
-        with db.get_cursor() as cursor:
+        connection = db.get_connection()
+        with connection:
+            cursor = db.get_cursor(connection)
             # cursor.execute(query, (edit_weight, datetime.now(pytz.timezone(os.environ.get('time_zone'))), weight_id))
             cursor.execute(query, (edit_weight, weight_id))
             # cnx.commit()
-            db.connection.commit()
         return jsonify(success=True)
 
 
@@ -163,11 +151,11 @@ def edit_weight(weight_id):
 def delete_weight(weight_id):
     order_id = request.args.get('order_id')  # get order_id from the URL parameters
     query = "DELETE FROM salmon_order_weight WHERE id = %s LIMIT 1"
-    # with cnx.cursor() as cursor:
-    with db.get_cursor() as cursor:
+    connection = db.get_connection()
+    with connection:
+        cursor = db.get_cursor(connection)
         cursor.execute(query, (weight_id,))
-        # cnx.commit()
-        db.connection.commit()
+
     return redirect(url_for('order_detail', order_id=order_id))
 
 if __name__ == '__main__':

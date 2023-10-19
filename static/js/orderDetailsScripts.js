@@ -1,16 +1,3 @@
-
-// Socket setup
-
-var socket = io.connect('https://zebra-factory.onrender.com');
-socket.on('refresh_data', function(data) {
-    alert(data.message);
-    // Optionally, you can refresh the page to get the latest data
-    location.reload();
-});
-
-
-
-
 function validateForm() {
     var scaleReading = document.getElementById("scale_reading").value;
     if (scaleReading === "" || scaleReading === null) {
