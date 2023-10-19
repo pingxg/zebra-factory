@@ -10,3 +10,4 @@ mysqlclient
 html2image
 Pillow
 Jinja2
+flask_sqlalchemy

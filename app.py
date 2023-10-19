@@ -6,7 +6,9 @@ from collections import defaultdict
 # Third-party Libraries
 from flask import Flask, render_template, request, jsonify, redirect, session, url_for
 from flask_socketio import SocketIO, emit
-import mysql.connector
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
+
 import pytz
 from dotenv import load_dotenv
 
@@ -19,33 +21,40 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # Custom Jinja2 Filters
 app.jinja_env.filters['float'] = float
 
-# Database Management
-class Database:
-    def __init__(self, config):
-        self.config = config
-        self.pool = self.create_pool()
 
-    def create_pool(self):
-        return mysql.connector.pooling.MySQLConnectionPool(pool_name="mypool",
-                                                            pool_size=5,
-                                                            **self.config)
+# SQLAlchemy setup
+app.config['SQLALCHEMY_DATABASE_URI'] = (
+    f"mysql+mysqldb://{os.environ.get('db_user')}:{os.environ.get('db_password')}@"
+    f"{os.environ.get('db_host')}:{os.environ.get('db_port')}/{os.environ.get('db_name')}?charset=utf8mb4"
+)
+app.config['SQLALCHEMY_POOL_SIZE'] = 15
+app.config['SQLALCHEMY_POOL_TIMEOUT'] = 10
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    def get_connection(self):
-        return self.pool.get_connection()
-
-    def get_cursor(self, connection):
-        return connection.cursor()
+db = SQLAlchemy(app)
 
 
-db_config = {
-    'user': os.environ.get('db_user'),
-    'password': os.environ.get('db_password'),
-    'host': os.environ.get('db_host'),
-    'database': os.environ.get('db_name'),
-    'port': str(os.environ.get('db_port')),
-    'autocommit': True,
-}
-db = Database(db_config)
+class SalmonOrder(db.Model):
+    __tablename__ = "salmon_orders"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    customer = db.Column(db.String)
+    date = db.Column(db.Date)
+    product = db.Column(db.String)
+    price = db.Column(db.Float)
+    quantity = db.Column(db.Integer)
+    
+    weights = db.relationship("SalmonOrderWeight", backref="order")
+
+
+class SalmonOrderWeight(db.Model):
+    __tablename__ = "salmon_order_weight"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('salmon_orders.id'))
+    quantity = db.Column(db.Float)
+    production_time = db.Column(db.DateTime)
+
 
 
 # Routes
@@ -63,19 +72,21 @@ def index():
     selected_date = request.form.get('selected_date', date.today())  # Default to today's date
     order_details = None
     if selected_date:
-        query = """
-	    SELECT o.id, o.customer, o.date, o.product, COALESCE(o.price * 1.14, 0) AS price, o.quantity, COALESCE(SUM(w.quantity), 0) AS total_produced
-        FROM salmon_orders o
-        LEFT JOIN salmon_order_weight w ON o.id = w.order_id
-        WHERE o.date = %s
-        GROUP BY o.id, o.customer, o.date, o.product, o.price, o.quantity
-        """
-        connection = db.get_connection()
-        with connection:
-            cursor = db.get_cursor(connection)
-            cursor.execute(query,(selected_date,))
-            order_details = cursor.fetchall()
-
+        order_details = (
+            db.session.query(
+                SalmonOrder.id, 
+                SalmonOrder.customer, 
+                SalmonOrder.date, 
+                SalmonOrder.product,
+                (func.coalesce(SalmonOrder.price * 1.14, 0)).label("price"),
+                SalmonOrder.quantity,
+                (func.coalesce(func.sum(SalmonOrderWeight.quantity), 0)).label("total_produced")
+            )
+            .outerjoin(SalmonOrderWeight, SalmonOrder.id == SalmonOrderWeight.order_id)
+            .filter(SalmonOrder.date == selected_date)
+            .group_by(SalmonOrder.id)
+            .all()
+        )
         grouped_orders = defaultdict(list)
         totals = {}  # Dictionary to store the total for each product group
 
@@ -84,84 +95,79 @@ def index():
             if order[3] not in totals:
                 totals[order[3]] = 0
             totals[order[3]] += int(order[5])
-        # Ensure connection is closed
-        connection.close()
+
     return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals)
 
 
 @app.route('/order/<int:order_id>', methods=['GET', 'POST'])
 def order_detail(order_id):
-    connection = db.get_connection()
-
     if request.method == 'POST':
         scale_reading = float(request.form['scale_reading'])
-        query = "INSERT INTO salmon_order_weight (order_id, quantity, production_time) VALUES (%s, %s, %s)"
-
-        with connection:
-            cursor = db.get_cursor(connection)
-            cursor.execute(query,(order_id, scale_reading, datetime.now(pytz.timezone(os.environ.get('time_zone')))))
-
+        weight = SalmonOrderWeight(order_id=order_id, 
+                                    quantity=scale_reading, 
+                                    production_time=datetime.now(pytz.timezone(os.environ.get('time_zone'))))
+        db.session.add(weight)
+        db.session.commit()
         session['show_toast'] = True
         return redirect(url_for('order_detail', order_id=order_id))
+
     show_toast = session.pop('show_toast', False)
 
-    # Query to join salmon_orders with salmon_order_weight to get total produced amount and order details
-    query = """
-        SELECT o.id, o.customer, o.date, o.product, COALESCE(o.price * 1.14, 0) AS price, o.quantity, COALESCE(SUM(w.quantity), 0) AS total_produced
-        FROM salmon_orders o
-        LEFT JOIN salmon_order_weight w ON o.id = w.order_id
-        WHERE o.id = %s
-        GROUP BY o.id, o.customer, o.date, o.product, o.price, o.quantity
-    """
+    # Using SQLAlchemy ORM to retrieve the order with total produced and weight details
+    order = (
+        db.session.query(
+            SalmonOrder.id, 
+            SalmonOrder.customer, 
+            SalmonOrder.date, 
+            SalmonOrder.product,
+            (func.coalesce(SalmonOrder.price * 1.14, 0)).label("price"),
+            SalmonOrder.quantity,
+            (func.coalesce(func.sum(SalmonOrderWeight.quantity), 0)).label("total_produced")
+        )
+        .outerjoin(SalmonOrderWeight, SalmonOrder.id == SalmonOrderWeight.order_id)
+        .filter(SalmonOrder.id == order_id)
+        .group_by(SalmonOrder.id)
+        .first()
+    )
 
-    weight_detail_query = "SELECT id, quantity, production_time FROM salmon_order_weight WHERE order_id = %s ORDER BY production_time ASC"
+    weight_details = (
+        db.session.query(SalmonOrderWeight.id, SalmonOrderWeight.quantity, SalmonOrderWeight.production_time)
+        .filter(SalmonOrderWeight.order_id == order_id)
+        .order_by(SalmonOrderWeight.production_time.asc())
+        .all()
+    )
 
-
-    with connection:
-        cursor = db.get_cursor(connection)
-        cursor.execute(query, (order_id,))
-        order_with_total_produced = cursor.fetchall()
-        cursor.execute(weight_detail_query, (order_id,))
-        weight_details = cursor.fetchall()
-
-    if not order_with_total_produced:
+    if not order:
         return "Order not found", 404
-    
-    # Ensure connection is closed
-    connection.close()
-    return render_template('order_detail.html', order=order_with_total_produced, show_toast=show_toast, weight_details=weight_details)
+
+    return render_template('order_detail.html', order=order, show_toast=show_toast, weight_details=weight_details)
 
 
 @app.route('/weight/<int:weight_id>/edit', methods=['GET', 'POST'])
 def edit_weight(weight_id):
-    edit_weight = request.form.get('edit_weight')
-    order_id = request.args.get('order_id')
+    weight = SalmonOrderWeight.query.filter_by(id=weight_id).first()
+    
+    if not weight:
+        return jsonify(success=False, error="Weight not found"), 404
 
     if request.method == 'POST':
-        # Update weight in the database
-        # query = "UPDATE salmon_order_weight SET quantity = %s, production_time = %s WHERE id = %s"
-        query = "UPDATE salmon_order_weight SET quantity = %s WHERE id = %s"
-        connection = db.get_connection()
-        with connection:
-            cursor = db.get_cursor(connection)
-            # cursor.execute(query, (edit_weight, datetime.now(pytz.timezone(os.environ.get('time_zone'))), weight_id))
-            cursor.execute(query, (edit_weight, weight_id))
-        # Ensure connection is closed
-        connection.close()
+        edit_val = request.form.get('edit_weight')
+        weight.quantity = edit_val
+        db.session.commit()
         return jsonify(success=True)
-
 
 @app.route('/weight/<int:weight_id>/delete', methods=['POST'])
 def delete_weight(weight_id):
-    order_id = request.args.get('order_id')  # get order_id from the URL parameters
-    query = "DELETE FROM salmon_order_weight WHERE id = %s LIMIT 1"
-    connection = db.get_connection()
-    with connection:
-        cursor = db.get_cursor(connection)
-        cursor.execute(query, (weight_id,))
-    # Ensure connection is closed
-    connection.close()
-    return redirect(url_for('order_detail', order_id=order_id))
+    weight = SalmonOrderWeight.query.filter_by(id=weight_id).first()
+    
+    if not weight:
+        return "Weight not found", 404
+
+    db.session.delete(weight)
+    db.session.commit()
+
+    return redirect(url_for('order_detail', order_id=weight.order_id))
+
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000)
