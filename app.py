@@ -56,7 +56,6 @@ class SalmonOrderWeight(db.Model):
     production_time = db.Column(db.DateTime)
 
 
-
 # Routes
 @app.route('/emit_print_event', methods=['POST'])
 def emit_print():

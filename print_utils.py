@@ -5,7 +5,9 @@ from jinja2 import Environment, FileSystemLoader
 from html2image import Html2Image
 from PIL import Image
 import shutil
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
+
 import hashlib
 import random
 import string
@@ -27,7 +29,8 @@ db_config = {
 
 DATABASE_URL = f"mysql://{os.environ.get('db_user')}:{os.environ.get('db_password')}@{os.environ.get('db_host')}:{os.environ.get('db_port')}/{os.environ.get('db_name')}"
 engine = create_engine(DATABASE_URL)
-
+Session = sessionmaker(bind=engine)
+session = Session()
 
 def print_zebra(zpl_data=None, printer_name='zebra'):
     # Open the printer
@@ -113,7 +116,7 @@ def pdf_render_print(order_id, folder_path="temp"):
     create_directory_if_not_exists(folder_path)
     if not order_id:
         return None
-    query = f"""
+    query = text("""
             SELECT 
                 o.id AS order_id, 
                 o.customer AS store, 
@@ -132,10 +135,14 @@ def pdf_render_print(order_id, folder_path="temp"):
             LEFT JOIN 
                 salmon_customer c ON o.customer = c.customer
             WHERE
-                o.id = {order_id};
-        """
+                o.id = :order_id;
+        """)
 
-    df = pd.read_sql(query, engine)
+    # df = pd.read_sql(query, engine)
+    result = session.execute(query, {'order_id': order_id})
+    df = pd.DataFrame(result.fetchall(), columns=result.keys())
+    session.close()
+
     df['expiry_date'] = df['date'] + pd.Timedelta(days=6)
     df['date'] = pd.to_datetime(df['date'])
     df['expiry_date'] = pd.to_datetime(df['expiry_date'])
@@ -280,3 +287,4 @@ def zebra_generator(df):
 # df = pdf_render_print(152)
 # zpl_data = zebra_generator(df)
 # print_zebra(zpl_data=zpl_data[0])
+

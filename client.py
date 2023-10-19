@@ -4,6 +4,8 @@ from print_utils import pdf_render_print
 
 sio = socketio.Client()
 
+
+
 @sio.on('print')
 def on_print(data):
     print("Received order ID:", data['order_id'])
@@ -11,3 +13,5 @@ def on_print(data):
 
 sio.connect(os.environ.get('link'))
 sio.wait()
+
+
