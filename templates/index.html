@@ -1,16 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salmon Production</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    <script src="/static/js/indexScripts.js" defer></script>
-</head>
+{% extends "base.html" %}
 
+{% block head_content %}
+    <title>Salmon Production</title>
+    <script src="/static/js/indexScripts.js" defer></script>
+{% endblock %}
+
+{% block body %}
 <body class="bg-gray-100 font-sans">
     <div class="container mx-auto p-4 md:p-12">
         <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col my-2">
@@ -72,5 +67,4 @@
         </div>
     </div>
 </body>
-
-</html>
+{% endblock %}

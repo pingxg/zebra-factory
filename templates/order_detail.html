@@ -1,25 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salmon Production</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+{% extends "base.html" %}
+
+{% block head_content %}
+    <title>Order Details</title>
     <link rel="stylesheet" href="/static/css/orderDetailsStyles.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script src="/static/js/orderDetailsScripts.js" defer></script>
 
     {% if show_toast %}
-    <script>
-        window.onload = function() {
-            showToast();
-        };
-    </script>
+        <script>
+            window.onload = function() {
+                showToast();
+            };
+        </script>
     {% endif %}
-
+    
     <script>
         function emitPrintEvent() {
             const orderId = "{{ order[0][0] }}";  // Extract order_id from the Jinja2 template
@@ -41,9 +34,9 @@
             });
         }
     </script>
-</head>
+{% endblock %}
 
-
+{% block body %}
 <body>
     <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 p-4 bg-gradient-to-r from-indigo-400 to-blue-400 text-white rounded-lg shadow-xl opacity-0 transition-all duration-500 ease-in-out max-w-xs w-full">
         <i class="fas fa-check-circle mr-2"></i> Added successfully!
@@ -57,7 +50,6 @@
         <i class="fas fa-check-circle mr-2"></i> Print Successful!
         <button id="printToastClose" class="absolute top-1/2 right-4 transform -translate-y-1/2 text-2xl leading-none hover:text-gray-100">&times;</button>
     </div>
-
 
     <div class="container mx-auto p-4 md:p-12">
         <div href="/" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col my-2">
@@ -200,6 +192,5 @@
         </div>
     </div>
     
-    
 </body>
-</html>
+{% endblock %}
