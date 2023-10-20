@@ -40,7 +40,8 @@ def print_zebra(zpl_data=None, printer_name='zebra'):
         pdc = win32print.StartDocPrinter(hprinter, 1, ("ZPL Document", None, "RAW"))
 
         # Send raw data to the printer
-        win32print.WritePrinter(hprinter, zpl_data.encode('cp1252'))
+        # win32print.WritePrinter(hprinter, zpl_data.encode('cp1252'))
+        win32print.WritePrinter(hprinter, zpl_data.encode('utf-8'))
 
         # End the print job
         win32print.EndDocPrinter(hprinter)
@@ -231,7 +232,7 @@ def zebra_generator(df):
 
     ; Add temperature
     ^FO30,315^A0N,20,20^FDSäilytys/ Förvaring^FS
-    ^FO30,360^A0N,30,30^FD0 -3 °C^FS
+    ^FO30,360^A0N,30,30^FD0°C - +3°C^FS
 
     ; Add an Expiration date
     ^FO240,315^A0N,20,20^FDViimeinen käyttöpäivä^FS
