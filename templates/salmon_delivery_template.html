@@ -287,8 +287,8 @@
                 <tr>
                     <td>{{ product }}</td>
                     <td>{{ weight }}</td>
-                    <td>{{ price }}</td>
-                    <td>{{ delivered }}</td>
+                    <td>{{ "%.2f"|format(price) }}</td>
+                    <td>{{ "%.2f"|format(delivered) }}</td>
                 </tr>
             {% endif %}
         </tbody>
@@ -299,7 +299,7 @@
         <tbody>
             <tr>
                 <th >Delivered (kg)</th>
-                    <td>{{ delivered }}</td>
+                    <td>{{ "%.2f"|format(delivered) }}</td>
             </tr>
 
             <tr>
