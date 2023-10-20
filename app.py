@@ -57,12 +57,20 @@ class SalmonOrderWeight(db.Model):
 
 
 # Routes
-@app.route('/emit_print_event', methods=['POST'])
-def emit_print():
+@app.route('/emit_print_zebra', methods=['POST'])
+def emit_print_zebra():
     data = request.json
     order_id = data.get('order_id')
-    socketio.emit('print', {'order_id': order_id})
-    return jsonify({'status': 'Print event emitted'})
+    socketio.emit('print_zebra', {'order_id': order_id})
+    return jsonify({'status': 'Print zebra event emitted'})
+
+# Routes
+@app.route('/emit_print_pdf', methods=['POST'])
+def emit_print_pdf():
+    data = request.json
+    order_id = data.get('order_id')
+    socketio.emit('print_pdf', {'order_id': order_id})
+    return jsonify({'status': 'Print pdf event emitted'})
 
 
 

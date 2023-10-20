@@ -14,9 +14,9 @@
     {% endif %}
     
     <script>
-        function emitPrintEvent() {
+        function emitPrintZebra() {
             const orderId = "{{ order.id }}";  // Extract order_id from the Jinja2 template
-            fetch('/emit_print_event', {
+            fetch('/emit_print_zebra', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -25,14 +25,34 @@
             })
             .then(response => response.json())
             .then(data => {
-                if(data.status === 'Print event emitted') {
-                    console.log("Print event successfully emitted");
+                if(data.status === 'Print event (Zebra) emitted') {
+                    console.log("Print event (Zebra) successfully emitted");
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
             });
         }
+        function emitPrintPdf() {
+            const orderId = "{{ order.id }}";  // Extract order_id from the Jinja2 template
+            fetch('/emit_print_pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ order_id: orderId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'Print event (PDF) emitted') {
+                    console.log("Print event (PDF) successfully emitted");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
     </script>
 {% endblock %}
 
@@ -150,13 +170,19 @@
                     Add Reading
                 </button>
 
-                <!-- "Print" Button -->
-                <button type="button" onclick="showPrintToast(); emitPrintEvent();"
-                        class="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-4 rounded-lg w-full transition duration-300 ease-in-out transform {{ 'opacity-50 cursor-not-allowed' if order.total_produced < order.quantity|float*0.9 else 'hover:from-green-600 hover:to-green-700' }}" 
+                <!-- "Print Label" Button -->
+                <button type="button" onclick="showPrintToast(); emitPrintZebra();"
+                        class="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-4 rounded-lg w-full transition duration-300 ease-in-out transform mb-3  {{ 'opacity-50 cursor-not-allowed' if order.total_produced < order.quantity|float*0.9 else 'hover:from-green-600 hover:to-green-700' }}" 
                         {{ 'disabled' if order.total_produced < order.quantity|float*0.9 else '' }}>
-                    Print
+                    Print Label
                 </button>
 
+                <!-- "Print Delivery Note" Button -->
+                <button type="button" onclick="showPrintToast(); emitPrintPdf();"
+                        class="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-4 rounded-lg w-full transition duration-300 ease-in-out transform  mb-3 {{ 'opacity-50 cursor-not-allowed' if order.total_produced < order.quantity|float*0.9 else 'hover:from-green-600 hover:to-green-700' }}" 
+                        {{ 'disabled' if order.total_produced < order.quantity|float*0.9 else '' }}>
+                    Print Delivery Note
+                </button>
             </form>
         </div>
     </div>

@@ -21,18 +21,32 @@ def on_disconnect():
     """Callback for when the client disconnects from the server."""
     logger.info("Disconnected from the server.")
 
-@sio.on('print')
+@sio.on('print_zebra')
 def on_print(data):
-    """Callback for handling 'print' events from the server."""
+    """Callback for handling 'print_zebra' events from the server."""
     order_id = data.get('order_id')
     if order_id:
-        logger.info(f"Received order ID: {order_id}")
+        logger.info(f"Received order ID: {order_id}. Printing Zebra label.")
         try:
-            pdf_render_print(order_id)
+            pdf_render_print(order_id, file_type="zpl")
         except Exception as e:
             logger.error(f"Error while processing order ID {order_id}: {e}")
     else:
-        logger.warning("Received 'print' event without order ID.")
+        logger.warning("Received 'print_zebra' event without order ID.")
+
+@sio.on('print_pdf')
+def on_print(data):
+    """Callback for handling 'print_pdf' events from the server."""
+    order_id = data.get('order_id')
+    if order_id:
+        logger.info(f"Received order ID: {order_id}. Printing PDF.")
+        try:
+            pdf_render_print(order_id, file_type="pdf")
+        except Exception as e:
+            logger.error(f"Error while processing order ID {order_id}: {e}")
+    else:
+        logger.warning("Received 'print_pdf' event without order ID.")
+
 
 @sio.on('keepalive_response')
 def on_keepalive_response():

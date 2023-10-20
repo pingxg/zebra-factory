@@ -112,7 +112,7 @@ def create_directory_if_not_exists(directory_path):
         os.makedirs(directory_path)
 
 
-def pdf_render_print(order_id, folder_path="temp"):
+def pdf_render_print(order_id, file_type, folder_path="temp"):
     create_directory_if_not_exists(folder_path)
     if not order_id:
         return None
@@ -151,29 +151,31 @@ def pdf_render_print(order_id, folder_path="temp"):
                 delivery_note_data[column] = round(df[column].sum(),2)
             else:
                 delivery_note_data[column] = df[column].iloc[0]
+        if file_type =="pdf":
+            env = Environment(loader=FileSystemLoader('.'))
+            template = env.get_template('templates/salmon_delivery_template.html')
+            rendered_html = template.render(delivery_note_data)
+            hti = Html2Image(
+                size=(2142, 3000),
+                # custom_flags=['--no-sandbox', '--headless', '--disable-gpu', '--disable-software-rasterizer', '--disable-dev-shm-usage'],
+                output_path=folder_path
+                )
+            # hti.browser_executable = "/usr/bin/google-chrome"
+            random_hash = generate_random_hash()
+            image_name = f'{random_hash}.png'
+            image_path = f'{folder_path}/{image_name}'
+            hti.screenshot(html_str=rendered_html, save_as=image_name)
+            images_to_pdf(image_path, output_dir='temp', repetition=2)
+            if os.path.isfile(os.path.join(folder_path, f"{random_hash}.pdf")):
+                print_document(os.path.join(folder_path, f"{random_hash}.pdf"))
 
-        env = Environment(loader=FileSystemLoader('.'))
-        template = env.get_template('templates/salmon_delivery_template.html')
-        rendered_html = template.render(delivery_note_data)
-        hti = Html2Image(
-            size=(2142, 3000),
-            # custom_flags=['--no-sandbox', '--headless', '--disable-gpu', '--disable-software-rasterizer', '--disable-dev-shm-usage'],
-            output_path=folder_path
-            )
-        # hti.browser_executable = "/usr/bin/google-chrome"
-        random_hash = generate_random_hash()
-        image_name = f'{random_hash}.png'
-        image_path = f'{folder_path}/{image_name}'
-        hti.screenshot(html_str=rendered_html, save_as=image_name)
-        images_to_pdf(image_path, output_dir='temp', repetition=2)
-        if os.path.isfile(os.path.join(folder_path, f"{random_hash}.pdf")):
-            print_document(os.path.join(folder_path, f"{random_hash}.pdf"))
+                pass
+        if file_type =="zpl":
             zebra_print_list = zebra_generator(df)
             for i in zebra_print_list:
                 print_zebra(zpl_data=i)
-            pass
         else:
-            print(f"Print failed due to unable to generate PDF file.")
+            print(f"Print failed due to unable to generate file.")
 
     except Exception as e:
         # If there's any error, rollback the session
