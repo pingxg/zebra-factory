@@ -4,9 +4,11 @@ from datetime import date, datetime
 from collections import defaultdict
 
 # Third-party Libraries
-from flask import Flask, render_template, request, jsonify, redirect, session, url_for
+from flask import Flask, render_template, request, jsonify, redirect, session, url_for, flash
 from flask_socketio import SocketIO, emit
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import check_password_hash
 from sqlalchemy import func
 
 import pytz
@@ -14,9 +16,15 @@ from dotenv import load_dotenv
 
 # Configuration
 load_dotenv()  # Load environment variables from .env
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 app.config['SECRET_KEY'] = os.environ.get('secret_key')
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
 
 # Custom Jinja2 Filters
 app.jinja_env.filters['float'] = float
@@ -32,6 +40,15 @@ app.config['SQLALCHEMY_POOL_TIMEOUT'] = 10
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+
+
+class User(UserMixin, db.Model):
+    __tablename__ = "user"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String, unique=True)
+    password = db.Column(db.String)
+
 
 
 class SalmonOrder(db.Model):
@@ -56,8 +73,47 @@ class SalmonOrderWeight(db.Model):
     production_time = db.Column(db.DateTime)
 
 
+
+
+
 # Routes
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+
+        # Check if user exists and password is correct
+        if user and user.password == password:  # Note: In a real-world scenario, use a hashing method instead of plain text comparison
+            login_user(user)
+            return redirect(url_for('index'))
+        # if user and check_password_hash(user.password, password):
+        #     login_user(user)
+        #     return redirect(url_for('index'))
+        else:
+            flash("Invalid email or password.", 'danger')
+            return redirect(url_for('login'))
+
+
+        # return "Invalid login credentials", 401
+
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+
 @app.route('/emit_print_zebra', methods=['POST'])
+@login_required
 def emit_print_zebra():
     data = request.json
     order_id = data.get('order_id')
@@ -66,6 +122,7 @@ def emit_print_zebra():
 
 # Routes
 @app.route('/emit_print_pdf', methods=['POST'])
+@login_required
 def emit_print_pdf():
     data = request.json
     order_id = data.get('order_id')
@@ -75,6 +132,7 @@ def emit_print_pdf():
 
 
 @app.route('/', methods=['GET', 'POST'])
+@login_required
 def index():
     selected_date = request.form.get('selected_date', date.today())  # Default to today's date
     order_details = None
@@ -107,6 +165,7 @@ def index():
 
 
 @app.route('/order/<int:order_id>', methods=['GET', 'POST'])
+@login_required
 def order_detail(order_id):
     if request.method == 'POST':
         scale_reading = float(request.form['scale_reading'])
@@ -151,6 +210,7 @@ def order_detail(order_id):
 
 
 @app.route('/weight/<int:weight_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_weight(weight_id):
     weight = SalmonOrderWeight.query.filter_by(id=weight_id).first()
     
@@ -164,6 +224,7 @@ def edit_weight(weight_id):
         return jsonify(success=True)
 
 @app.route('/weight/<int:weight_id>/delete', methods=['POST'])
+@login_required
 def delete_weight(weight_id):
     weight = SalmonOrderWeight.query.filter_by(id=weight_id).first()
     

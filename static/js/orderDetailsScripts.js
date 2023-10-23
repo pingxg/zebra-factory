@@ -49,6 +49,7 @@ function showErrorToast() {
         toast.style.transform = 'translate(-50%, -100%)';
     }, 3000);  // Toast will be visible for 3 seconds
 }
+
 function showPrintToast() {
     const toast = document.getElementById('printToast');
     const closeBtn = document.getElementById('printToastClose');
