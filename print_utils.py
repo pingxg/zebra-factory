@@ -274,10 +274,3 @@ def zebra_generator(df):
         zpl_labels.append(zpl_label)
 
     return zpl_labels
-
-
-
-# df = pdf_render_print(152)
-# zpl_data = zebra_generator(df)
-# print_zebra(zpl_data=zpl_data[0])
-

@@ -138,3 +138,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+function showDeleteConfirmation(deleteUrl) {
+    // Set the form's action to the provided delete URL
+    document.getElementById('deleteForm').action = deleteUrl;
+    
+    // Show the delete confirmation modal
+    document.getElementById('deleteConfirmationModal').classList.remove('hidden');
+}
+
+document.getElementById('cancelDelete').addEventListener('click', function() {
+    // Hide the delete confirmation modal
+    document.getElementById('deleteConfirmationModal').classList.add('hidden');
+});

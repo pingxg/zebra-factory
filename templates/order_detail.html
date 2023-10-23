@@ -142,12 +142,15 @@
                             </form>
 
                             <!-- Delete Button -->
-                            <form action="{{ url_for('delete_weight', weight_id=weight[0], order_id=order.id) }}" method="post" class="inline-block">
+                            <!-- <form action="{{ url_for('delete_weight', weight_id=weight[0], order_id=order.id) }}" method="post" class="inline-block">
                                 <button type="submit" title="Delete" class="flex items-center p-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-full hover:from-red-500 hover:to-red-600 transition duration-300 ease-in-out">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
-                            </form>
-                            
+                            </form> -->
+                            <button title="Delete" class="flex items-center p-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-full hover:from-red-500 hover:to-red-600 transition duration-300 ease-in-out" onclick="showDeleteConfirmation('{{ url_for('delete_weight', weight_id=weight[0], order_id=order.id) }}');">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+
                         </div>
                     </div>
                 {% endfor %}
@@ -217,6 +220,35 @@
             </div>
         </div>
     </div>
+
+
+    <div id="deleteConfirmationModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Are you sure    to delete?
+                    </h3>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse sm:space-x-reverse sm:space-x-4"> <!-- Add flex and space-x for spacing -->
+                    <form id="deleteForm" action="" method="post" class="flex-1"> <!-- Make this flex-1 to take up equal width -->
+                        <button type="submit" class="w-full sm:w-auto mt-3 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:mt-0">
+                            Delete
+                        </button>
+                    </form>
+                    <button type="button" id="cancelDelete" class="flex-1 w-full sm:w-auto mt-3 inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0">
+                        Cancel
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
     
+
 </body>
 {% endblock %}
