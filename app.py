@@ -1,6 +1,6 @@
 # Standard Libraries
 import os
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from collections import defaultdict
 
 # Third-party Libraries
@@ -39,6 +39,9 @@ app.config['SQLALCHEMY_POOL_SIZE'] = 15
 app.config['SQLALCHEMY_POOL_TIMEOUT'] = 10
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=30)
+
+
 db = SQLAlchemy(app)
 
 
@@ -48,6 +51,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String, unique=True)
     password = db.Column(db.String)
+    name = db.Column(db.String)
 
 
 
@@ -90,18 +94,17 @@ def login():
         user = User.query.filter_by(email=email).first()
 
         # Check if user exists and password is correct
-        if user and user.password == password:  # Note: In a real-world scenario, use a hashing method instead of plain text comparison
-            login_user(user)
+        # if user and user.password == password:  # Note: In a real-world scenario, use a hashing method instead of plain text comparison
+        if user and check_password_hash(user.password, password):
+            remember_me = False
+            if 'remember' in request.form:
+                remember_me = True
+                login_user(user, remember=remember_me)
             return redirect(url_for('index'))
-        # if user and check_password_hash(user.password, password):
-        #     login_user(user)
-        #     return redirect(url_for('index'))
+
         else:
             flash("Invalid email or password.", 'danger')
             return redirect(url_for('login'))
-
-
-        # return "Invalid login credentials", 401
 
     return render_template('login.html')
 
