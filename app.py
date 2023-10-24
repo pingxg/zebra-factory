@@ -7,10 +7,9 @@ from collections import defaultdict
 from flask import Flask, render_template, request, jsonify, redirect, session, url_for, flash
 from flask_socketio import SocketIO, emit
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from werkzeug.security import check_password_hash
 from sqlalchemy import func
-
 import pytz
 from dotenv import load_dotenv
 
