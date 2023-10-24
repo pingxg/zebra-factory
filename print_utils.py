@@ -18,16 +18,16 @@ load_dotenv()  # take environment variables from .env.
 
 # Setup MySQL connection
 db_config = {
-    'user': os.environ.get('db_user'),
-    'password': os.environ.get('db_password'),
-    'host': os.environ.get('db_host'),
-    'database': os.environ.get('db_name'),
-    'port': os.environ.get('db_port'),
+    'user': os.environ.get('DB_USER'),
+    'password': os.environ.get('DB_PASSWORD'),
+    'host': os.environ.get('DB_HOST'),
+    'database': os.environ.get('DB_NAME'),
+    'port': os.environ.get('DB_PORT'),
     'autocommit':True,
 }
 
 
-DATABASE_URL = f"mysql://{os.environ.get('db_user')}:{os.environ.get('db_password')}@{os.environ.get('db_host')}:{os.environ.get('db_port')}/{os.environ.get('db_name')}"
+DATABASE_URL = f"mysql://{os.environ.get('DB_USER')}:{os.environ.get('DB_PASSWORD')}@{os.environ.get('DB_HOST')}:{os.environ.get('DB_PORT')}/{os.environ.get('DB_NAME')}"
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 session = Session()
