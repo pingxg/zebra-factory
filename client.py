@@ -61,7 +61,7 @@ def keepalive_loop():
 
 def main():
     """Main function to start the client."""
-    link = os.environ.get('link')
+    link = os.environ.get('LINK')
     if not link:
         logger.error("Environment variable 'link' not set.")
         return

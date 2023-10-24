@@ -16,7 +16,7 @@
 # # Configuration
 # load_dotenv()  # Load environment variables from .env
 # app = Flask(__name__, template_folder='templates')
-# app.config['SECRET_KEY'] = os.environ.get('secret_key')
+# app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 # socketio = SocketIO(app, cors_allowed_origins="*")
 
 

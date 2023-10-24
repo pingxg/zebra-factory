@@ -111,7 +111,7 @@ def order_detail(order_id):
         scale_reading = float(request.form['scale_reading'])
         weight = SalmonOrderWeight(order_id=order_id, 
                                     quantity=scale_reading, 
-                                    production_time=datetime.now(pytz.timezone(os.environ.get('time_zone'))))
+                                    production_time=datetime.now(pytz.timezone(os.environ.get('TIMEZONE'))))
         db.session.add(weight)
         db.session.commit()
         session['show_toast'] = True
