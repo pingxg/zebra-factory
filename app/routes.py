@@ -34,6 +34,8 @@ def login():
                 if 'remember' in request.form:
                     remember_me = True
                     login_user(user, remember=remember_me)
+                else:
+                    login_user(user)
                 return redirect(url_for('main.index'))
 
             else:

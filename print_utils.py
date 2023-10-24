@@ -154,7 +154,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 delivery_note_data[column] = df[column].iloc[0]
         if file_type =="pdf":
             env = Environment(loader=FileSystemLoader('.'))
-            template = env.get_template('templates/salmon_delivery_template.html')
+            template = env.get_template('app/templates/salmon_delivery_template.html')
             rendered_html = template.render(delivery_note_data)
             hti = Html2Image(
                 size=(2142, 3000),
@@ -171,7 +171,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 print_document(os.path.join(folder_path, f"{random_hash}.pdf"))
 
                 pass
-        if file_type =="zpl":
+        elif file_type =="zpl":
             zebra_print_list = zebra_generator(df)
             for i in zebra_print_list:
                 print_zebra(zpl_data=i)
