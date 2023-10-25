@@ -31,7 +31,8 @@ def login():
             # Check if user exists and password is correct
             if user and check_password_hash(user.password, password):
                 remember_me = False
-                if 'remember' in request.form:
+                print(request.form.get('remember'))
+                if 'remember' in request.form and request.form.get('remember') =="on":
                     remember_me = True
                     login_user(user, remember=remember_me)
                 else:
