@@ -144,8 +144,11 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
         df['expiry_date'] = df['date'] + pd.Timedelta(days=6)
         df['date'] = pd.to_datetime(df['date'])
         df['expiry_date'] = pd.to_datetime(df['expiry_date'])
+        df['date_z'] = df['date'].dt.strftime("%Y.%m.%d")
+        df['expiry_date_z'] = df['expiry_date'].dt.strftime("%Y.%m.%d")
         df['date'] = df['date'].dt.strftime("%Y.%m.%d, %a")
         df['expiry_date'] = df['expiry_date'].dt.strftime("%Y.%m.%d, %a")
+
         delivery_note_data = {}
         for column in df.columns:
             if column == 'delivered' and len(df)>1:
@@ -237,7 +240,7 @@ def zebra_generator(df):
     ; Add an Expiration date
     ^FO240,315^A0N,20,20^FDViimeinen käyttöpäivä^FS
     ^FO240,335^A0N,20,20^FD/ Sista förbrukningsdag^FS
-    ^FO240,360^A0N,30,30^FD{expiry_date}^FS
+    ^FO240,360^A0N,20,20^FD{date_z}-{expiry_date_z}^FS
 
 
     ; Add net weight
@@ -267,8 +270,10 @@ def zebra_generator(df):
             address=row['address'],
             phone=row['phone'],
             date=row['date'],
+            date_z=row['date_z'],
             product=row['product'],
             expiry_date=row['expiry_date'],
+            expiry_date_z=row['expiry_date_z'],
             delivered=row['delivered']
         )
         zpl_labels.append(zpl_label)
