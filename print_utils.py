@@ -8,6 +8,7 @@ import shutil
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+
 import hashlib
 import random
 import string
@@ -32,7 +33,7 @@ engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-def print_zebra(zpl_data=None, printer_name='zebra'):
+def print_zebra(zpl_data=None, printer_name=os.environ.get('ZEBRA_PRINTER_NAME')):
     # Open the printer
     hprinter = win32print.OpenPrinter(printer_name)
     try:
@@ -50,15 +51,19 @@ def print_zebra(zpl_data=None, printer_name='zebra'):
 
 
 
-def print_document(pdf_path, printer_name="EPSON25CEF5 (ET-2810 Series)"):
+def print_document(pdf_path, printer_name=os.environ.get('DEFAULT_PRINTER_NAME')):
     # Path to Adobe Reader or Adobe Acrobat. Adjust if it's located differently on your system.
-    acrobat_path = "C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe"
+    acrobat_path = os.environ.get('ACROBAT_PATH')
 
     # Command to send to the shell
     cmd = f'"{acrobat_path}" /N /T "{pdf_path}" "{printer_name}"'
 
     win32api.WinExec(cmd)
 
+# def print_document(pdf_path, printer_name="EPSON25CEF5 (ET-2810 Series)"):
+#     if not printer_name:
+#         printer_name = win32print.GetDefaultPrinter()
+#     win32api.ShellExecute(0, "print", pdf_path, f'/{printer_name}', ".", 0)
 
 
 def random_string(length=10):
@@ -164,11 +169,14 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 # custom_flags=['--no-sandbox', '--headless', '--disable-gpu', '--disable-software-rasterizer', '--disable-dev-shm-usage'],
                 output_path=folder_path
                 )
-            # hti.browser_executable = "/usr/bin/google-chrome"
+            # hti.browser_executable = "chromedriver.exe"
             random_hash = generate_random_hash()
             image_name = f'{random_hash}.png'
             image_path = f'{folder_path}/{image_name}'
-            hti.screenshot(html_str=rendered_html, save_as=image_name)
+            hti.screenshot(
+                html_str=rendered_html,
+                save_as=image_name,
+                )
             images_to_pdf(image_path, output_dir='temp', repetition=2)
             if os.path.isfile(os.path.join(folder_path, f"{random_hash}.pdf")):
                 print_document(os.path.join(folder_path, f"{random_hash}.pdf"))
