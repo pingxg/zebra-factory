@@ -41,7 +41,8 @@ def print_zebra(zpl_data=None, printer_name='zebra'):
 
         # Send raw data to the printer
         # win32print.WritePrinter(hprinter, zpl_data.encode('cp1252'))
-        win32print.WritePrinter(hprinter, zpl_data.encode('utf-8'))
+        # win32print.WritePrinter(hprinter, zpl_data.encode('utf-8'))
+        win32print.WritePrinter(hprinter, zpl_data.encode())
 
         # End the print job
         win32print.EndDocPrinter(hprinter)
@@ -196,6 +197,9 @@ def zebra_generator(df):
     zpl_template_x99_y63 = """
     ; Start of label
     ^XA
+
+    ; Set UTF-8 Character Encoding
+    ^CI28
 
     ; Draw the producer identifier
     ^FO230,110^GFA,1387,1387,19,,::::::::::S03MFC,:Q01FFM0FF8,P01F8O01F8,P0FCQ03F,O07CS03E,N07CU01F,M03CW01C,M0FM01F2O07,L018M0102O01C,L07N0102P06,K018N0102P018,K06O01F2Q06,K0EO01F2Q03,J018O0102Q018,J03P0102R0C,J06P0102R02,J0CP0102R01,I018gK018,I03gM0C,:I06gM06,I04gM02,I04O03018783CP03,I04O070188C46P03,I04O0502804C6P03,I04O010480I4P03,I04O010880838P03,I04O01188183CP03,I04O0110830C6P03,I04O011FC6082P02,I02O01008C0C6P06,I03O07C08FC7CP0C,I018gL08,I018gK018,J0CgK01,J06gK06,J03P07E84Q0C,J01CO04084P018,K0EO04084P03,K03O04048P0E,K01CN07878O038,L038M0403P0C,M0CM0403O038,M078L0403O0E,M01CL0403N078,N03EK07C3M07E,O03FS07E,P03EQ07E,Q07FO0FE,R07FEK03FE,T07KFE,,:::::::::^FS
