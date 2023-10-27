@@ -61,11 +61,6 @@ def print_document(pdf_path, printer_name=os.environ.get('DEFAULT_PRINTER_NAME')
 
     win32api.WinExec(cmd)
 
-# def print_document(pdf_path, printer_name="EPSON25CEF5 (ET-2810 Series)"):
-#     if not printer_name:
-#         printer_name = win32print.GetDefaultPrinter()
-#     win32api.ShellExecute(0, "print", pdf_path, f'/{printer_name}', ".", 0)
-
 
 def random_string(length=10):
     characters = string.ascii_letters + string.digits
@@ -75,7 +70,6 @@ def generate_random_hash():
     random_data = random_string()
     result = hashlib.sha256(random_data.encode()).hexdigest()
     return result
-
 
 
 def images_to_pdf(img_path, output_dir='temp', repetition=1):
