@@ -241,12 +241,12 @@ def zebra_generator(df):
 
     ; Add temperature
     ^FO30,315^A0N,20,20^FDSäilytys/ Förvaring^FS
-    ^FO30,360^A0N,30,30^FD0°C - +3°C^FS
+    ^FO30,360^A0N,30,30^FD{temperature_info}^FS
 
     ; Add an Expiration date
     ^FO240,315^A0N,20,20^FDViimeinen käyttöpäivä^FS
     ^FO240,335^A0N,20,20^FD/ Sista förbrukningsdag^FS
-    ^FO240,360^A0N,20,20^FD{date_z}-{expiry_date_z}^FS
+    ^FO240,360^A0N,20,20^FD{expiry_info}^FS
 
 
     ; Add net weight
@@ -270,6 +270,13 @@ def zebra_generator(df):
     zpl_labels = []
 
     for _, row in df.iterrows():
+        if 'Frozen' in row['product']:
+            temperature_info = "-20°C"
+            expiry_info = f"{row['date_z']}"
+        else:
+            temperature_info = "0°C - +3°C"
+            expiry_info = f"{row['date_z']}-{row['expiry_date_z']}"
+
         zpl_label = zpl_template_x99_y63.format(
             order_id=row['order_id'],
             store=row['store'],
@@ -280,7 +287,10 @@ def zebra_generator(df):
             product=row['product'],
             expiry_date=row['expiry_date'],
             expiry_date_z=row['expiry_date_z'],
-            delivered=row['delivered']
+            delivered=row['delivered'],
+            temperature_info=temperature_info,
+            expiry_info=expiry_info,
+
         )
         zpl_labels.append(zpl_label)
 
