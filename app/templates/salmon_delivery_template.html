@@ -319,10 +319,12 @@
                 <th >Production date</th>
                 <td>{{ date }}</td>
             </tr>
+            {% if "Frozen" not in product %}
             <tr>
                 <th >Expiry date (+6 days)</th>
                 <td>{{ expiry_date }}</td>
             </tr>
+            {% endif %}
             <tr>
                 <th>Country of origin</th>
                 <td>Norway</td>
