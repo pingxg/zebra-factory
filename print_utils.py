@@ -276,7 +276,6 @@ def zebra_generator(df):
     ^XZ  
     """
     zpl_labels = []
-
     for _, row in df.iterrows():
         if 'Frozen' in row['product']:
             temperature_info = "-18°C"
@@ -297,5 +296,4 @@ def zebra_generator(df):
             expiry_info=expiry_info,
         )
         zpl_labels.append(zpl_label)
-
     return zpl_labels
