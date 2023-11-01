@@ -322,7 +322,12 @@
             {% if "Frozen" not in product %}
             <tr>
                 <th >Expiry date (+6 days)</th>
-                <td>{{ expiry_date }}</td>
+                <td>{{ expiry_date_fresh }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <th >Expiry date (+90 days)</th>
+                <td>{{ expiry_date_frozen }}</td>
             </tr>
             {% endif %}
             <tr>

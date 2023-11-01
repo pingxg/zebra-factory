@@ -143,13 +143,19 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
         df = pd.DataFrame(result.fetchall(), columns=result.keys())
         df['expiry_date_fresh'] = df['date'] + pd.Timedelta(days=6)
         df['expiry_date_frozen'] = df['date'] + pd.Timedelta(days=90)
+
         df['date'] = pd.to_datetime(df['date'])
         df['expiry_date_fresh'] = pd.to_datetime(df['expiry_date_fresh'])
+        df['expiry_date_frozen'] = pd.to_datetime(df['expiry_date_frozen'])
+
         df['date_z'] = df['date'].dt.strftime("%Y.%m.%d")
-        df['expiry_date_z_fresh'] = df['expiry_date_fresh'].dt.strftime("%Y.%m.%d")
-        df['expiry_date_frozen'] = df['expiry_date_frozen'].dt.strftime("%Y.%m.%d")
         df['date'] = df['date'].dt.strftime("%Y.%m.%d, %a")
-        df['expiry_date'] = df['expiry_date'].dt.strftime("%Y.%m.%d, %a")
+        
+        df['expiry_date_z_fresh'] = df['expiry_date_fresh'].dt.strftime("%Y.%m.%d")
+        df['expiry_date_fresh'] = df['expiry_date'].dt.strftime("%Y.%m.%d, %a")
+
+        df['expiry_date_z_frozen'] = df['expiry_date_frozen'].dt.strftime("%Y.%m.%d")
+        df['expiry_date_frozen'] = df['expiry_date_frozen'].dt.strftime("%Y.%m.%d, %a")
 
         delivery_note_data = {}
         for column in df.columns:
@@ -285,17 +291,10 @@ def zebra_generator(df):
         zpl_label = zpl_template_x99_y63.format(
             order_id=row['order_id'],
             store=row['store'],
-            address=row['address'],
-            phone=row['phone'],
-            date=row['date'],
-            date_z=row['date_z'],
             product=product_name,
-            expiry_date=row['expiry_date_fresh'],
-            expiry_date_z=row['expiry_date_z_fresh'],
             delivered=row['delivered'],
             temperature_info=temperature_info,
             expiry_info=expiry_info,
-
         )
         zpl_labels.append(zpl_label)
 
