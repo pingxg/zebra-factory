@@ -281,7 +281,7 @@ def zebra_generator(df):
         if 'Frozen' in row['product']:
             temperature_info = "-18°C"
             expiry_info = f"{row['expiry_date_z_frozen']}"
-            product_name = f"{row['product'].str.replace('Lohi ','')}"
+            product_name = f"{row['product'].replace('Lohi ','')}"
         else:
             temperature_info = "0°C - +3°C"
             expiry_info = f"{row['date_z']}-{row['expiry_date_z_fresh']}"
