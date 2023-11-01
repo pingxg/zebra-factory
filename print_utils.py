@@ -141,11 +141,13 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
     try:
         result = session.execute(query, {'order_id': order_id})
         df = pd.DataFrame(result.fetchall(), columns=result.keys())
-        df['expiry_date'] = df['date'] + pd.Timedelta(days=6)
+        df['expiry_date_fresh'] = df['date'] + pd.Timedelta(days=6)
+        df['expiry_date_frozen'] = df['date'] + pd.Timedelta(days=90)
         df['date'] = pd.to_datetime(df['date'])
-        df['expiry_date'] = pd.to_datetime(df['expiry_date'])
+        df['expiry_date_fresh'] = pd.to_datetime(df['expiry_date_fresh'])
         df['date_z'] = df['date'].dt.strftime("%Y.%m.%d")
-        df['expiry_date_z'] = df['expiry_date'].dt.strftime("%Y.%m.%d")
+        df['expiry_date_z_fresh'] = df['expiry_date_fresh'].dt.strftime("%Y.%m.%d")
+        df['expiry_date_frozen'] = df['expiry_date_frozen'].dt.strftime("%Y.%m.%d")
         df['date'] = df['date'].dt.strftime("%Y.%m.%d, %a")
         df['expiry_date'] = df['expiry_date'].dt.strftime("%Y.%m.%d, %a")
 
@@ -271,11 +273,14 @@ def zebra_generator(df):
 
     for _, row in df.iterrows():
         if 'Frozen' in row['product']:
-            temperature_info = "-20°C"
-            expiry_info = f"{row['date_z']}"
+            temperature_info = "-18°C"
+            expiry_info = f"{row['expiry_date_frozen']}"
+            product_name = f"{row['product'].str.replace('Lohi ','')}"
         else:
             temperature_info = "0°C - +3°C"
-            expiry_info = f"{row['date_z']}-{row['expiry_date_z']}"
+            expiry_info = f"{row['date_z']}-{row['expiry_date_z_fresh']}"
+            product_name = f"{row['product']}"
+
 
         zpl_label = zpl_template_x99_y63.format(
             order_id=row['order_id'],
@@ -284,9 +289,9 @@ def zebra_generator(df):
             phone=row['phone'],
             date=row['date'],
             date_z=row['date_z'],
-            product=row['product'],
-            expiry_date=row['expiry_date'],
-            expiry_date_z=row['expiry_date_z'],
+            product=product_name,
+            expiry_date=row['expiry_date_fresh'],
+            expiry_date_z=row['expiry_date_z_fresh'],
             delivered=row['delivered'],
             temperature_info=temperature_info,
             expiry_info=expiry_info,
