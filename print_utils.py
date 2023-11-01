@@ -187,7 +187,10 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 pass
         elif file_type =="zpl":
             zebra_print_list = zebra_generator(df)
+            print(zebra_print_list)
+            print(len(zebra_print_list))
             for i in zebra_print_list:
+                print(i)
                 print_zebra(zpl_data=i)
         else:
             print(f"Print failed due to unable to generate file.")
@@ -285,7 +288,6 @@ def zebra_generator(df):
             temperature_info = "0°C - +3°C"
             expiry_info = f"{row['date_z']}-{row['expiry_date_z_fresh']}"
             product_name = f"{row['product']}"
-
 
         zpl_label = zpl_template_x99_y63.format(
             order_id=row['order_id'],
