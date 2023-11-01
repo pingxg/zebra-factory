@@ -4,7 +4,7 @@ from werkzeug.security import check_password_hash
 from .models import User, SalmonOrder, SalmonOrderWeight
 from . import db, login_manager, socketio
 import os
-from datetime import date, datetime
+from datetime import datetime, timedelta
 from collections import defaultdict
 from sqlalchemy import func
 import pytz
@@ -77,7 +77,8 @@ def emit_print_pdf():
 @bp.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
-    selected_date = request.form.get('selected_date', date.today())  # Default to today's date
+    # selected_date = request.form.get('selected_date', (datetime.today() + timedelta(days=1)).date())  # Default to today's date
+    selected_date = request.form.get('selected_date') or request.args.get('selected_date', (datetime.today() + timedelta(days=1)).date())
     order_details = None
     if selected_date:
         order_details = (
