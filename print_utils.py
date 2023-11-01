@@ -152,7 +152,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
         df['date'] = df['date'].dt.strftime("%Y.%m.%d, %a")
         
         df['expiry_date_z_fresh'] = df['expiry_date_fresh'].dt.strftime("%Y.%m.%d")
-        df['expiry_date_fresh'] = df['expiry_date'].dt.strftime("%Y.%m.%d, %a")
+        df['expiry_date_fresh'] = df['expiry_date_fresh'].dt.strftime("%Y.%m.%d, %a")
 
         df['expiry_date_z_frozen'] = df['expiry_date_frozen'].dt.strftime("%Y.%m.%d")
         df['expiry_date_frozen'] = df['expiry_date_frozen'].dt.strftime("%Y.%m.%d, %a")
@@ -280,7 +280,7 @@ def zebra_generator(df):
     for _, row in df.iterrows():
         if 'Frozen' in row['product']:
             temperature_info = "-18°C"
-            expiry_info = f"{row['expiry_date_frozen']}"
+            expiry_info = f"{row['expiry_date_z_frozen']}"
             product_name = f"{row['product'].str.replace('Lohi ','')}"
         else:
             temperature_info = "0°C - +3°C"
