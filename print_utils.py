@@ -41,8 +41,6 @@ def print_zebra(zpl_data=None, printer_name=os.environ.get('ZEBRA_PRINTER_NAME')
         pdc = win32print.StartDocPrinter(hprinter, 1, ("ZPL Document", None, "RAW"))
 
         # Send raw data to the printer
-        # win32print.WritePrinter(hprinter, zpl_data.encode('cp1252'))
-        # win32print.WritePrinter(hprinter, zpl_data.encode('utf-8'))
         win32print.WritePrinter(hprinter, zpl_data.encode())
 
         # End the print job
@@ -73,11 +71,8 @@ def generate_random_hash():
 
 
 def images_to_pdf(img_path, output_dir='temp', repetition=1):
-
     # Create a list to store the images
     img_list = []
-
-
     img = Image.open(img_path).convert('RGB')
     
     # Append the image to the list the specified number of times
