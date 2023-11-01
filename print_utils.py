@@ -136,8 +136,6 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
     try:
         result = session.execute(query, {'order_id': order_id})
         df = pd.DataFrame(result.fetchall(), columns=result.keys())
-        print(df)
-        print(df.shape)
         df['expiry_date_fresh'] = df['date'] + pd.Timedelta(days=6)
         df['expiry_date_frozen'] = df['date'] + pd.Timedelta(days=90)
 
@@ -184,10 +182,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 pass
         elif file_type =="zpl":
             zebra_print_list = zebra_generator(df)
-            print(zebra_print_list)
-            print(len(zebra_print_list))
             for i in zebra_print_list:
-                print(i)
                 print_zebra(zpl_data=i)
         else:
             print(f"Print failed due to unable to generate file.")
@@ -200,7 +195,6 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
     finally:
         # Close the session properly
         session.close()
-
     return df
 
 def zebra_generator(df):
@@ -273,11 +267,9 @@ def zebra_generator(df):
     ^FO240,450^A0N,30,40^FD{store}^FS
 
     ; End of label
-    ^XZ  
+    ^XZ
     """
     zpl_labels = []
-    print(df.shape)
-
     for _, row in df.iterrows():
         if 'Frozen' in row['product']:
             temperature_info = "-18°C"
