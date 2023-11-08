@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for, flash
 from flask_login import login_required, logout_user, login_user
 from werkzeug.security import check_password_hash
-from .models import User, SalmonOrder, SalmonOrderWeight
+from .models import User,Customer, SalmonOrder, SalmonOrderWeight
 from . import db, login_manager, socketio
 import os
 from datetime import datetime, timedelta
@@ -77,8 +77,20 @@ def emit_print_pdf():
 @bp.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
-    # selected_date = request.form.get('selected_date', (datetime.today() + timedelta(days=1)).date())  # Default to today's date
-    selected_date = request.form.get('selected_date') or request.args.get('selected_date', (datetime.today() + timedelta(days=1)).date())
+    # selected_date = request.form.get('selected_date') or request.args.get('selected_date', (datetime.today() + timedelta(days=1)).date())
+    selected_date_str = request.form.get('selected_date') or request.args.get('selected_date')
+    if selected_date_str:
+        selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+    else:
+        # Default to tomorrow's date if none is provided
+        selected_date = (datetime.today() + timedelta(days=1)).date()
+
+    # Check if prev_date or next_date buttons were clicked
+    if 'prev_date' in request.form:
+        selected_date -= timedelta(days=1)
+    elif 'next_date' in request.form:
+        selected_date += timedelta(days=1)
+
     order_details = None
     if selected_date:
         order_details = (
@@ -89,11 +101,14 @@ def index():
                 SalmonOrder.product,
                 (func.coalesce(SalmonOrder.price * 1.14, 0)).label("price"),
                 SalmonOrder.quantity,
-                (func.coalesce(func.sum(SalmonOrderWeight.quantity), 0)).label("total_produced")
+                (func.coalesce(func.sum(SalmonOrderWeight.quantity), 0)).label("total_produced"),
+                Customer.priority,
+                Customer.packing,
             )
             .outerjoin(SalmonOrderWeight, SalmonOrder.id == SalmonOrderWeight.order_id)
             .filter(SalmonOrder.date == selected_date)
             .group_by(SalmonOrder.id)
+            .outerjoin(Customer, SalmonOrder.customer == Customer.customer)
             .all()
         )
         grouped_orders = defaultdict(list)
@@ -105,7 +120,7 @@ def index():
                 totals[order[3]] = 0
             totals[order[3]] += int(order[5])
 
-    return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals)
+    return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, timedelta=timedelta)
 
 
 @bp.route('/order/<int:order_id>', methods=['GET', 'POST'])
@@ -132,11 +147,15 @@ def order_detail(order_id):
             SalmonOrder.product,
             (func.coalesce(SalmonOrder.price * 1.14, 0)).label("price"),
             SalmonOrder.quantity,
-            (func.coalesce(func.sum(SalmonOrderWeight.quantity), 0)).label("total_produced")
+            (func.coalesce(func.sum(SalmonOrderWeight.quantity), 0)).label("total_produced"),
+            Customer.priority,
+            Customer.packing,
+
         )
         .outerjoin(SalmonOrderWeight, SalmonOrder.id == SalmonOrderWeight.order_id)
         .filter(SalmonOrder.id == order_id)
         .group_by(SalmonOrder.id)
+        .outerjoin(Customer, SalmonOrder.customer == Customer.customer)
         .first()
     )
 
@@ -146,7 +165,7 @@ def order_detail(order_id):
         .order_by(SalmonOrderWeight.production_time.asc())
         .all()
     )
-
+    print(order)
     if not order:
         return "Order not found", 404
 

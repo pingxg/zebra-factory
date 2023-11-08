@@ -13,6 +13,22 @@
                 <a href="/" class="block text-black hover:text-gray-700">Salmon Production</a>
             </h2>
             
+            <!-- <form action="/" method="post" class="mb-6 bg-gradient-to-r from-gray-100 to-gray-200 p-4 rounded-lg shadow-md">
+                <div class="mb-4 flex items-center">
+                    <label class="text-gray-600 text-lg font-semibold mr-2" for="selected_date">
+                        Date:
+                    </label>
+                    <input 
+                    type="date" 
+                    id="selected_date" 
+                    name="selected_date" 
+                    value="{{ selected_date }}" 
+                    class="border border-gray-300 px-2 md:px-3 py-1 md:py-2 text-xl md:text-3xl flex-grow rounded font-bold text-gray-700">
+                </div>
+                <button type="submit" class="text-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg w-full transition duration-300 ease-in-out transform hover:scale-102">
+                    Fetch Order
+                </button>
+            </form> -->
             <form action="/" method="post" class="mb-6 bg-gradient-to-r from-gray-100 to-gray-200 p-4 rounded-lg shadow-md">
                 <div class="mb-4 flex items-center">
                     <label class="text-gray-600 text-lg font-semibold mr-2" for="selected_date">
@@ -24,13 +40,22 @@
                     name="selected_date" 
                     value="{{ selected_date }}" 
                     class="border border-gray-300 px-2 md:px-3 py-1 md:py-2 text-xl md:text-3xl flex-grow rounded font-bold text-gray-700">
-                
-
                 </div>
-                <button type="submit" class="text-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg w-full transition duration-300 ease-in-out transform hover:scale-102">
-                    Fetch Order
-                </button>
+
+                <div class="flex justify-between mt-4 space-x-2">
+                    <button name="prev_date" type="submit" value="{{ (selected_date - timedelta(days=1)).isoformat() }}" class="flex-grow-none text-sm bg-gray-300 hover:bg-gray-400 text-black font-semibold py-1.5 px-4 rounded-lg transition duration-300 ease-in-out">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button type="submit" class="flex-grow text-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-102">
+                        Fetch Order
+                    </button>
+                    <button name="next_date" type="submit" value="{{ (selected_date + timedelta(days=1)).isoformat() }}" class="flex-grow-none text-sm bg-gray-300 hover:bg-gray-400 text-black font-semibold py-1.5 px-4 rounded-lg transition duration-300 ease-in-out">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+                
             </form>
+            
             
             {% if grouped_orders %}
                 {% for product, product_orders in grouped_orders.items() %}
@@ -41,13 +66,19 @@
                             <div>
                                 <a href="{{ url_for('main.order_detail', order_id=order[0]) }}" 
                                     class="rounded-border block p-3 md:p-4 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex flex-col justify-between
-                                    {% if order[6] == 0 %} 
-                                    bg-gradient-to-bl from-gray-900 to-gray-600 bg-gradient-to-r
-                                    {% elif order[6] > 0 and order[6] < order[5]|float*0.9 %}
-                                    bg-gradient-to-l from-red-800 via-yellow-600 to-yellow-500
+                                    {% if order[6] >= order[5]|float*0.9 %}
+                                        bg-gradient-to-tr from-green-500 to-green-700
                                     {% else %} 
-                                    bg-gradient-to-tr from-green-500 to-green-700
-                                    {% endif %}">
+                                        {% if order[7] == 1 %}
+                                            bg-gradient-to-l from-red-900 via-yellow-800 to-yellow-600
+                                        {% elif order[7] == 2 %}
+                                            bg-gradient-to-br from-blue-600 to-blue-900
+                                        {% else %}
+                                            bg-gradient-to-bl from-gray-900 to-gray-600 bg-gradient-to-r
+                                        {% endif %}
+                                    {% endif %}
+                                    ">
+
                                     <div class="text-white font-semibold text-base sm:text-lg">
                                         {{ order[1] }}
                                     </div>
@@ -58,6 +89,9 @@
                                         <p class="text-white font-thin text-base sm:text-xl">
                                             {{ order[6] }} / {{ order[5]|int }} kg
                                         </p>
+                                        <div class="absolute top-0 right-0 bg-black bg-opacity-20 text-white rounded-lg rounded-bl-lg px-2 py-1 text-xs" style="text-transform: capitalize;">
+                                            {{ order[8] }}
+                                        </div>
                                     </div>
                                 </a>
                             </div>

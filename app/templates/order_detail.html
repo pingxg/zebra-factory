@@ -104,6 +104,14 @@
                     <span class="flex-grow text-md md:text-lg text-gray-600 text-right customer-name">{{ order.customer }}</span>
                 </div>
                 <div class="flex justify-between items-center mb-4">
+                    <h3 class="flex-shrink text-lg md:text-xl font-semibold text-gray-700 text-left">Priority</h3>
+                    <span class="flex-grow text-md md:text-lg text-gray-600 text-right customer-name">{{ order.priority }}</span>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg md:text-xl font-semibold text-gray-700">Packing</h3>
+                    <span class="text-md md:text-lg text-gray-600">{{ order.packing }}</span>
+                </div>
+                <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg md:text-xl font-semibold text-gray-700">Date</h3>
                     <!-- <span class="text-md md:text-lg text-gray-600">{{ order.date }}</span> -->
                     <!-- <a href="{{ url_for('main.index', selected_date=order.date) }}" class="text-md md:text-lg text-blue-500 hover:underline">{{ order.date }}</a> -->
@@ -127,6 +135,7 @@
                     <h3 class="text-lg md:text-xl font-semibold text-gray-700">Amount</h3>
                     <span class="text-md md:text-lg text-gray-600">{{ "%.2f"|format(order.total_produced) }} / {{ order.quantity|int }} kg</span>
                 </div>
+
             </div>
 
             {% if weight_details %}
