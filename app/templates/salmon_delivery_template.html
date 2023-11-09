@@ -315,25 +315,27 @@
 
     <table class="price-info product-info-container">
         <tbody>
-            <tr>
-                <th >Production date</th>
-                <td>{{ date }}</td>
-            </tr>
-            {% if "Frozen" not in product %}
-            <tr>
-                <th >Expiry date (+6 days)</th>
-                <td>{{ expiry_date_fresh }}</td>
-            </tr>
-            {% else %}
-            <tr>
-                <th >Expiry date (+90 days)</th>
-                <td>{{ expiry_date_frozen }}</td>
-            </tr>
+            {% if "Lohi" in product %}
+                <tr>
+                    <th >Production date</th>
+                    <td>{{ date }}</td>
+                </tr>
+                {% if "Frozen" not in product %}
+                    <tr>
+                        <th >Expiry date (+6 days)</th>
+                        <td>{{ expiry_date_fresh }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <th >Expiry date (+90 days)</th>
+                        <td>{{ expiry_date_frozen }}</td>
+                    </tr>
+                {% endif %}
+                <tr>
+                    <th>Country of origin</th>
+                    <td>Norway</td>
+                </tr>
             {% endif %}
-            <tr>
-                <th>Country of origin</th>
-                <td>Norway</td>
-            </tr>
             <tr>
                 <th>Contact</th>
                 <td>04578319456</td>
