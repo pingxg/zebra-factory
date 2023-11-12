@@ -246,7 +246,7 @@ def order_editing():
     week_str = request.args.get('week', calculate_current_iso_week())
 
     year, week = map(int, week_str.split('-W'))
-    start_date = datetime.fromisocalendar(year, week, 1)
+    start_date = date.fromisocalendar(year, week, 1)
     end_date = start_date + timedelta(days=6)
 
     # Check if prev_week or next_week buttons were clicked
@@ -256,8 +256,7 @@ def order_editing():
         start_date += timedelta(weeks=1)
     end_date = start_date + timedelta(days=6)
 
-    start_date = start_date.date()
-    end_date = end_date.date()
+
     # Update week_str to reflect the new week
     week_str = f"{start_date.year}-W{start_date.isocalendar()[1]:02d}"
 
