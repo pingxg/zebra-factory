@@ -21,6 +21,21 @@ def create_app(config_name):
     socketio.init_app(app, cors_allowed_origins="*")
     
     from . import routes
+
+    from datetime import datetime, timedelta
+
+    def adjust_week(week_str, delta_weeks):
+        year, week = map(int, week_str.split('-W'))
+        start_of_week = datetime.fromisocalendar(year, week, 1)
+        adjusted_date = start_of_week + timedelta(weeks=delta_weeks)
+        adjusted_year, adjusted_week, _ = adjusted_date.isocalendar()
+        adjusted_week_str = f"{adjusted_year}-W{adjusted_week:02d}"
+        return adjusted_week_str
+
     app.register_blueprint(routes.bp)
 
+    # Define and add the custom filter
+    @app.template_filter('adjust_week')
+    def adjust_week_filter(week_str, delta_weeks):
+        return adjust_week(week_str, delta_weeks)
     return app

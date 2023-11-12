@@ -8,24 +8,116 @@
 
 {% block body %}
 <div class="flex flex-col space-y-4 p-4">
-    <!-- Date Range, Search Button, and Advanced Toggle Row -->
-    <div class="flex items-center justify-between space-x-3">
-        <!-- Date Range Picker -->
-        <input type="week" id="date-range" name="date-range" class="border p-2 flex-grow rounded-lg" value="{{ current_week }}">
 
-        <!-- Search Button -->
-        <button id="search-btn" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg">
-            Search
-        </button>
 
-    </div>
+    <form action="/order_editing" method="get" class="mb-6 bg-gradient-to-r from-gray-100 to-gray-200 p-4 rounded-lg shadow-md">
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col my-2">
+    
+            <div class="mb-4 flex items-center">
+                <input 
+                type="week" 
+                id="date-range" 
+                name="week"
+                value="{{ week_str }}" 
+                class="border p-2 flex-grow rounded-lg">
+            </div>
+    
+            <div class="flex justify-between mt-4 space-x-2">
+                <button name="prev_week" type="submit" value="true" class="flex-grow text-sm bg-gray-300 hover:bg-gray-400 text-black font-semibold py-1.5 px-4 rounded-lg transition duration-300 ease-in-out">
+                    <i class="fa-solid fa-chevron-left"></i> Prev Week
+                </button>
+                <button 
+                type="submit" 
+                class="flex-grow bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg">
+                Search
+                </button>
+                <button name="next_week" type="submit" value="true" class="flex-grow text-sm bg-gray-300 hover:bg-gray-400 text-black font-semibold py-1.5 px-4 rounded-lg transition duration-300 ease-in-out">
+                    <i class="fa-solid fa-chevron-right"></i> Next Week
+                </button>
+            </div>
+    
+        </div>
+    </form>
+    
+    
 
     <!-- Editable Order Table -->
-    <div class="overflow-x-auto mt-6">
-        <table id="order-table" class="min-w-full leading-normal">
+    <!-- <div class="table-wrp block max-h-96">
+        <table id="order-table" class="w-full">
+            <thead class="bg-white border-b sticky top-0">
+                <tr>
+                    <th>Customer</th>
+                    {% for date in week_dates %}
+                        <th >{{ date.strftime('%Y-%m-%d') }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody class="h-96 overflow-y-auto">
+                {% for customer, dates in orders_by_customer.items() %}
+                    <tr>
+                        <td>{{ customer }}</td>
+                        {% for date in week_dates %}
+                            <td>
+                                {% for order in dates[date] %}
+                                    <p>{{ order.product }} ({{ "%.2f"|format(order.price*1.14) }}): {{ order.quantity|float }}</p>
+                                {% else %}
+                                    <p></p>
+                                {% endfor %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
         </table>
     </div>
+ -->
+
+
+
+
+    <div class="overflow-x-auto shadow-lg rounded-lg max-h-96 table-wrp block ">
+        <table class="w-full text-left table-auto bg-white">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0">
+                <tr>
+                    <th class="px-6 py-3 border-b border-gray-300 border-r">Customer</th>
+                    {% for date in week_dates %}
+                        <th class="px-6 py-3 border-b border-gray-300 border-r">{{ date.strftime('%Y-%m-%d') }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody class="text-sm divide-y divide-gray-200 h-96 overflow-y-auto">
+                {% for customer, dates in orders_by_customer.items() %}
+                    <tr class="{{ loop.index0 % 2 == 0 and 'bg-white' or 'bg-gray-50' }}">
+                        <td class="px-6 py-4 border-r font-medium text-gray-700">{{ customer }}</td>
+                        {% for date in week_dates %}
+                            <td class="px-6 py-4 border-r">
+                                {% for order in dates[date] %}
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-semibold text-gray-800">{{ order.product }}</span>
+                                        <span class="ml-2 text-gray-600">({{ "%.2f"|format(order.price*1.14) }})</span>
+                                        <span class="ml-4 text-blue-600">{{ order.quantity|float }}</span>
+                                        <button class="ml-4 text-blue-500 hover:text-blue-800 transition duration-300 ease-in-out">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <span></span>
+                                {% endfor %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+    
+
 </div>
+
+
+
 
 
 {% endblock %}

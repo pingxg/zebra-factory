@@ -4,7 +4,7 @@ from werkzeug.security import check_password_hash
 from .models import User,Customer, SalmonOrder, SalmonOrderWeight
 from . import db, login_manager, socketio
 import os
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from collections import defaultdict
 from sqlalchemy import func
 import pytz
@@ -206,7 +206,6 @@ def order_detail(order_id):
     #     .order_by(SalmonOrderWeight.production_time.asc())
     #     .all()
     # )
-    print(order)
     if not order:
         return "Order not found", 404
 
@@ -244,11 +243,41 @@ def delete_weight(weight_id):
 @bp.route('/order_editing', methods=['GET', 'POST'])
 @login_required
 def order_editing():
-    # Calculate the current week's Monday to Saturday range in ISO format
-    current_week = calculate_current_iso_week()
+    week_str = request.args.get('week', calculate_current_iso_week())
 
+    year, week = map(int, week_str.split('-W'))
+    start_date = datetime.fromisocalendar(year, week, 1)
+    end_date = start_date + timedelta(days=6)
+
+    # Check if prev_week or next_week buttons were clicked
+    if 'prev_week' in request.args:
+        start_date -= timedelta(weeks=1)
+    elif 'next_week' in request.args:
+        start_date += timedelta(weeks=1)
+    end_date = start_date + timedelta(days=6)
+
+    start_date = start_date.date()
+    end_date = end_date.date()
+    # Update week_str to reflect the new week
+    week_str = f"{start_date.year}-W{start_date.isocalendar()[1]:02d}"
+
+    # Query the database for orders within the week
+    orders = (
+        db.session.query(SalmonOrder)
+        .filter(SalmonOrder.date.between(start_date, end_date))
+        .order_by(SalmonOrder.customer.asc())
+        .all()
+    )
+
+    # Organize orders by customer and date
+    orders_by_customer = defaultdict(lambda: defaultdict(list))
+    for order in orders:
+        orders_by_customer[order.customer][order.date].append(order)
+
+    # List of dates in the week for column headers
+    week_dates = [start_date + timedelta(days=i) for i in range(6)]
     # Render the order_editing template with necessary data
-    return render_template('order_editing.html', current_week=current_week)
+    return render_template('order_editing.html', week_str=week_str, orders_by_customer=orders_by_customer, week_dates=week_dates)
 
 def calculate_current_iso_week():
     # Get the current date
@@ -271,3 +300,4 @@ def calculate_current_iso_week():
     week_range_str = f"{year}-W{week_number_str}"
 
     return week_range_str
+
