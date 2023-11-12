@@ -14,7 +14,7 @@
     
     <script>
         function emitPrintZebra() {
-            const orderId = "{{ order.id }}";  // Extract order_id from the Jinja2 template
+            const orderId = "{{ order[0] }}";  // Extract order_id from the Jinja2 template
             fetch('/emit_print_zebra', {
                 method: 'POST',
                 headers: {
@@ -33,7 +33,7 @@
             });
         }
         function emitPrintPdf() {
-            const orderId = "{{ order.id }}";  // Extract order_id from the Jinja2 template
+            const orderId = "{{ order[0] }}";  // Extract order_id from the Jinja2 template
             fetch('/emit_print_pdf', {
                 method: 'POST',
                 headers: {
@@ -73,19 +73,19 @@
     <div class="container mx-auto p-4 md:p-12">
         <div href="/" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col my-2">
             <div class="font-bold text-3xl mb-4 text-center p-4 rounded-lg shadow-md cursor-pointer transition duration-300 ease-in-out
-            {% if order.total_produced == 0 %}
+            {% if order[0] == 0 %}
                 bg-gradient-to-r from-gray-100 to-gray-200
-            {% elif order.total_produced > 0 and order.total_produced < order.quantity|float*0.95 %}
+            {% elif order[6] > 0 and order[6] < order[5]|float*0.95 %}
                 bg-gradient-to-r from-yellow-50 to-yellow-100
             {% else %}
                 bg-gradient-to-r from-green-50 to-green-100
             {% endif %}">
             <a href="/" class="block text-black hover:text-gray-700">Order Details</a>
             <span class="block mt-2 text-sm font-normal text-gray-700">
-                {% if order.total_produced == 0 %}
+                {% if order[0] == 0 %}
                     Not started
-                {% elif order.total_produced > 0 and order.total_produced < order.quantity|float*0.95 %}
-                    In progress - {{ '%.2f' % (order.quantity|float - order.total_produced|float) }} kg remaining
+                {% elif order[6] > 0 and order[6] < order[5]|float*0.95 %}
+                    In progress - {{ '%.2f' % (order[5]|float - order[6]|float) }} kg remaining
                 {% else %}
                     Completed
                 {% endif %}
@@ -97,43 +97,43 @@
             <div class="mb-6 bg-gradient-to-r from-gray-100 to-gray-200 p-4 md:p-6 rounded-lg shadow-md">
                 <div class="flex justify-between items-center mb-4 border-b pb-2">
                     <h3 class="text-lg md:text-xl font-semibold text-gray-700">Order ID</h3>
-                    <span class="text-md md:text-lg text-gray-600">{{ order.id }}</span>
+                    <span class="text-md md:text-lg text-gray-600">{{ order[0] }}</span>
                 </div>
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="flex-shrink text-lg md:text-xl font-semibold text-gray-700 text-left">Customer</h3>
-                    <span class="flex-grow text-md md:text-lg text-gray-600 text-right customer-name">{{ order.customer }}</span>
+                    <span class="flex-grow text-md md:text-lg text-gray-600 text-right customer-name">{{ order[1] }}</span>
                 </div>
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="flex-shrink text-lg md:text-xl font-semibold text-gray-700 text-left">Priority</h3>
-                    <span class="flex-grow text-md md:text-lg text-gray-600 text-right customer-name">{{ order.priority }}</span>
+                    <span class="flex-grow text-md md:text-lg text-gray-600 text-right customer-name">{{ order[7] }}</span>
                 </div>
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg md:text-xl font-semibold text-gray-700">Packing</h3>
-                    <span class="text-md md:text-lg text-gray-600">{{ order.packing }}</span>
+                    <span class="text-md md:text-lg text-gray-600">{{ order[8] }}</span>
                 </div>
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg md:text-xl font-semibold text-gray-700">Date</h3>
-                    <!-- <span class="text-md md:text-lg text-gray-600">{{ order.date }}</span> -->
-                    <!-- <a href="{{ url_for('main.index', selected_date=order.date) }}" class="text-md md:text-lg text-blue-500 hover:underline">{{ order.date }}</a> -->
-                    <a href="{{ url_for('main.index', selected_date=order.date) }}" 
+                    <!-- <span class="text-md md:text-lg text-gray-600">{{ order[2] }}</span> -->
+                    <!-- <a href="{{ url_for('main.index', selected_date=order[2]) }}" class="text-md md:text-lg text-blue-500 hover:underline">{{ order[2] }}</a> -->
+                    <a href="{{ url_for('main.index', selected_date=order[2]) }}" 
                     class="date-link inline-flex items-center px-2 py-1 rounded transition-colors duration-200 hover:bg-gray-300 text-md md:text-lg text-gray-600">
-                    {{ order.date }}
-                    <i class="fas fa-link ml-2 text-sm"></i> <!-- Font Awesome calendar icon -->
+                    {{ order[2] }}
+                    <i class="fas fa-link ml-2 text-sm"></i>
                     </a>
                     
                 </div>
 
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg md:text-xl font-semibold text-gray-700">Product</h3>
-                    <span class="text-md md:text-lg text-gray-600">{{ order.product }}</span>
+                    <span class="text-md md:text-lg text-gray-600">{{ order[3] }}</span>
                 </div>
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg md:text-xl font-semibold text-gray-700">Price (VAT14)</h3>
-                    <span class="text-md md:text-lg text-gray-600">{{ "%.2f"|format(order.price) }} €/kg</span>
+                    <span class="text-md md:text-lg text-gray-600">{{ "%.2f"|format(order[4]) }} €/kg</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <h3 class="text-lg md:text-xl font-semibold text-gray-700">Amount</h3>
-                    <span class="text-md md:text-lg text-gray-600">{{ "%.2f"|format(order.total_produced) }} / {{ order.quantity|float }} kg</span>
+                    <span class="text-md md:text-lg text-gray-600">{{ "%.2f"|format(order[6]) }} / {{ order[5]|float }} kg</span>
                 </div>
 
             </div>
@@ -151,13 +151,13 @@
                             {{ weight[2].strftime('%H:%M:%S') }}
                         </div>
                         <div class="flex">
-                            <form action="{{ url_for('main.edit_weight', weight_id=weight[0], order_id=order.id) }}" method="post" class="inline-block mr-2">
-                                <button title="Edit" class="flex items-center p-2 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-full hover:from-blue-500 hover:to-blue-600 transition duration-300 ease-in-out edit-btn" data-weight-id="{{ weight[0] }}" data-current-weight="{{ weight[1] }}" data-order-id="{{ order[0][0] }}">
+                            <form action="{{ url_for('main.edit_weight', weight_id=weight[0], order_id=order[0]) }}" method="post" class="inline-block mr-2">
+                                <button title="Edit" class="flex items-center p-2 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-full hover:from-blue-500 hover:to-blue-600 transition duration-300 ease-in-out edit-btn" data-weight-id="{{ weight[0] }}" data-current-weight="{{ weight[1] }}" data-order-id="{{ order[0] }}">
                                     <i class="fas fa-edit"></i>
                                 </button>
                             </form>
 
-                            <button title="Delete" class="flex items-center p-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-full hover:from-red-500 hover:to-red-600 transition duration-300 ease-in-out" onclick="showDeleteConfirmation('{{ url_for('main.delete_weight', weight_id=weight[0], order_id=order.id) }}');">
+                            <button title="Delete" class="flex items-center p-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-full hover:from-red-500 hover:to-red-600 transition duration-300 ease-in-out" onclick="showDeleteConfirmation('{{ url_for('main.delete_weight', weight_id=weight[0], order_id=order[0]) }}');">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
 
@@ -167,33 +167,33 @@
             </div>
             {% endif %}
 
-            <form id="addReading" action="{{ url_for('main.order_detail', order_id=order.id) }}" method="post" onsubmit="return validateForm();">
+            <form id="addReading" action="{{ url_for('main.order_detail', order_id=order[0]) }}" method="post" onsubmit="return validateForm();">
                 <!-- Input Box -->
                 <input type="number" step="0.0001" 
                     id="scale_reading" 
                     name="scale_reading" 
-                    class="border border-gray-300 px-3 py-2 h-12 text-gray-700 w-full rounded mb-4 {{ 'opacity-50 cursor-not-allowed' if order.total_produced >= order.quantity|float*0.95 else '' }}" 
+                    class="border border-gray-300 px-3 py-2 h-12 text-gray-700 w-full rounded mb-4 {{ 'opacity-50 cursor-not-allowed' if order[6] >= order[5]|float*0.95 else '' }}" 
                     placeholder="Enter scale reading" 
-                    {{ 'disabled' if order.total_produced >= order.quantity|float*0.95 else '' }}>
+                    {{ 'disabled' if order[6] >= order[5]|float*0.95 else '' }}>
 
                 <!-- "Add Reading" Button -->
                 <button type="submit" 
-                        class="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-4 rounded-lg w-full transition duration-300 ease-in-out transform mb-3 {{ 'opacity-50 cursor-not-allowed' if order.total_produced >= order.quantity|float*0.95 else 'hover:from-blue-600 hover:to-blue-700' }}" 
-                        {{ 'disabled' if order.total_produced >= order.quantity|float*0.95 else '' }}>
+                        class="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-4 rounded-lg w-full transition duration-300 ease-in-out transform mb-3 {{ 'opacity-50 cursor-not-allowed' if order[6] >= order[5]|float*0.95 else 'hover:from-blue-600 hover:to-blue-700' }}" 
+                        {{ 'disabled' if order[6] >= order[5]|float*0.95 else '' }}>
                         <i class="fa-solid fa-plus"></i> Add Reading
                 </button>
 
                 <!-- "Print Label" Button -->
                 <button type="button" onclick="emitPrintZebra();showPrintToast(); "
-                        class="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-4 rounded-lg w-full transition duration-300 ease-in-out transform mb-3  {{ 'opacity-50 cursor-not-allowed' if order.total_produced < order.quantity|float*0.95 else 'hover:from-green-600 hover:to-green-700' }}" 
-                        {{ 'disabled' if order.total_produced < order.quantity|float*0.95 else '' }}>
+                        class="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-4 rounded-lg w-full transition duration-300 ease-in-out transform mb-3  {{ 'opacity-50 cursor-not-allowed' if order[6] < order[5]|float*0.95 else 'hover:from-green-600 hover:to-green-700' }}" 
+                        {{ 'disabled' if order[6] < order[5]|float*0.95 else '' }}>
                         <i class="fa-solid fa-receipt"></i> Print Label
                 </button>
 
                 <!-- "Print Delivery Note" Button -->
                 <button type="button" onclick="emitPrintPdf();showPrintToast();"
-                        class="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-4 rounded-lg w-full transition duration-300 ease-in-out transform  mb-3  {{ 'opacity-50 cursor-not-allowed' if order.total_produced < order.quantity|float*0.95 else 'hover:from-green-600 hover:to-green-700' }}" 
-                        {{ 'disabled' if order.total_produced < order.quantity|float*0.95 else '' }}>
+                        class="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-4 rounded-lg w-full transition duration-300 ease-in-out transform  mb-3  {{ 'opacity-50 cursor-not-allowed' if order[6] < order[5]|float*0.95 else 'hover:from-green-600 hover:to-green-700' }}" 
+                        {{ 'disabled' if order[6] < order[5]|float*0.95 else '' }}>
                         <i class="fa-solid fa-file-pdf"></i> Print Delivery Note
                 </button>
             </form>

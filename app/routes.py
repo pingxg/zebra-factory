@@ -150,7 +150,6 @@ def order_detail(order_id):
             (func.coalesce(func.sum(SalmonOrderWeight.quantity), 0)).label("total_produced"),
             Customer.priority,
             Customer.packing,
-
         )
         .outerjoin(SalmonOrderWeight, SalmonOrder.id == SalmonOrderWeight.order_id)
         .filter(SalmonOrder.id == order_id)
@@ -165,6 +164,49 @@ def order_detail(order_id):
         .order_by(SalmonOrderWeight.production_time.asc())
         .all()
     )
+
+
+    # # First, get the customer and date of the specified order
+    # order_customer_date = (
+    #     db.session.query(SalmonOrder.customer, SalmonOrder.date)
+    #     .filter(SalmonOrder.id == order_id)
+    #     .subquery()
+    # )
+    # # Subquery to get all orders with the same customer and date
+    # similar_orders_subquery = (
+    #     db.session.query(SalmonOrder.id)
+    #     .join(order_customer_date, (SalmonOrder.customer == order_customer_date.c.customer) & (SalmonOrder.date == order_customer_date.c.date))
+    #     .subquery()
+    # )
+
+    # # Modify your main query to join with the subquery
+    # order = (
+    #     db.session.query(
+    #         SalmonOrder.id, 
+    #         SalmonOrder.customer, 
+    #         SalmonOrder.date, 
+    #         SalmonOrder.product,
+    #         (func.coalesce(SalmonOrder.price * 1.14, 0)).label("price"),
+    #         SalmonOrder.quantity,
+    #         (func.coalesce(func.sum(SalmonOrderWeight.quantity), 0)).label("total_produced"),
+    #         Customer.priority,
+    #         Customer.packing,
+    #     )
+    #     .outerjoin(SalmonOrderWeight, SalmonOrder.id == SalmonOrderWeight.order_id)
+    #     .join(similar_orders_subquery, SalmonOrder.id == similar_orders_subquery.c.id)
+    #     .group_by(SalmonOrder.id)
+    #     .outerjoin(Customer, SalmonOrder.customer == Customer.customer)
+    #     .all()
+    # )
+
+    # # Query for weight details remains the same
+    # weight_details = (
+    #     db.session.query(SalmonOrderWeight.id, SalmonOrderWeight.quantity, SalmonOrderWeight.production_time)
+    #     .filter(SalmonOrderWeight.order_id == order_id)
+    #     .order_by(SalmonOrderWeight.production_time.asc())
+    #     .all()
+    # )
+    print(order)
     if not order:
         return "Order not found", 404
 
