@@ -32,3 +32,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // This could be complex and involve more in-depth JavaScript to handle inline editing, validation, and updating the backend
 });
 
+
+

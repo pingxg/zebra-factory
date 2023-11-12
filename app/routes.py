@@ -165,7 +165,6 @@ def order_detail(order_id):
         .order_by(SalmonOrderWeight.production_time.asc())
         .all()
     )
-    print(order)
     if not order:
         return "Order not found", 404
 
