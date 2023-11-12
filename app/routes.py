@@ -118,7 +118,7 @@ def index():
             grouped_orders[order[3]].append(order)
             if order[3] not in totals:
                 totals[order[3]] = 0
-            totals[order[3]] += int(order[5])
+            totals[order[3]] += (order[5])
 
     return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, timedelta=timedelta)
 
@@ -198,3 +198,35 @@ def delete_weight(weight_id):
     db.session.commit()
 
     return redirect(url_for('main.order_detail', order_id=weight.order_id))
+
+
+@bp.route('/order_editing', methods=['GET', 'POST'])
+@login_required
+def order_editing():
+    # Calculate the current week's Monday to Saturday range in ISO format
+    current_week = calculate_current_iso_week()
+
+    # Render the order_editing template with necessary data
+    return render_template('order_editing.html', current_week=current_week)
+
+def calculate_current_iso_week():
+    # Get the current date
+    current_date = datetime.now()
+
+    # Calculate the start and end of the current ISO week
+    # ISO weeks start on Monday and end on Sunday
+    start_of_week = current_date - timedelta(days=current_date.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+
+    # Format the dates to match the `input[type=week]` value format (YYYY-W##)
+    # Where ## is the ISO week number
+    week_number = current_date.isocalendar()[1]
+    year = start_of_week.year
+
+    # Pad the week number with leading zero if necessary
+    week_number_str = f"{week_number:02d}"
+
+    # Combine into the full string
+    week_range_str = f"{year}-W{week_number_str}"
+
+    return week_range_str

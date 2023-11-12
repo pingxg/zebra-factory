@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block head_content %}
+    <script src="/static/js/orderEditingScripts.js" defer></script>
+    <link rel="stylesheet" href="/static/css/orderEditing.css">
+
+{% endblock %}
+
+{% block body %}
+<div class="flex flex-col space-y-4 p-4">
+    <!-- Date Range, Search Button, and Advanced Toggle Row -->
+    <div class="flex items-center justify-between space-x-3">
+        <!-- Date Range Picker -->
+        <input type="week" id="date-range" name="date-range" class="border p-2 flex-grow rounded-lg" value="{{ current_week }}">
+
+        <!-- Search Button -->
+        <button id="search-btn" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg">
+            Search
+        </button>
+
+    </div>
+
+    <!-- Editable Order Table -->
+    <div class="overflow-x-auto mt-6">
+        <table id="order-table" class="min-w-full leading-normal">
+            <!-- Table will be populated with JavaScript -->
+        </table>
+    </div>
+</div>
+
+
+{% endblock %}
