@@ -120,7 +120,12 @@ def index():
                 totals[order[3]] = 0
             totals[order[3]] += (order[5])
 
-    return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, timedelta=timedelta)
+
+
+        grouped_orders_sorted = dict(sorted(grouped_orders.items(), key=lambda x: (not x[0].startswith('Lohi'), x[0])))
+        print(grouped_orders_sorted)
+
+    return render_template('index.html', grouped_orders=grouped_orders_sorted, selected_date=selected_date, totals=totals, timedelta=timedelta)
 
 
 @bp.route('/order/<int:order_id>', methods=['GET', 'POST'])
