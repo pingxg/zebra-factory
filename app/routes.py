@@ -73,6 +73,14 @@ def emit_print_pdf():
     return jsonify({'status': 'Print pdf event emitted'})
 
 
+@login_required
+@socketio.on('keepalive')
+@bp.route('/emit_keepalive_response', methods=['POST'])
+def emit_keepalive_response():
+    socketio.emit('keepalive_response', {})
+    return jsonify({'status': 'Keepalive response emitted'})
+
+
 
 @bp.route('/', methods=['GET', 'POST'])
 @login_required
