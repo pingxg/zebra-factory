@@ -39,45 +39,12 @@
         </div>
     </form>
     
-    
-
-    <!-- Editable Order Table -->
-    <!-- <div class="table-wrp block max-h-96">
-        <table id="order-table" class="w-full">
-            <thead class="bg-white border-b sticky top-0">
-                <tr>
-                    <th>Customer</th>
-                    {% for date in week_dates %}
-                        <th >{{ date.strftime('%Y-%m-%d') }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody class="h-96 overflow-y-auto">
-                {% for customer, dates in orders_by_customer.items() %}
-                    <tr>
-                        <td>{{ customer }}</td>
-                        {% for date in week_dates %}
-                            <td>
-                                {% for order in dates[date] %}
-                                    <p>{{ order.product }} ({{ "%.2f"|format(order.price*1.14) }}): {{ order.quantity|float }}</p>
-                                {% else %}
-                                    <p></p>
-                                {% endfor %}
-                            </td>
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
- -->
-
-
 
 
     <div class="overflow-x-auto shadow-lg rounded-lg max-h-96 table-wrp block ">
+
         <table class="w-full text-left table-auto bg-white">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 items-center">
+            <thead class="text-xm text-gray-700 uppercase bg-gray-100 text-center sticky top-0 items-center">
                 <tr>
                     <th class="px-6 py-3 border-b border-gray-300 border-r">Customer</th>
                     {% for date in week_dates %}
@@ -88,38 +55,46 @@
             <tbody class="text-sm divide-y divide-gray-200 h-96 overflow-y-auto">
                 {% for customer, dates in orders_by_customer.items() %}
                     <tr class="{{ loop.index0 % 2 == 0 and 'bg-white' or 'bg-gray-50' }}">
-                        
+
                         <td class="px-6 py-4 border-r font-medium text-gray-700">{{ customer }}</td>
 
                         {% for date in week_dates %}
-                            <td class="px-6 py-4 border-r">
+                            <td class="px-6 py-4 border-r items-center">
                                 {% for order in dates[date] %}
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-right font-semibold text-gray-800">{{ order.product }} ({{ "%.2f"|format(order.price*1.14) }})</span>
-                                        <!-- <span class="ml-2 text-gray-600"></span> -->
-                                        <div class="flex justify-end items-center">
-                                            <span class="text-blue-600">
-                                                {{ order.quantity|float }}
-                                                <button class="ml-2 text-blue-500 hover:text-blue-800 transition duration-300 ease-in-out">
-                                                    <i class="fas fa-pencil-alt"></i>
-                                                </button>
-                                            </span>
-                                        </div>
+                                <div class="flex items-center">
+                                    <button class="flex justify-between items-center w-full text-left bg-white hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-300 ease-in-out">
+                                        <span class="text-right font-semibold text-gray-800">{{ order.product }} ({{ "%.2f"|format(order.price) }})</span>
+                                            <div class="flex justify-end items-center">
+                                                <span class="{{ 'text-green-600' if order.total_produced|float >= order.quantity|float * completion_threshold|float else 'text-red-600' }}">
+                                                    {{ "%.2f"|format(order.total_produced) }}/{{ order.quantity|float }}
+                                                </span>
+                                            </div>
+                                    </button>
 
-                                    </div>
+                                </div>
                                 {% else %}
                                     <span></span>
                                 {% endfor %}
+
+                                <div class="flex w-full justify-center items-center">
+                                    <a href="{{ url_for('main.add_order', date=date.strftime('%Y-%m-%d'), customer=customer) }}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-300 ease-in-out">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                    {% if dates[date] %}
+                                        <a href="{{ url_for('main.download_pdf', date=date.strftime('%Y-%m-%d'), customer=customer) }}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-300 ease-in-out">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
                             </td>
                         {% endfor %}
                     </tr>
                 {% endfor %}
             </tbody>
+
         </table>
     </div>
 
-
-    
 
 </div>
 

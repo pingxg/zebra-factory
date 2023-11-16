@@ -7,3 +7,9 @@
     position:sticky;
     top:0
   }
+
+.equal-width-columns th,
+.equal-width-columns td {
+    width: 14.29%; /* Adjust this based on the number of columns */
+}
+

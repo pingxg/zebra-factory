@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for, flash
+from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for, flash, send_file
 from flask_login import login_required, logout_user, login_user
 from werkzeug.security import check_password_hash
 from .models import User,Customer, SalmonOrder, SalmonOrderWeight
@@ -81,9 +81,15 @@ def emit_keepalive_response(data):
 
 
 
+@bp.context_processor
+def inject_global_vars():
+    return dict(completion_threshold=os.environ.get('COMPLETION_THRESHOLD', 0.9))
+
+
 @bp.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
+
     # selected_date = request.form.get('selected_date') or request.args.get('selected_date', (datetime.today() + timedelta(days=1)).date())
     selected_date_str = request.form.get('selected_date') or request.args.get('selected_date')
     if selected_date_str:
@@ -130,7 +136,6 @@ def index():
 
 
         grouped_orders_sorted = dict(sorted(grouped_orders.items(), key=lambda x: (not x[0].startswith('Lohi'), x[0])))
-        print(grouped_orders_sorted)
 
     return render_template('index.html', grouped_orders=grouped_orders_sorted, selected_date=selected_date, totals=totals, timedelta=timedelta)
 
@@ -273,22 +278,79 @@ def order_editing():
     week_str = f"{start_date.year}-W{start_date.isocalendar()[1]:02d}"
 
     # Query the database for orders within the week
+    # orders = (
+    #     db.session.query(SalmonOrder)
+        
+    #     .order_by(SalmonOrder.customer.asc())
+    #     .order_by(SalmonOrder.customer.asc())
+    #     .all()
+    # )
+
     orders = (
-        db.session.query(SalmonOrder)
+        db.session.query(
+            SalmonOrder.id, 
+            SalmonOrder.customer,
+            SalmonOrder.date,
+            SalmonOrder.product,
+            (func.coalesce(SalmonOrder.price * 1.14, 0)).label("price"),
+            SalmonOrder.quantity,
+            (func.coalesce(func.sum(SalmonOrderWeight.quantity), 0)).label("total_produced"),
+        )
         .filter(SalmonOrder.date.between(start_date, end_date))
-        .order_by(SalmonOrder.customer.asc())
+        .outerjoin(SalmonOrderWeight, SalmonOrder.id == SalmonOrderWeight.order_id)
+        .order_by(SalmonOrder.customer.asc(), SalmonOrder.product.asc())
+        .group_by(SalmonOrder.id)
         .all()
     )
-
+    print(orders)
     # Organize orders by customer and date
     orders_by_customer = defaultdict(lambda: defaultdict(list))
     for order in orders:
         orders_by_customer[order.customer][order.date].append(order)
+    print(orders_by_customer)
 
     # List of dates in the week for column headers
     week_dates = [start_date + timedelta(days=i) for i in range(6)]
     # Render the order_editing template with necessary data
     return render_template('order_editing.html', week_str=week_str, orders_by_customer=orders_by_customer, week_dates=week_dates)
+
+
+
+@bp.route('/download_pdf')
+@login_required
+def download_pdf():
+    date = request.args.get('date')
+    customer = request.args.get('customer')
+
+    # Perform your logic to generate a PDF based on the date and customer
+    # This is a placeholder for your PDF generation logic
+    pdf_file_path = generate_pdf(date, customer) 
+
+    # Send the generated PDF file back to the client
+    return send_file(pdf_file_path, as_attachment=True)
+
+def generate_pdf(date, customer):
+    # Implement the logic to generate a PDF file
+    # This function should return the path to the generated PDF file
+    # For example, you might use a library like ReportLab or FPDF to create the PDF
+    # Placeholder implementation:
+    pdf_file_path = 'path_to_generated_pdf.pdf'
+    return pdf_file_path
+
+
+@bp.route('/add_order')
+@login_required
+def add_order():
+    date = request.args.get('date')
+    customer = request.args.get('customer')
+
+    # Perform your logic to generate a PDF based on the date and customer
+    # This is a placeholder for your PDF generation logic
+    pdf_file_path = generate_pdf(date, customer) 
+
+    # Send the generated PDF file back to the client
+    return send_file(pdf_file_path, as_attachment=True)
+
 
 def calculate_current_iso_week():
     # Get the current date
