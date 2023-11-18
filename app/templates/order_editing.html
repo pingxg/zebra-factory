@@ -48,7 +48,11 @@
                 <tr>
                     <th class="px-6 py-3 border-b border-gray-300 border-r">Customer</th>
                     {% for date in week_dates %}
-                        <th class="px-6 py-3 border-b border-gray-300 border-r">{{ date.strftime('%Y-%m-%d') }}</th>
+                        <th class="px-6 py-3 border-b border-gray-300 border-r">{{ date.strftime('%Y-%m-%d') }}
+                                <a href="{{ url_for('main.download_delivery_note', date=date.strftime('%Y-%m-%d')) }}" class="flex justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-300 ease-in-out">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                        </th>
                     {% endfor %}
                 </tr>
             </thead>
@@ -62,26 +66,28 @@
                             <td class="px-6 py-4 border-r items-center">
                                 {% for order in dates[date] %}
                                 <div class="flex items-center">
-                                    <button class="flex justify-between items-center w-full text-left bg-white hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-300 ease-in-out">
-                                        <span class="text-right font-semibold text-gray-800">{{ order.product }} ({{ "%.2f"|format(order.price) }})</span>
-                                            <div class="flex justify-end items-center">
+                                    <button class="flex justify-between items-center w-full text-left hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-300 ease-in-out">
+                                        <!-- <span class="text-right font-semibold text-gray-800">{{ order.product }} ({{ "%.2f"|format(order.price) }})</span> -->
+                                        <div class="text-left font-semibold text-gray-800 truncate w-32 sm:text-xx">
+                                            {{ order.product }} ({{ "%.2f"|format(order.price) }})
+                                        </div>
+                                            <div class="flex justify-end items-center font-thin text-xs">
                                                 <span class="{{ 'text-green-600' if order.total_produced|float >= order.quantity|float * completion_threshold|float else 'text-red-600' }}">
                                                     {{ "%.2f"|format(order.total_produced) }}/{{ order.quantity|float }}
                                                 </span>
                                             </div>
                                     </button>
-
                                 </div>
                                 {% else %}
                                     <span></span>
                                 {% endfor %}
 
-                                <div class="flex w-full justify-center items-center">
+                                <div class="flex py-2 w-full justify-center items-center">
                                     <a href="{{ url_for('main.add_order', date=date.strftime('%Y-%m-%d'), customer=customer) }}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-300 ease-in-out">
                                         <i class="fas fa-plus"></i>
                                     </a>
                                     {% if dates[date] %}
-                                        <a href="{{ url_for('main.download_pdf', date=date.strftime('%Y-%m-%d'), customer=customer) }}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-300 ease-in-out">
+                                        <a href="{{ url_for('main.download_delivery_note', date=date.strftime('%Y-%m-%d'), customer=customer) }}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-300 ease-in-out">
                                             <i class="fas fa-download"></i>
                                         </a>
                                     {% endif %}

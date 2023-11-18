@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for, flash, send_file
+from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for, flash, send_file, make_response
 from flask_login import login_required, logout_user, login_user
 from werkzeug.security import check_password_hash
 from .models import User,Customer, SalmonOrder, SalmonOrderWeight
@@ -8,6 +8,11 @@ from datetime import date, datetime, timedelta
 from collections import defaultdict
 from sqlalchemy import func
 import pytz
+
+
+from weasyprint import HTML
+import io
+
 
 bp = Blueprint('main', __name__)
 
@@ -132,9 +137,6 @@ def index():
             if order[3] not in totals:
                 totals[order[3]] = 0
             totals[order[3]] += (order[5])
-
-
-
         grouped_orders_sorted = dict(sorted(grouped_orders.items(), key=lambda x: (not x[0].startswith('Lohi'), x[0])))
 
     return render_template('index.html', grouped_orders=grouped_orders_sorted, selected_date=selected_date, totals=totals, timedelta=timedelta)
@@ -182,47 +184,6 @@ def order_detail(order_id):
         .all()
     )
 
-
-    # # First, get the customer and date of the specified order
-    # order_customer_date = (
-    #     db.session.query(SalmonOrder.customer, SalmonOrder.date)
-    #     .filter(SalmonOrder.id == order_id)
-    #     .subquery()
-    # )
-    # # Subquery to get all orders with the same customer and date
-    # similar_orders_subquery = (
-    #     db.session.query(SalmonOrder.id)
-    #     .join(order_customer_date, (SalmonOrder.customer == order_customer_date.c.customer) & (SalmonOrder.date == order_customer_date.c.date))
-    #     .subquery()
-    # )
-
-    # # Modify your main query to join with the subquery
-    # order = (
-    #     db.session.query(
-    #         SalmonOrder.id, 
-    #         SalmonOrder.customer, 
-    #         SalmonOrder.date, 
-    #         SalmonOrder.product,
-    #         (func.coalesce(SalmonOrder.price * 1.14, 0)).label("price"),
-    #         SalmonOrder.quantity,
-    #         (func.coalesce(func.sum(SalmonOrderWeight.quantity), 0)).label("total_produced"),
-    #         Customer.priority,
-    #         Customer.packing,
-    #     )
-    #     .outerjoin(SalmonOrderWeight, SalmonOrder.id == SalmonOrderWeight.order_id)
-    #     .join(similar_orders_subquery, SalmonOrder.id == similar_orders_subquery.c.id)
-    #     .group_by(SalmonOrder.id)
-    #     .outerjoin(Customer, SalmonOrder.customer == Customer.customer)
-    #     .all()
-    # )
-
-    # # Query for weight details remains the same
-    # weight_details = (
-    #     db.session.query(SalmonOrderWeight.id, SalmonOrderWeight.quantity, SalmonOrderWeight.production_time)
-    #     .filter(SalmonOrderWeight.order_id == order_id)
-    #     .order_by(SalmonOrderWeight.production_time.asc())
-    #     .all()
-    # )
     if not order:
         return "Order not found", 404
 
@@ -277,15 +238,6 @@ def order_editing():
     # Update week_str to reflect the new week
     week_str = f"{start_date.year}-W{start_date.isocalendar()[1]:02d}"
 
-    # Query the database for orders within the week
-    # orders = (
-    #     db.session.query(SalmonOrder)
-        
-    #     .order_by(SalmonOrder.customer.asc())
-    #     .order_by(SalmonOrder.customer.asc())
-    #     .all()
-    # )
-
     orders = (
         db.session.query(
             SalmonOrder.id, 
@@ -302,12 +254,10 @@ def order_editing():
         .group_by(SalmonOrder.id)
         .all()
     )
-    print(orders)
     # Organize orders by customer and date
     orders_by_customer = defaultdict(lambda: defaultdict(list))
     for order in orders:
         orders_by_customer[order.customer][order.date].append(order)
-    print(orders_by_customer)
 
     # List of dates in the week for column headers
     week_dates = [start_date + timedelta(days=i) for i in range(6)]
@@ -315,27 +265,116 @@ def order_editing():
     return render_template('order_editing.html', week_str=week_str, orders_by_customer=orders_by_customer, week_dates=week_dates)
 
 
-
-@bp.route('/download_pdf')
+@bp.route('/download_delivery_note')
 @login_required
-def download_pdf():
+def download_delivery_note():
     date = request.args.get('date')
-    customer = request.args.get('customer')
+    customer = request.args.get('customer')  # No need for try-except here
 
-    # Perform your logic to generate a PDF based on the date and customer
-    # This is a placeholder for your PDF generation logic
-    pdf_file_path = generate_pdf(date, customer) 
+    pdf_file_path = generate_delivery_note(date, customer)
 
-    # Send the generated PDF file back to the client
     return send_file(pdf_file_path, as_attachment=True)
 
-def generate_pdf(date, customer):
-    # Implement the logic to generate a PDF file
-    # This function should return the path to the generated PDF file
-    # For example, you might use a library like ReportLab or FPDF to create the PDF
-    # Placeholder implementation:
-    pdf_file_path = 'path_to_generated_pdf.pdf'
+def generate_delivery_note(date, customer=None):
+    # Fetch the required data
+    data = get_data_for_pdf(date, customer)  # Implement this function
+
+    combined_html_content = ""
+
+    for store_data in data:
+        # Render the template for each store and append it twice to the combined HTML
+        html_content = render_template('salmon_delivery_template_copy.html', data=store_data)
+        combined_html_content += html_content + html_content  # Append the same content twice
+
+    # Define the PDF file path
+    pdf_file_path = f"/temp/{date}_{customer}.pdf" if customer else f"/temp/{date}.pdf"
+
+    # Convert the combined HTML to a single PDF
+    HTML(string=combined_html_content).write_pdf(pdf_file_path)
+
     return pdf_file_path
+
+def get_data_for_pdf(date, customer=None):
+
+    # Retrieve and convert the environment variable
+    completion_threshold = float(os.getenv('COMPLETION_THRESHOLD', '0.9'))  # Default value can be set
+
+    subquery = (
+        db.session.query(
+            SalmonOrderWeight.order_id,
+            func.coalesce(func.sum(SalmonOrderWeight.quantity), 0).label("delivered")
+        )
+        .group_by(SalmonOrderWeight.order_id)
+        .subquery()
+    )
+
+    query = db.session.query(
+        SalmonOrder.customer.label("store"), 
+        Customer.company.label("customer"),
+        Customer.address,
+        Customer.phone,
+        SalmonOrder.date,
+        SalmonOrder.product,
+        (func.coalesce(SalmonOrder.price * 1.14, 0)).label("price"),
+        SalmonOrder.quantity.label("weight"),
+        subquery.c.delivered,
+    )\
+    .outerjoin(subquery, SalmonOrder.id == subquery.c.order_id) \
+    .outerjoin(Customer, SalmonOrder.customer == Customer.customer)\
+    .filter(SalmonOrder.date == date)\
+    .filter(subquery.c.delivered >= completion_threshold * SalmonOrder.quantity)\
+
+    # Apply customer filter if customer is provided
+    if customer:
+        query = query.filter(Customer.customer == customer)
+
+    # Finalize the query
+    data = query.order_by(SalmonOrder.customer.asc(), SalmonOrder.product.asc()).all()
+
+    store_dict = defaultdict(lambda: {
+        'store': '',
+        'customer': '',
+        'address': '',
+        'phone': '',
+        'date': '',
+        'order_detail': [],
+        'contain_frozen':False,
+        'contain_lohi':False,
+    })
+
+    for order in data:
+        store, customer, address, phone, date, product, price, weight, delivered = order
+
+        # Convert Decimal and datetime.date to a more friendly format if necessary
+        price = float(price) if price is not None else 0.0
+        weight = float(weight) if weight is not None else 0.0
+        delivered = float(delivered) if delivered is not None else 0.0
+        date = date.strftime('%Y-%m-%d')
+
+        if store not in store_dict:
+            store_dict[store].update({
+                'store': store,
+                'customer': customer,
+                'address': address,
+                'phone': phone,
+                'date': date
+            })
+
+        store_dict[store]['order_detail'].append({
+            'id': len(store_dict[store]['order_detail']) + 1,
+            'product': product,
+            'weight': str(round(weight,2)),
+            'price': str(round(price,2)),
+            'delivered': str(round(delivered,2))
+        })
+        if 'Frozen' in product:
+            store_dict[store]['contain_frozen'] = True
+        elif 'Frozen' not in product and 'Lohi' in product:
+            store_dict[store]['contain_lohi'] = True
+
+    return list(store_dict.values())
+
+
 
 
 @bp.route('/add_order')
@@ -346,7 +385,7 @@ def add_order():
 
     # Perform your logic to generate a PDF based on the date and customer
     # This is a placeholder for your PDF generation logic
-    pdf_file_path = generate_pdf(date, customer) 
+    pdf_file_path = generate_delivery_note(date, customer) 
 
     # Send the generated PDF file back to the client
     return send_file(pdf_file_path, as_attachment=True)
