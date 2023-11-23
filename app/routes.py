@@ -300,7 +300,7 @@ def generate_delivery_note(date, customer=None):
     if data:
         for i in range(len(data)):
             html_content = render_template('salmon_delivery_template_copy_copy.html', data=data[i])
-            pdf_file_name = f"{date}_{customer}.pdf" if customer else f"{date}_{i}.pdf"
+            pdf_file_name = f"{date}_{customer}.pdf" if customer else f"{date}_{i:03d}.pdf"
             pdf_file_path = os.path.join(os.getcwd(), "temp", pdf_file_name)
             convert_html_to_pdf(html_content, pdf_file_path)
 
@@ -359,13 +359,14 @@ def get_data_for_pdf(date, customer=None):
     .outerjoin(Customer, SalmonOrder.customer == Customer.customer)\
     .filter(SalmonOrder.date == date)\
     .filter(subquery.c.delivered >= completion_threshold * SalmonOrder.quantity)\
+    .order_by(SalmonOrder.customer.asc(), SalmonOrder.product.asc())
 
     # Apply customer filter if customer is provided
     if customer:
         query = query.filter(Customer.customer == customer)
 
     # Finalize the query
-    data = query.order_by(SalmonOrder.customer.asc(), SalmonOrder.product.asc()).all()
+    data = query.all()
 
     store_dict = defaultdict(lambda: {
         'store': '',
