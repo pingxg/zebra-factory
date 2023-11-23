@@ -321,7 +321,7 @@ def generate_delivery_note(date, customer=None):
             writer = PdfWriter()
             pdf_file_name = f"{date}.pdf"
             pdf_file_path = os.path.join(os.getcwd(), "temp", pdf_file_name)
-            for inpfn in matching_files:
+            for inpfn in sorted(matching_files):
                 writer.addpages(PdfReader(inpfn).pages)
             writer.write(pdf_file_path)
     else:
