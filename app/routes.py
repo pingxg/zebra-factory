@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for, flash, send_file, make_response
+from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for, flash, send_file, make_response, abort
 from flask_login import login_required, logout_user, login_user
 from werkzeug.security import check_password_hash
 from .models import User,Customer, SalmonOrder, SalmonOrderWeight
@@ -8,10 +8,12 @@ from datetime import date, datetime, timedelta
 from collections import defaultdict
 from sqlalchemy import func
 import pytz
+import re
+from pdfrw import PdfReader, PdfWriter
+import shutil
 
 
-from weasyprint import HTML
-import io
+from xhtml2pdf import pisa
 
 
 bp = Blueprint('main', __name__)
@@ -269,30 +271,64 @@ def order_editing():
 @login_required
 def download_delivery_note():
     date = request.args.get('date')
-    customer = request.args.get('customer')  # No need for try-except here
-
+    customer = request.args.get('customer')
     pdf_file_path = generate_delivery_note(date, customer)
+    if pdf_file_path:
+        return send_file(pdf_file_path, as_attachment=True)
+    else:
+        abort(404)
 
-    return send_file(pdf_file_path, as_attachment=True)
 
 def generate_delivery_note(date, customer=None):
-    # Fetch the required data
-    data = get_data_for_pdf(date, customer)  # Implement this function
+    # Utility function
+    def convert_html_to_pdf(source_html, output_filename):
+        # open output file for writing (truncated binary)
+        with open(output_filename, "w+b") as result_file:
+            pisa_status = pisa.CreatePDF(
+                    source_html,
+                    dest=result_file)
+        return pisa_status.err
+    data = get_data_for_pdf(date, customer)
 
-    combined_html_content = ""
+    if os.path.exists(os.path.join(os.getcwd(), "temp")):
+        # Remove the directory and all its contents
+        shutil.rmtree(os.path.join(os.getcwd(), "temp"))
 
-    for store_data in data:
-        # Render the template for each store and append it twice to the combined HTML
-        html_content = render_template('salmon_delivery_template_copy.html', data=store_data)
-        combined_html_content += html_content + html_content  # Append the same content twice
+    if not os.path.exists(os.path.join(os.getcwd(), "temp")):
+        os.makedirs(os.path.join(os.getcwd(), "temp"))
+    
+    if data:
+        for i in range(len(data)):
+            html_content = render_template('salmon_delivery_template_copy_copy.html', data=data[i])
+            pdf_file_name = f"{date}_{customer}.pdf" if customer else f"{date}_{i}.pdf"
+            pdf_file_path = os.path.join(os.getcwd(), "temp", pdf_file_name)
+            convert_html_to_pdf(html_content, pdf_file_path)
 
-    # Define the PDF file path
-    pdf_file_path = f"/temp/{date}_{customer}.pdf" if customer else f"/temp/{date}.pdf"
+        if customer is None:
+            # Regular expression pattern to match 'yyyy-mm-dd_{index}'
+            pattern = r'^\d{4}-\d{2}-\d{2}_\d+.pdf$'
 
-    # Convert the combined HTML to a single PDF
-    HTML(string=combined_html_content).write_pdf(pdf_file_path)
+            # List to store matching file paths
+            matching_files = []
 
+            # Iterate through files in the directory
+            for filename in os.listdir("temp" ):
+                if re.match(pattern, filename):
+                    full_path = os.path.join("temp", filename)
+                    matching_files.append(full_path)
+                    matching_files.append(full_path)
+
+            writer = PdfWriter()
+            pdf_file_name = f"{date}.pdf"
+            pdf_file_path = os.path.join(os.getcwd(), "temp", pdf_file_name)
+            for inpfn in matching_files:
+                writer.addpages(PdfReader(inpfn).pages)
+            writer.write(pdf_file_path)
+    else:
+        return False
     return pdf_file_path
+
+
 
 def get_data_for_pdf(date, customer=None):
 
@@ -340,6 +376,7 @@ def get_data_for_pdf(date, customer=None):
         'order_detail': [],
         'contain_frozen':False,
         'contain_lohi':False,
+        'contain_other':False,
     })
 
     for order in data:
@@ -371,6 +408,8 @@ def get_data_for_pdf(date, customer=None):
             store_dict[store]['contain_frozen'] = True
         elif 'Frozen' not in product and 'Lohi' in product:
             store_dict[store]['contain_lohi'] = True
+        elif 'Lohi' not in product:
+            store_dict[store]['contain_other'] = True
 
     return list(store_dict.values())
 

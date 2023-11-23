@@ -71,7 +71,7 @@
                                         <div class="text-left font-semibold text-gray-800 truncate w-32 sm:text-xx">
                                             {{ order.product }} ({{ "%.2f"|format(order.price) }})
                                         </div>
-                                            <div class="flex justify-end items-center font-thin text-xs">
+                                            <div class="flex justify-end items-center text-xm">
                                                 <span class="{{ 'text-green-600' if order.total_produced|float >= order.quantity|float * completion_threshold|float else 'text-red-600' }}">
                                                     {{ "%.2f"|format(order.total_produced) }}/{{ order.quantity|float }}
                                                 </span>

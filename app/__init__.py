@@ -32,10 +32,23 @@ def create_app(config_name):
         adjusted_week_str = f"{adjusted_year}-W{adjusted_week:02d}"
         return adjusted_week_str
 
+    def add_days(date_str, days, date_format="%Y-%m-%d"):
+        # Convert the string to a datetime object
+        dt = datetime.strptime(date_str, date_format)
+        # Add the specified number of days
+        new_date = dt + timedelta(days=days)
+        # Convert back to string if needed, or return the datetime object
+        return new_date.strftime(date_format)
+
     app.register_blueprint(routes.bp)
 
     # Define and add the custom filter
     @app.template_filter('adjust_week')
     def adjust_week_filter(week_str, delta_weeks):
         return adjust_week(week_str, delta_weeks)
+    # Define and add the custom filter
+    @app.template_filter('add_days')
+    def add_days_filter(date_str, days):
+        return add_days(date_str, days)
+        
     return app
