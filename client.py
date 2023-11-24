@@ -62,6 +62,8 @@ def keepalive_loop():
     while True:
         time.sleep(10)  # Send a keepalive message every 10 seconds
         sio.emit('keepalive', {})
+        logger.info("Sending keepalive message to the server.")
+
 
 def main():
     """Main function to start the client."""

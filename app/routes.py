@@ -12,12 +12,16 @@ import re
 from pdfrw import PdfReader, PdfWriter
 import shutil
 
-
+import logging
 from xhtml2pdf import pisa
 
 
 bp = Blueprint('main', __name__)
 
+
+# Set up logging with timestamp
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 
@@ -84,6 +88,7 @@ def emit_print_pdf():
 @socketio.on('keepalive')
 def emit_keepalive_response(data):
     socketio.emit('keepalive_response', {})
+    logger.info("Keep alive message reveiced from client, sending response.")
     return jsonify({'status': 'Keepalive response emitted'})
 
 
