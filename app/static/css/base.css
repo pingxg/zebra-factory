@@ -42,3 +42,22 @@
     transform-origin: bottom left;
     width: 28px;
   }
+
+  @keyframes breathing {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.breathing-icon {
+    animation: breathing 5s ease-in-out infinite;
+}

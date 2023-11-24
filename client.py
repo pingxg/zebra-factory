@@ -60,7 +60,7 @@ def on_keepalive_response(data):
 def keepalive_loop():
     """Continuously send keepalive messages to the server."""
     while True:
-        time.sleep(10)  # Send a keepalive message every 10 seconds
+        time.sleep(5)  # Send a keepalive message every 10 seconds
         sio.emit('keepalive', {})
         logger.info("Sending keepalive message to the server.")
 

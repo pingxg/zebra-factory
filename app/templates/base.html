@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
     <script>
         var socket = io.connect('https://zebra-factory.onrender.com');
             socket.on('refresh_data', function(data) {
@@ -17,6 +18,17 @@
                 // Optionally, you can refresh the page to get the latest data
                 location.reload();
             });
+
+            // Listen for status updates
+            socket.on('status_update', function(data) {
+                const statusIcon = document.getElementById('status-icon');
+                if (data.status === 'green') {
+                    statusIcon.className = 'fas fa-circle text-green-500 mr-3 breathing-icon';
+                } else {
+                    statusIcon.className = 'fas fa-circle text-red-500 mr-3';
+                }
+            });
+
     </script>
     <script>
 
@@ -52,12 +64,10 @@
                         <span class="bar"></span>
                     </a>
 
-                <!-- User greeting -->
-                <!-- <div class="text-lg font-semibold text-gray-100">
-                    Hello, <span class="text-white">{{ current_user.name }}</span>!
-                </div> -->
-                <!-- Logout button -->
+
                 <div>
+                    <!-- Status Icon -->
+                        <span id="status-icon" class="fas fa-circle text-red-500 mr-3"></span>
                     <a href="{{ url_for('main.logout') }}" class="transition duration-300 ease-in-out bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-full shadow-md border border-gray-600 hover:border-gray-500">
                         Logout
                     </a>

@@ -11,6 +11,8 @@ import pytz
 import re
 from pdfrw import PdfReader, PdfWriter
 import shutil
+import threading
+import time
 
 import logging
 from xhtml2pdf import pisa
@@ -84,13 +86,44 @@ def emit_print_pdf():
     return jsonify({'status': 'Print pdf event emitted'})
 
 
+# @login_required
+# @socketio.on('keepalive')
+# def emit_keepalive_response(data):
+#     status = {'status': 'online'}  # Prepare the status information
+#     socketio.emit('keepalive_response', {})
+#     logger.info("Keep alive message reveiced from client, sending response.")
+
+
+# Dictionary to keep track of the last keepalive time for each client
+clients_last_keepalive = {}
+
+def check_clients_status():
+    while True:
+        current_time = time.time()
+        for client_id, last_time in clients_last_keepalive.items():
+            if current_time - last_time > 10:  # 10 seconds threshold
+                socketio.emit('status_update', {'status': 'red'}, room=client_id)
+            else:
+                socketio.emit('status_update', {'status': 'green'}, room=client_id)
+        time.sleep(5)
+
+@login_required
+@socketio.on('connect')
+def handle_connect():
+    clients_last_keepalive[request.sid] = time.time()
+
 @login_required
 @socketio.on('keepalive')
-def emit_keepalive_response(data):
-    socketio.emit('keepalive_response', {})
-    logger.info("Keep alive message reveiced from client, sending response.")
-    return jsonify({'status': 'Keepalive response emitted'})
+def handle_keepalive():
+    clients_last_keepalive[request.sid] = time.time()
 
+@login_required
+@socketio.on('disconnect')
+def handle_disconnect():
+    del clients_last_keepalive[request.sid]
+
+# Start a background thread to check client status
+threading.Thread(target=check_clients_status, daemon=True).start()
 
 
 @bp.context_processor
