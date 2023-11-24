@@ -53,7 +53,7 @@ def on_print(data):
 
 
 @sio.on('keepalive_response')
-def on_keepalive_response():
+def on_keepalive_response(data):
     """Callback for handling the server's response to our keepalive message."""
     logger.info("Received keepalive response from server.")
 
