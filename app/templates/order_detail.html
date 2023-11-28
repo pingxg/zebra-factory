@@ -73,7 +73,7 @@
     <div class="container mx-auto p-4 md:p-12">
         <div href="/" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col my-2">
             <div class="font-bold text-3xl mb-4 text-center p-4 rounded-lg shadow-md cursor-pointer transition duration-300 ease-in-out
-            {% if order[0] == 0 %}
+            {% if order[6] == 0 %}
                 bg-gradient-to-r from-gray-100 to-gray-200
             {% elif order[6] > 0 and order[6] < order[5]|float*completion_threshold|float %}
                 bg-gradient-to-r from-yellow-50 to-yellow-100
@@ -82,7 +82,7 @@
             {% endif %}">
             <a href="/" class="block text-black hover:text-gray-700">Order Details</a>
             <span class="block mt-2 text-sm font-normal text-gray-700">
-                {% if order[0] == 0 %}
+                {% if order[6] == 0 %}
                     Not started
                 {% elif order[6] > 0 and order[6] < order[5]|float*completion_threshold|float %}
                     In progress - {{ '%.2f' % (order[5]|float - order[6]|float) }} kg remaining

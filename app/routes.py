@@ -191,7 +191,6 @@ def order_detail(order_id):
         .outerjoin(Customer, Order.customer == Customer.customer)
         .first()
     )
-
     weight_details = (
         db.session.query(OrderWeight.id, OrderWeight.quantity, OrderWeight.production_time)
         .filter(OrderWeight.order_id == order_id)
