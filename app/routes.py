@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for, flash, send_file, make_response, abort
 from flask_login import login_required, logout_user, login_user
 from werkzeug.security import check_password_hash
-from .models import User,Customer, SalmonOrder, SalmonOrderWeight
+from .models import User, Customer, Order, OrderWeight, ProductName
 from . import db, login_manager, socketio
 import os
 from datetime import date, datetime, timedelta
@@ -86,44 +86,12 @@ def emit_print_pdf():
     return jsonify({'status': 'Print pdf event emitted'})
 
 
-# @login_required
-# @socketio.on('keepalive')
-# def emit_keepalive_response(data):
-#     status = {'status': 'online'}  # Prepare the status information
-#     socketio.emit('keepalive_response', {})
-#     logger.info("Keep alive message reveiced from client, sending response.")
-
-
-# Dictionary to keep track of the last keepalive time for each client
-clients_last_keepalive = {}
-
-def check_clients_status():
-    while True:
-        current_time = time.time()
-        for client_id, last_time in clients_last_keepalive.items():
-            if current_time - last_time > 10:  # 10 seconds threshold
-                socketio.emit('status_update', {'status': 'red'}, room=client_id)
-            else:
-                socketio.emit('status_update', {'status': 'green'}, room=client_id)
-        time.sleep(5)
-
-@login_required
-@socketio.on('connect')
-def handle_connect():
-    clients_last_keepalive[request.sid] = time.time()
-
 @login_required
 @socketio.on('keepalive')
-def handle_keepalive():
-    clients_last_keepalive[request.sid] = time.time()
-
-@login_required
-@socketio.on('disconnect')
-def handle_disconnect():
-    del clients_last_keepalive[request.sid]
-
-# Start a background thread to check client status
-threading.Thread(target=check_clients_status, daemon=True).start()
+def emit_keepalive_response(data):
+    status = {'status': 'online'}  # Prepare the status information
+    socketio.emit('keepalive_response', {})
+    logger.info("Keep alive message reveiced from client, sending response.")
 
 
 @bp.context_processor
@@ -153,33 +121,40 @@ def index():
     if selected_date:
         order_details = (
             db.session.query(
-                SalmonOrder.id, 
-                SalmonOrder.customer, 
-                SalmonOrder.date, 
-                SalmonOrder.product,
-                (func.coalesce(SalmonOrder.price * 1.14, 0)).label("price"),
-                SalmonOrder.quantity,
-                (func.coalesce(func.sum(SalmonOrderWeight.quantity), 0)).label("total_produced"),
+                Order.id, 
+                Order.customer, 
+                Order.date, 
+                Order.product,
+                (func.coalesce(Order.price * 1.14, 0)).label("price"),
+                Order.quantity,
+                (func.coalesce(func.sum(OrderWeight.quantity), 0)).label("total_produced"),
                 Customer.priority,
                 Customer.packing,
+                ProductName.product_type,
             )
-            .outerjoin(SalmonOrderWeight, SalmonOrder.id == SalmonOrderWeight.order_id)
-            .filter(SalmonOrder.date == selected_date)
-            .group_by(SalmonOrder.id)
-            .outerjoin(Customer, SalmonOrder.customer == Customer.customer)
+            .outerjoin(ProductName, Order.product == ProductName.product_name)
+            .outerjoin(OrderWeight, Order.id == OrderWeight.order_id)
+            .filter(Order.date == selected_date)
+            .group_by(Order.id)
+            .outerjoin(Customer, Order.customer == Customer.customer)
+            .order_by(ProductName.product_type.asc(), Customer.priority.asc(), Order.product.asc(), Order.customer.asc())
             .all()
         )
-        grouped_orders = defaultdict(list)
-        totals = {}  # Dictionary to store the total for each product group
 
+        grouped_orders = {}
+        totals = {}  # Dictionary to store the total for each product group
+        from pprint import pprint
         for order in order_details:
-            grouped_orders[order[3]].append(order)
+            if order[9] not in grouped_orders:
+                grouped_orders[order[9]] = {}
+            if f'Priority {order[7]}' not in grouped_orders[order[9]]:
+                grouped_orders[order[9]][f'Priority {order[7]}'] = []
+            grouped_orders[order[9]][f'Priority {order[7]}'].append(order)
             if order[3] not in totals:
                 totals[order[3]] = 0
             totals[order[3]] += (order[5])
-        grouped_orders_sorted = dict(sorted(grouped_orders.items(), key=lambda x: (not x[0].startswith('Lohi'), x[0])))
-
-    return render_template('index.html', grouped_orders=grouped_orders_sorted, selected_date=selected_date, totals=totals, timedelta=timedelta)
+        
+    return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, timedelta=timedelta)
 
 
 @bp.route('/order/<int:order_id>', methods=['GET', 'POST'])
@@ -187,7 +162,7 @@ def index():
 def order_detail(order_id):
     if request.method == 'POST':
         scale_reading = float(request.form['scale_reading'])
-        weight = SalmonOrderWeight(order_id=order_id, 
+        weight = OrderWeight(order_id=order_id, 
                                     quantity=scale_reading, 
                                     production_time=datetime.now(pytz.timezone(os.environ.get('TIMEZONE'))))
         db.session.add(weight)
@@ -200,27 +175,27 @@ def order_detail(order_id):
     # Using SQLAlchemy ORM to retrieve the order with total produced and weight details
     order = (
         db.session.query(
-            SalmonOrder.id, 
-            SalmonOrder.customer, 
-            SalmonOrder.date, 
-            SalmonOrder.product,
-            (func.coalesce(SalmonOrder.price * 1.14, 0)).label("price"),
-            SalmonOrder.quantity,
-            (func.coalesce(func.sum(SalmonOrderWeight.quantity), 0)).label("total_produced"),
+            Order.id, 
+            Order.customer, 
+            Order.date, 
+            Order.product,
+            (func.coalesce(Order.price * 1.14, 0)).label("price"),
+            Order.quantity,
+            (func.coalesce(func.sum(OrderWeight.quantity), 0)).label("total_produced"),
             Customer.priority,
             Customer.packing,
         )
-        .outerjoin(SalmonOrderWeight, SalmonOrder.id == SalmonOrderWeight.order_id)
-        .filter(SalmonOrder.id == order_id)
-        .group_by(SalmonOrder.id)
-        .outerjoin(Customer, SalmonOrder.customer == Customer.customer)
+        .outerjoin(OrderWeight, Order.id == OrderWeight.order_id)
+        .filter(Order.id == order_id)
+        .group_by(Order.id)
+        .outerjoin(Customer, Order.customer == Customer.customer)
         .first()
     )
 
     weight_details = (
-        db.session.query(SalmonOrderWeight.id, SalmonOrderWeight.quantity, SalmonOrderWeight.production_time)
-        .filter(SalmonOrderWeight.order_id == order_id)
-        .order_by(SalmonOrderWeight.production_time.asc())
+        db.session.query(OrderWeight.id, OrderWeight.quantity, OrderWeight.production_time)
+        .filter(OrderWeight.order_id == order_id)
+        .order_by(OrderWeight.production_time.asc())
         .all()
     )
 
@@ -233,7 +208,7 @@ def order_detail(order_id):
 @bp.route('/weight/<int:weight_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_weight(weight_id):
-    weight = SalmonOrderWeight.query.filter_by(id=weight_id).first()
+    weight = OrderWeight.query.filter_by(id=weight_id).first()
     
     if not weight:
         return jsonify(success=False, error="Weight not found"), 404
@@ -247,7 +222,7 @@ def edit_weight(weight_id):
 @bp.route('/weight/<int:weight_id>/delete', methods=['POST'])
 @login_required
 def delete_weight(weight_id):
-    weight = SalmonOrderWeight.query.filter_by(id=weight_id).first()
+    weight = OrderWeight.query.filter_by(id=weight_id).first()
     
     if not weight:
         return "Weight not found", 404
@@ -280,18 +255,18 @@ def order_editing():
 
     orders = (
         db.session.query(
-            SalmonOrder.id, 
-            SalmonOrder.customer,
-            SalmonOrder.date,
-            SalmonOrder.product,
-            (func.coalesce(SalmonOrder.price * 1.14, 0)).label("price"),
-            SalmonOrder.quantity,
-            (func.coalesce(func.sum(SalmonOrderWeight.quantity), 0)).label("total_produced"),
+            Order.id, 
+            Order.customer,
+            Order.date,
+            Order.product,
+            (func.coalesce(Order.price * 1.14, 0)).label("price"),
+            Order.quantity,
+            (func.coalesce(func.sum(OrderWeight.quantity), 0)).label("total_produced"),
         )
-        .filter(SalmonOrder.date.between(start_date, end_date))
-        .outerjoin(SalmonOrderWeight, SalmonOrder.id == SalmonOrderWeight.order_id)
-        .order_by(SalmonOrder.customer.asc(), SalmonOrder.product.asc())
-        .group_by(SalmonOrder.id)
+        .filter(Order.date.between(start_date, end_date))
+        .outerjoin(OrderWeight, Order.id == OrderWeight.order_id)
+        .order_by(Order.customer.asc(), Order.product.asc())
+        .group_by(Order.id)
         .all()
     )
     # Organize orders by customer and date
@@ -341,14 +316,12 @@ def generate_delivery_note(date, customer=None):
             pdf_file_name = f"{date}_{customer}.pdf" if customer else f"{date}_{i:03d}.pdf"
             pdf_file_path = os.path.join(os.getcwd(), "temp", pdf_file_name)
             convert_html_to_pdf(html_content, pdf_file_path)
-
+        matching_files = []
         if customer is None:
             # Regular expression pattern to match 'yyyy-mm-dd_{index}'
             pattern = r'^\d{4}-\d{2}-\d{2}_\d+.pdf$'
-
             # List to store matching file paths
-            matching_files = []
-
+            
             # Iterate through files in the directory
             for filename in os.listdir("temp" ):
                 if re.match(pattern, filename):
@@ -356,12 +329,18 @@ def generate_delivery_note(date, customer=None):
                     matching_files.append(full_path)
                     matching_files.append(full_path)
 
-            writer = PdfWriter()
             pdf_file_name = f"{date}.pdf"
-            pdf_file_path = os.path.join(os.getcwd(), "temp", pdf_file_name)
-            for inpfn in sorted(matching_files):
-                writer.addpages(PdfReader(inpfn).pages)
-            writer.write(pdf_file_path)
+        else:
+            matching_files.append(os.path.join("temp", pdf_file_name))
+            matching_files.append(os.path.join("temp", pdf_file_name))
+
+        writer = PdfWriter()
+        pdf_file_path = os.path.join(os.getcwd(), "temp", pdf_file_name)
+        for inpfn in sorted(matching_files):
+            writer.addpages(PdfReader(inpfn).pages)
+        writer.write(pdf_file_path)
+
+        
     else:
         return False
     return pdf_file_path
@@ -375,29 +354,29 @@ def get_data_for_pdf(date, customer=None):
 
     subquery = (
         db.session.query(
-            SalmonOrderWeight.order_id,
-            func.coalesce(func.sum(SalmonOrderWeight.quantity), 0).label("delivered")
+            OrderWeight.order_id,
+            func.coalesce(func.sum(OrderWeight.quantity), 0).label("delivered")
         )
-        .group_by(SalmonOrderWeight.order_id)
+        .group_by(OrderWeight.order_id)
         .subquery()
     )
 
     query = db.session.query(
-        SalmonOrder.customer.label("store"), 
+        Order.customer.label("store"), 
         Customer.company.label("customer"),
         Customer.address,
         Customer.phone,
-        SalmonOrder.date,
-        SalmonOrder.product,
-        (func.coalesce(SalmonOrder.price * 1.14, 0)).label("price"),
-        SalmonOrder.quantity.label("weight"),
+        Order.date,
+        Order.product,
+        (func.coalesce(Order.price * 1.14, 0)).label("price"),
+        Order.quantity.label("weight"),
         subquery.c.delivered,
     )\
-    .outerjoin(subquery, SalmonOrder.id == subquery.c.order_id) \
-    .outerjoin(Customer, SalmonOrder.customer == Customer.customer)\
-    .filter(SalmonOrder.date == date)\
-    .filter(subquery.c.delivered >= completion_threshold * SalmonOrder.quantity)\
-    .order_by(SalmonOrder.customer.asc(), SalmonOrder.product.asc())
+    .outerjoin(subquery, Order.id == subquery.c.order_id) \
+    .outerjoin(Customer, Order.customer == Customer.customer)\
+    .filter(Order.date == date)\
+    .filter(subquery.c.delivered >= completion_threshold * Order.quantity)\
+    .order_by(Order.customer.asc(), Order.product.asc())
 
     # Apply customer filter if customer is provided
     if customer:

@@ -18,7 +18,7 @@ class Customer(db.Model):
     priority = db.Column(db.Integer)
     packing = db.Column(db.String)
 
-class SalmonOrder(db.Model):
+class Order(db.Model):
     __tablename__ = "salmon_orders"
     id = db.Column(db.Integer, primary_key=True)
     customer = db.Column(db.String, db.ForeignKey('salmon_customer.customer'))
@@ -26,13 +26,17 @@ class SalmonOrder(db.Model):
     product = db.Column(db.String)
     price = db.Column(db.Float)
     quantity = db.Column(db.Integer)
-    
-    weights = db.relationship('SalmonOrderWeight', backref='salmon_order', lazy=True, cascade='all, delete, delete-orphan')
+    weights = db.relationship('OrderWeight', backref='salmon_order', lazy=True, cascade='all, delete, delete-orphan')
 
-class SalmonOrderWeight(db.Model):
+class OrderWeight(db.Model):
     __tablename__ = "salmon_order_weight"
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('salmon_orders.id'), nullable=False)
     quantity = db.Column(db.Float)
     production_time = db.Column(db.DateTime)
 
+class ProductName(db.Model):
+    __tablename__ = "salmon_product_name"
+    id = db.Column(db.Integer, primary_key=True)
+    product_name = db.Column(db.String, db.ForeignKey('salmon_orders.product'))
+    product_type = db.Column(db.String)

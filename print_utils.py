@@ -135,6 +135,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
         """)
     try:
         result = session.execute(query, {'order_id': order_id})
+        
         df = pd.DataFrame(result.fetchall(), columns=result.keys())
         df['expiry_date_fresh'] = df['date'] + pd.Timedelta(days=6)
         df['expiry_date_frozen'] = df['date'] + pd.Timedelta(days=90)

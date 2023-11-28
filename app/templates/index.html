@@ -37,58 +37,123 @@
                 </div>
                 
             </form>
-            
-            
+
+
             {% if grouped_orders %}
-                {% for product, product_orders in grouped_orders.items() %}
-                    <div class="my-6 p-4 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg shadow-md">
-                        <h3 class="font-bold text-2xl mb-4 text-center">{{ product }}: {{ totals[product]|float }} kg</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 mb-4">
-                            {% for order in product_orders %}
-                            <div>
-                                <a href="{{ url_for('main.order_detail', order_id=order[0]) }}" 
-                                    class="rounded-border block p-3 md:p-4 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex flex-col justify-between
-                                    {% if order[6] >= order[5]|float*completion_threshold|float %}
-                                        bg-gradient-to-tr from-green-500 to-green-700
-                                    {% else %} 
-                                        {% if order[7] == 1 %}
-                                            bg-gradient-to-l from-red-900 via-yellow-800 to-yellow-600
-                                        {% elif order[7] == 2 %}
-                                            bg-gradient-to-br from-blue-600 to-blue-900
-                                        {% else %}
-                                            bg-gradient-to-bl from-gray-900 to-gray-600 bg-gradient-to-r
-                                        {% endif %}
-                                    {% endif %}
-                                    ">
-
-                                    <div class="text-white font-semibold text-base sm:text-lg">
-                                        {{ order[1] }}
-                                    </div>
-                                    <div class="flex justify-between items-end">
-                                        <p class="text-white font-thin text-base sm:text-s">
-                                            {{ order[3] }}
-                                        </p>
-                                        <p class="text-white font-thin text-base sm:text-xl">
-                                            {{ order[6] }} / {{ order[5]|float }} kg
-                                        </p>
-
-                                        {% if "Lohi" in order[3] %}
-                                        <div class="absolute top-0 right-0 bg-black bg-opacity-20 text-white rounded-lg rounded-bl-lg px-2 py-1 text-xs" style="text-transform: capitalize;">
-                                            {{ order[8] }}
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                </a>
-                            </div>
-                        {% endfor %}
-                        </div>
-                    </div>
+            <div class="tabs flex border-b-2 border-gray-300">
+                {% for product_type, order_details in grouped_orders.items() %}
+                    <button class="tab-button flex-1 py-2 px-4 text-sm font-medium transition duration-300 ease-in-out focus:outline-none hover:bg-gray-100 focus:bg-gray-200 text-gray-700 hover:text-gray-900 focus:text-gray-900 rounded-t-md" onclick="showOrders('{{ product_type }}')">{{ product_type }}</button>
                 {% endfor %}
-            {% else %}
-            <div class="mt-6 p-4 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg shadow-md text-center">
-                <h4 class="font-bold text-xl mb-4">No Orders</h3>
-                <p class="text-gray-600">Please select a different date or check back later.</p>
             </div>
+            
+            
+            <div id="LohiOrders" class="orders-content">
+                {% for product_type, order_detailes in grouped_orders.items() %}
+                    {% if "Lohi" in product_type %}
+                        {% for priority, detailes in order_detailes.items() %}
+                            <div class="flex items-center justify-center gap-2 my-4">
+                                <hr class="w-full border-t border-gray-300">
+                                <span class="text-sm text-gray-500 font-medium whitespace-nowrap">{{ priority }}</span>
+                                <hr class="w-full border-t border-gray-300">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 mb-4">
+                                {% for order in detailes %}
+                                <div>
+                                    <a href="{{ url_for('main.order_detail', order_id=order[0]) }}" 
+                                        class="rounded-border block p-3 md:p-4 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex flex-col justify-between
+                                        {% if order[6] >= order[5]|float*completion_threshold|float %}
+                                            bg-gradient-to-tr from-green-500 to-green-700
+                                        {% else %} 
+                                            {% if order[7] == 1 %}
+                                                bg-gradient-to-l from-red-900 via-yellow-800 to-yellow-600
+                                            {% elif order[7] == 2 %}
+                                                bg-gradient-to-br from-blue-600 to-blue-900
+                                            {% else %}
+                                                bg-gradient-to-bl from-gray-900 to-gray-600 bg-gradient-to-r
+                                            {% endif %}
+                                        {% endif %}
+                                        ">
+                                        <div class="text-white font-semibold text-base sm:text-lg">
+                                            {{ order[1] }}
+                                        </div>
+                                        <div class="flex justify-between items-end">
+                                            <p class="text-white font-thin text-base sm:text-s">
+                                                {{ order[3] }}
+                                            </p>
+                                            <p class="text-white font-thin text-base sm:text-xl">
+                                                {{ order[6] }} / {{ order[5]|float }} kg
+                                            </p>
+                                            {% if "Lohi" in order[3] %}
+                                            <div class="absolute top-0 right-0 bg-black bg-opacity-20 text-white rounded-lg rounded-bl-lg px-2 py-1 text-xs" style="text-transform: capitalize;">
+                                                {{ order[8] }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+            </div>
+
+            <div id="VegetableOrders" class="orders-content" style="display:none;">
+                {% for product_type, order_detailes in grouped_orders.items() %}
+                    {% if "Vegetable" in product_type %}
+                        {% for priority, detailes in order_detailes.items() %}
+                            <div class="flex items-center justify-center gap-2 my-4">
+                                <hr class="w-full border-t border-gray-300">
+                                <span class="text-sm text-gray-500 font-medium whitespace-nowrap">{{ priority }}</span>
+                                <hr class="w-full border-t border-gray-300">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 mb-4">
+                                {% for order in detailes %}
+                                <div>
+                                    <a href="{{ url_for('main.order_detail', order_id=order[0]) }}" 
+                                        class="rounded-border block p-3 md:p-4 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex flex-col justify-between
+                                        {% if order[6] >= order[5]|float*completion_threshold|float %}
+                                            bg-gradient-to-tr from-green-500 to-green-700
+                                        {% else %} 
+                                            {% if order[7] == 1 %}
+                                                bg-gradient-to-l from-red-900 via-yellow-800 to-yellow-600
+                                            {% elif order[7] == 2 %}
+                                                bg-gradient-to-br from-blue-600 to-blue-900
+                                            {% else %}
+                                                bg-gradient-to-bl from-gray-900 to-gray-600 bg-gradient-to-r
+                                            {% endif %}
+                                        {% endif %}
+                                        ">
+                                        <div class="text-white font-semibold text-base sm:text-lg">
+                                            {{ order[1] }}
+                                        </div>
+                                        <div class="flex justify-between items-end">
+                                            <p class="text-white font-thin text-base sm:text-s">
+                                                {{ order[3] }}
+                                            </p>
+                                            <p class="text-white font-thin text-base sm:text-xl">
+                                                {{ order[6] }} / {{ order[5]|float }} kg
+                                            </p>
+                                            {% if "Lohi" in order[3] %}
+                                            <div class="absolute top-0 right-0 bg-black bg-opacity-20 text-white rounded-lg rounded-bl-lg px-2 py-1 text-xs" style="text-transform: capitalize;">
+                                                {{ order[8] }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+            {% else %}
+                <div class="mt-6 p-4 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg shadow-md text-center">
+                    <h4 class="font-bold text-xl mb-4">No Orders</h3>
+                    <p class="text-gray-600">Please select a different date or check back later.</p>
+                </div>
             {% endif %}
         </div>
     </div>
