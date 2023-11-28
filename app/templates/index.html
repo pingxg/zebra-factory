@@ -38,6 +38,34 @@
                 
             </form>
 
+            {% if totals %}
+
+            <div class="my-3 w-full bg-white shadow-md rounded-lg overflow-hidden">
+                <table class="w-full">
+                    {% for product, order_info in totals.items() %}
+                        <tr class="grid grid-cols-3 divide-x divide-gray-200">
+                            <td class="px-5 py-3 text-xs text-gray-700 font-medium text-center">
+                                {{ product }}
+                            </td>
+                            <td class="px-5 py-3 text-xs font-thin text-gray-700 text-center">
+                                {{ '%.1f' % (order_info[1]|float/order_info[0]|float*100) }} %
+                            </td>
+                            <td class="px-5 py-3 text-xs font-thin text-gray-700 text-center">
+                                {{ '%.2f' % (order_info[1]|float) }} / {{ '%.2f' % (order_info[0]|float) }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+                
+                
+            </div>
+            
+            
+                
+            {% endif %}
+
+
+
 
             {% if grouped_orders %}
             <div class="tabs flex border-b-2 border-gray-300">

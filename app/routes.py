@@ -150,10 +150,14 @@ def index():
             if f'Priority {order[7]}' not in grouped_orders[order[9]]:
                 grouped_orders[order[9]][f'Priority {order[7]}'] = []
             grouped_orders[order[9]][f'Priority {order[7]}'].append(order)
+            print(order)
             if order[3] not in totals:
-                totals[order[3]] = 0
-            totals[order[3]] += (order[5])
-        
+                totals[order[3]] = []
+                totals[order[3]].append(0)
+                totals[order[3]].append(0)
+            totals[order[3]][0] += (order[5])
+            totals[order[3]][1] += (order[6])
+        print(totals)
     return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, timedelta=timedelta)
 
 
@@ -162,9 +166,10 @@ def index():
 def order_detail(order_id):
     if request.method == 'POST':
         scale_reading = float(request.form['scale_reading'])
-        weight = OrderWeight(order_id=order_id, 
-                                    quantity=scale_reading, 
-                                    production_time=datetime.now(pytz.timezone(os.environ.get('TIMEZONE'))))
+        weight = OrderWeight(
+            order_id=order_id, 
+            quantity=scale_reading, 
+            production_time=datetime.now(pytz.timezone(os.environ.get('TIMEZONE'))))
         db.session.add(weight)
         db.session.commit()
         session['show_toast'] = True
