@@ -157,7 +157,6 @@ def index():
                 totals[order[3]].append(0)
             totals[order[3]][0] += (order[5])
             totals[order[3]][1] += (order[6])
-        print(totals)
     return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, timedelta=timedelta)
 
 
