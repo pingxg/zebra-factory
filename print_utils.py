@@ -141,7 +141,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
             LEFT JOIN 
                 salmon_customer c ON o.customer = c.customer
             WHERE
-                o.id = order_id;
+                o.id = :order_id;
         """)
     try:
         result = session.execute(query, {'order_id': order_id})
