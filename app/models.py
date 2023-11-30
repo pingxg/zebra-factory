@@ -34,9 +34,17 @@ class OrderWeight(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey('salmon_orders.id'), nullable=False)
     quantity = db.Column(db.Float)
     production_time = db.Column(db.DateTime)
+    batch_number = db.Column(db.Integer)
 
 class ProductName(db.Model):
     __tablename__ = "salmon_product_name"
     id = db.Column(db.Integer, primary_key=True)
     product_name = db.Column(db.String, db.ForeignKey('salmon_orders.product'))
     product_type = db.Column(db.String)
+
+class MaterialInfo(db.Model):
+    __tablename__ = "salmon_material_info"
+    id = db.Column(db.Integer, primary_key=True)
+    farmer = db.Column(db.String)
+    date = db.Column(db.Date)
+    batch_number = db.Column(db.Integer, db.ForeignKey('salmon_order_weight.batch_number'))

@@ -123,15 +123,25 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 o.product, 
                 COALESCE(o.price * 1.14, 0) AS price, 
                 o.quantity AS weight, 
-                w.quantity AS delivered
-            FROM 
+                w.quantity AS delivered,
+				COALESCE(w.batch_number, 
+					(SELECT batch_number
+					FROM data.salmon_material_info 
+					ORDER BY date DESC LIMIT 1)
+					) AS batch_number,
+				COALESCE((SELECT farmer
+					FROM data.salmon_material_info 
+					ORDER BY date DESC LIMIT 1),
+                    "Nordlaks Havbruk AS"
+					) AS farmer
+            FROM
                 salmon_orders o
             LEFT JOIN 
                 salmon_order_weight w ON o.id = w.order_id
             LEFT JOIN 
                 salmon_customer c ON o.customer = c.customer
             WHERE
-                o.id = :order_id;
+                o.id = order_id;
         """)
     try:
         result = session.execute(query, {'order_id': order_id})
@@ -211,14 +221,14 @@ def zebra_generator(df):
 
     ; Add Exporter info
     ^FO30,40^A0N,20,20^FDViejä / Exportör^FS
-    ^FO30,65^A0N,25,25^FDNordlaks Sales AS^FS
-    ^FO30,90^A0N,20,20^FDCoC 4063651427851^FS
+    ^FO30,65^A0N,25,25^FD{exporter}^FS
+    ^FO30,90^A0N,20,20^FD{exporter_info}^FS
 
     ; Add Farmer info
     ^FO470,40^A0N,20,20^FDKasvattaja / Uppfödare^FS
-    ^FO470,65^A0N,25,25^FDNordlaks Havbruk AS^FS
-    ^FO470,90^A0N,25,25^FD929911946 / 16939^FS
-    ^FO470,115^A0N,20,20^FDGGN 4059883202717^FS
+    ^FO470,65^A0N,25,25^FD{farmer}^FS
+    ^FO470,90^A0N,25,25^FD{farmer_info} / {batch_number}^FS
+    ^FO470,115^A0N,20,20^FDGGN {farmer_ggn}^FS
 
     ; Add Producer info
     ^FO30,135^A0N,20,20^FDValmistaja / Tillverkare^FS
@@ -281,6 +291,18 @@ def zebra_generator(df):
             expiry_info = f"{row['date_z']}-{row['expiry_date_z_fresh']}"
             product_name = f"{row['product']}"
 
+
+        if row['farmer'] == 'Nordlaks Havbruk AS':
+            farmer_info = "929911946"
+            farmer_ggn = "4059883202717"
+            exporter = "Nordlaks Sales AS"
+            exporter_info = "CoC 4063651427851"
+        elif row['farmer'] == 'Kirkenes Processing AS':
+            farmer_info = "917056595"
+            farmer_ggn = "4056186507785"
+            exporter = "Leroy Seafood AS AS"
+            exporter_info = "N-5003 Bergen, Norway"
+
         zpl_label = zpl_template_x99_y63.format(
             order_id=row['order_id'],
             store=row['store'],
@@ -288,6 +310,12 @@ def zebra_generator(df):
             delivered=row['delivered'],
             temperature_info=temperature_info,
             expiry_info=expiry_info,
+            batch_number=row['batch_number'],
+            farmer=row['farmer'],
+            farmer_info=farmer_info,
+            farmer_ggn=farmer_ggn,
+            exporter=exporter,
+            exporter_info=exporter_info,
         )
         zpl_labels.append(zpl_label)
     return zpl_labels

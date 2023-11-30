@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for, flash, send_file, make_response, abort
 from flask_login import login_required, logout_user, login_user
 from werkzeug.security import check_password_hash
-from .models import User, Customer, Order, OrderWeight, ProductName
+from .models import User, Customer, Order, OrderWeight, ProductName, MaterialInfo
 from . import db, login_manager, socketio
 import os
 from datetime import date, datetime, timedelta
@@ -165,10 +165,27 @@ def index():
 def order_detail(order_id):
     if request.method == 'POST':
         scale_reading = float(request.form['scale_reading'])
+        batch_number = request.form['batch_number']
+
+        try:
+            batch_number = int(batch_number)
+        except:
+            print("Batch number not provided")
+            batch_number = (
+                db.session.query(
+                    MaterialInfo.batch_number, 
+                )
+                .order_by(MaterialInfo.date.desc())
+                .first()
+            )
+            print(int(batch_number[0]))
+
         weight = OrderWeight(
             order_id=order_id, 
             quantity=scale_reading, 
-            production_time=datetime.now(pytz.timezone(os.environ.get('TIMEZONE'))))
+            production_time=datetime.now(pytz.timezone(os.environ.get('TIMEZONE'))),
+            batch_number=batch_number
+            )
         db.session.add(weight)
         db.session.commit()
         session['show_toast'] = True
