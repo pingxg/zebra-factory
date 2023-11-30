@@ -131,8 +131,14 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
 					) AS batch_number,
 				COALESCE((SELECT farmer
 					FROM data.salmon_material_info 
-					ORDER BY date DESC LIMIT 1),
-                    "Nordlaks Havbruk AS"
+                    WHERE batch_number = COALESCE(w.batch_number, 
+                                                (SELECT batch_number
+                                                FROM data.salmon_material_info 
+                                                ORDER BY date DESC LIMIT 1)
+                                                )),
+                    (SELECT farmer
+					FROM data.salmon_material_info 
+					ORDER BY date DESC LIMIT 1)
 					) AS farmer
             FROM
                 salmon_orders o
