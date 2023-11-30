@@ -300,7 +300,7 @@ def zebra_generator(df):
         elif row['farmer'] == 'Kirkenes Processing AS':
             farmer_info = "917056595"
             farmer_ggn = "4056186507785"
-            exporter = "Leroy Seafood AS AS"
+            exporter = "Lerøy Seafood AS"
             exporter_info = "N-5003 Bergen, Norway"
 
         zpl_label = zpl_template_x99_y63.format(
