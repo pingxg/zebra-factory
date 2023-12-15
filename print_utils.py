@@ -123,7 +123,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 o.product, 
                 COALESCE(o.price * 1.14, 0) AS price, 
                 o.quantity AS weight, 
-                w.quantity AS delivered,
+                w.quantity AS delivered
             FROM
                 salmon_orders o
             LEFT JOIN 
