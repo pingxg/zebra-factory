@@ -124,22 +124,6 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 COALESCE(o.price * 1.14, 0) AS price, 
                 o.quantity AS weight, 
                 w.quantity AS delivered,
-				COALESCE(w.batch_number, 
-					(SELECT batch_number
-					FROM data.salmon_material_info 
-					ORDER BY date DESC LIMIT 1)
-					) AS batch_number,
-				COALESCE((SELECT farmer
-					FROM data.salmon_material_info 
-                    WHERE batch_number = COALESCE(w.batch_number, 
-                                                (SELECT batch_number
-                                                FROM data.salmon_material_info 
-                                                ORDER BY date DESC LIMIT 1)
-                                                )),
-                    (SELECT farmer
-					FROM data.salmon_material_info 
-					ORDER BY date DESC LIMIT 1)
-					) AS farmer
             FROM
                 salmon_orders o
             LEFT JOIN 
@@ -216,75 +200,68 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
 
 def zebra_generator(df):
     zpl_template_x99_y63 = """
-    ; Start of label
-    ^XA
+; Start of label
+^XA
 
-    ; Set UTF-8 Character Encoding
-    ^CI28
+; Set UTF-8 Character Encoding
+^CI28
 
-    ; Draw the producer identifier
-    ^FO230,110^GFA,1387,1387,19,,::::::::::S03MFC,:Q01FFM0FF8,P01F8O01F8,P0FCQ03F,O07CS03E,N07CU01F,M03CW01C,M0FM01F2O07,L018M0102O01C,L07N0102P06,K018N0102P018,K06O01F2Q06,K0EO01F2Q03,J018O0102Q018,J03P0102R0C,J06P0102R02,J0CP0102R01,I018gK018,I03gM0C,:I06gM06,I04gM02,I04O03018783CP03,I04O070188C46P03,I04O0502804C6P03,I04O010480I4P03,I04O010880838P03,I04O01188183CP03,I04O0110830C6P03,I04O011FC6082P02,I02O01008C0C6P06,I03O07C08FC7CP0C,I018gL08,I018gK018,J0CgK01,J06gK06,J03P07E84Q0C,J01CO04084P018,K0EO04084P03,K03O04048P0E,K01CN07878O038,L038M0403P0C,M0CM0403O038,M078L0403O0E,M01CL0403N078,N03EK07C3M07E,O03FS07E,P03EQ07E,Q07FO0FE,R07FEK03FE,T07KFE,,:::::::::^FS
+; Draw the producer identifier
+^FO270,40^GFA,1387,1387,19,,::::::::::S03MFC,:Q01FFM0FF8,P01F8O01F8,P0FCQ03F,O07CS03E,N07CU01F,M03CW01C,M0FM01F2O07,L018M0102O01C,L07N0102P06,K018N0102P018,K06O01F2Q06,K0EO01F2Q03,J018O0102Q018,J03P0102R0C,J06P0102R02,J0CP0102R01,I018gK018,I03gM0C,:I06gM06,I04gM02,I04O03018783CP03,I04O070188C46P03,I04O0502804C6P03,I04O010480I4P03,I04O010880838P03,I04O01188183CP03,I04O0110830C6P03,I04O011FC6082P02,I02O01008C0C6P06,I03O07C08FC7CP0C,I018gL08,I018gK018,J0CgK01,J06gK06,J03P07E84Q0C,J01CO04084P018,K0EO04084P03,K03O04048P0E,K01CN07878O038,L038M0403P0C,M0CM0403O038,M078L0403O0E,M01CL0403N078,N03EK07C3M07E,O03FS07E,P03EQ07E,Q07FO0FE,R07FEK03FE,T07KFE,,:::::::::^FS
 
-    ; Add Exporter info
-    ^FO30,40^A0N,20,20^FDViejä / Exportör^FS
-    ^FO30,65^A0N,25,25^FD{exporter}^FS
-    ^FO30,90^A0N,20,20^FD{exporter_info}^FS
+; Add Producer info
+^FO30,50^A0N,20,20^FDValmistaja / Tillverkare^FS
+^FO30,75^A0N,25,25^FDSpartao Oy^FS
+^FO30,110^A0N,20,20^FDY-tunnus: 2938534-6^FS
+^FO30,130^A0N,20,20^FDOsoite: Nihtisillantie 3B, 02630 Espoo^FS
+^FO30,150^A0N,20,20^FDPuh: +358 45 7831 9456^FS
 
-    ; Add Farmer info
-    ^FO470,40^A0N,20,20^FDKasvattaja / Uppfödare^FS
-    ^FO470,65^A0N,25,25^FD{farmer}^FS
-    ^FO470,90^A0N,25,25^FD{farmer_info} / {batch_number}^FS
-    ^FO470,115^A0N,20,20^FDGGN {farmer_ggn}^FS
-
-    ; Add Producer info
-    ^FO30,135^A0N,20,20^FDValmistaja / Tillverkare^FS
-    ^FO30,160^A0N,25,25^FDSpartao Oy^FS
-    ^FO30,190^A0N,15,20^FD2938534-6, Nihtisillantie 3B, 02630 Espoo^FS
-    ^FO30,205^A0N,15,20^FDPuh: +358 45 7831 9456^FS
-
-    ; Draw a line separator
-    ^FO30,230^GB730,2,2^FS
-
-    ; Add Product name
-    ^FO30,245^A0N,20,20^FDAinesosat / Ingredienser^FS
-    ^FO30,270^A0N,30,30^FDViljelty LOHI / Odlad LAX (Salmo Salar)^FS
-
-    ; Add Product origin country
-    ^FO470,165^A0N,20,20^FDAlkuperämaa / Ursprungslandet^FS
-    ^FO470,190^A0N,30,30^FDNorja / Norge^FS
+; Add the Batch number
+^FO470,50^A0N,20,20^FDEränumero / Batchnummer^FS
+^FO470,75^A0N,25,25^FD{batch_number}^FS
 
 
-    ; Add Product treatment
-    ^FO540,245^A0N,20,20^FDTuote / Produkt^FS
-    ^FO540,270^A0N,30,30^FD{product}^FS
+; Add Product origin country
+^FO470,115^A0N,20,20^FDAlkuperämaa / Ursprungslandet^FS
+^FO470,140^A0N,30,30^FDNorja / Norge^FS
 
-    ; Add temperature
-    ^FO30,315^A0N,20,20^FDSäilytys/ Förvaring^FS
-    ^FO30,360^A0N,30,30^FD{temperature_info}^FS
+; Draw a line separator
+^FO30,180^GB730,2,2^FS
 
-    ; Add an Expiration date
-    ^FO240,315^A0N,20,20^FDViimeinen käyttöpäivä^FS
-    ^FO240,335^A0N,20,20^FD/ Sista förbrukningsdag^FS
-    ^FO240,360^A0N,20,20^FD{expiry_info}^FS
+; Add Product name
+^FO30,195^A0N,20,20^FDAinesosat / Ingredienser^FS
+^FO30,220^A0N,30,30^FDViljelty LOHI / Odlad LAX (Salmo Salar)^FS
 
+; Add Product treatment
+^FO540,195^A0N,20,20^FDTuote / Produkt^FS
+^FO540,220^A0N,30,30^FD{product}^FS
 
-    ; Add net weight
-    ^FO540,315^A0N,20,20^FDNettopaino / Nettovikt^FS
-    ^FO540,360^A0N,30,30^FD{delivered} KG^FS
+; Add temperature
+^FO30,265^A0N,20,20^FDSäilytys/ Förvaring^FS
+^FO30,310^A0N,30,30^FD{temperature_info}^FS
 
-    ; Draw a line separator
-    ^FO30,410^GB730,2,2^FS
+; Add an Expiration date
+^FO240,265^A0N,20,20^FDViimeinen käyttöpäivä^FS
+^FO240,285^A0N,20,20^FD/ Sista förbrukningsdag^FS
+^FO240,310^A0N,20,20^FD{expiry_info}^FS
 
-    ; Add order id
-    ^FO30,425^A0N,20,20^FDTilausnumero^FS
-    ^FO30,450^A0N,30,35^FD{order_id}^FS
+; Add net weight
+^FO540,265^A0N,20,20^FDNettopaino / Nettovikt^FS
+^FO540,310^A0N,30,30^FD{delivered} KG^FS
 
-    ; Add recipient
-    ^FO240,425^A0N,20,20^FDAsiakas / Kund^FS
-    ^FO240,450^A0N,30,40^FD{store}^FS
+; Draw a line separator
+^FO30,360^GB730,2,2^FS
 
-    ; End of label
-    ^XZ
+; Add order id
+^FO30,375^A0N,20,20^FDTilausnumero^FS
+^FO30,400^A0N,30,35^FD{order_id}^FS
+
+; Add recipient
+^FO240,375^A0N,20,20^FDAsiakas / Kund^FS
+^FO240,400^A0N,30,40^FD{store}^FS
+
+; End of label
+^XZ
     """
     zpl_labels = []
     for _, row in df.iterrows():
@@ -298,16 +275,16 @@ def zebra_generator(df):
             product_name = f"{row['product']}"
 
 
-        if row['farmer'] == 'Nordlaks Havbruk AS':
-            farmer_info = "929911946"
-            farmer_ggn = "4059883202717"
-            exporter = "Nordlaks Sales AS"
-            exporter_info = "CoC 4063651427851"
-        elif row['farmer'] == 'Kirkenes Processing AS':
-            farmer_info = "917056595"
-            farmer_ggn = "4056186507785"
-            exporter = "Lerøy Seafood AS"
-            exporter_info = "N-5003 Bergen, Norway"
+        # if row['farmer'] == 'Nordlaks Havbruk AS':
+        #     farmer_info = "929911946"
+        #     farmer_ggn = "4059883202717"
+        #     exporter = "Nordlaks Sales AS"
+        #     exporter_info = "CoC 4063651427851"
+        # elif row['farmer'] == 'Kirkenes Processing AS':
+        #     farmer_info = "917056595"
+        #     farmer_ggn = "4056186507785"
+        #     exporter = "Lerøy Seafood AS"
+        #     exporter_info = "N-5003 Bergen, Norway"
 
         zpl_label = zpl_template_x99_y63.format(
             order_id=row['order_id'],
@@ -316,12 +293,12 @@ def zebra_generator(df):
             delivered=row['delivered'],
             temperature_info=temperature_info,
             expiry_info=expiry_info,
-            batch_number=row['batch_number'],
-            farmer=row['farmer'],
-            farmer_info=farmer_info,
-            farmer_ggn=farmer_ggn,
-            exporter=exporter,
-            exporter_info=exporter_info,
+            batch_number=df['date_z'].replace(".",""),
+            # farmer=row['farmer'],
+            # farmer_info=farmer_info,
+            # farmer_ggn=farmer_ggn,
+            # exporter=exporter,
+            # exporter_info=exporter_info,
         )
         zpl_labels.append(zpl_label)
     return zpl_labels
