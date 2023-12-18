@@ -1,7 +1,7 @@
 import csv
 
 # Path to your CSV file
-csv_file_path = 'vk50.csv'
+csv_file_path = 'vk51.csv'
 
 
 
@@ -10,12 +10,12 @@ sql = "INSERT INTO data.salmon_orders (date, product, customer, quantity, price)
 
 # Read the CSV file and generate SQL for each row
 with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
-    reader = csv.reader(csvfile)
+    reader = csv.reader(csvfile, delimiter=';')
     next(reader)  # Skip the header row
     sql_values = []
     for row in reader:
         date, product, customer, quantity, price = row
-        date = date.split("/")[2]+"-"+date.split("/")[1]+"-"+date.split("/")[0]
+        # date = date.split("/")[2]+"-"+date.split("/")[1]+"-"+date.split("/")[0]
         value = f"('{date}', '{product}', '{customer}', {quantity}, {price})"
         sql_values.append(value)
 

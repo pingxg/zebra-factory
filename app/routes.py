@@ -260,14 +260,14 @@ def order_editing():
 
     year, week = map(int, week_str.split('-W'))
     start_date = date.fromisocalendar(year, week, 1)
-    end_date = start_date + timedelta(days=6)
+    end_date = start_date + timedelta(days=7)
 
     # Check if prev_week or next_week buttons were clicked
     if 'prev_week' in request.args:
         start_date -= timedelta(weeks=1)
     elif 'next_week' in request.args:
         start_date += timedelta(weeks=1)
-    end_date = start_date + timedelta(days=6)
+    end_date = start_date + timedelta(days=7)
 
 
     # Update week_str to reflect the new week
@@ -295,7 +295,7 @@ def order_editing():
         orders_by_customer[order.customer][order.date].append(order)
 
     # List of dates in the week for column headers
-    week_dates = [start_date + timedelta(days=i) for i in range(6)]
+    week_dates = [start_date + timedelta(days=i) for i in range(7)]
     # Render the order_editing template with necessary data
     return render_template('order_editing.html', week_str=week_str, orders_by_customer=orders_by_customer, week_dates=week_dates)
 
