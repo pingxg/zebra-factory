@@ -150,7 +150,6 @@ def index():
             if f'Priority {order[7]}' not in grouped_orders[order[9]]:
                 grouped_orders[order[9]][f'Priority {order[7]}'] = []
             grouped_orders[order[9]][f'Priority {order[7]}'].append(order)
-            print(order)
             if order[3] not in totals:
                 totals[order[3]] = []
                 totals[order[3]].append(0)
