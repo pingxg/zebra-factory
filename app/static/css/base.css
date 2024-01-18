@@ -1,6 +1,23 @@
-#toast, #errorToast, #printToast {
-    z-index: 9999;
-    transform: translate(-50%, -100%);
+/**
+ * Sets z-index and transform for toast elements. 
+ * Gives toasts a high z-index to appear over other content.
+ * Centers toasts horizontally and positions them below the viewport.
+*/
+#toast,
+/**
+ * Sets z-index and transform for toast elements. 
+ * Gives toasts a high z-index to appear over other content.
+ * Centers toasts horizontally and positions them below the viewport.
+*/
+#errorToast,
+/**
+ * Sets z-index and transform for toast elements. 
+ * Gives toasts a high z-index to appear over other content.
+ * Centers toasts horizontally and positions them below the viewport.
+*/
+#printToast {
+  z-index: 9999;
+  transform: translate(-50%, -100%);
 }
 
 

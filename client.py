@@ -21,9 +21,8 @@ def on_connect():
 @sio.on('disconnect')
 def on_disconnect():
     """Callback for when the client disconnects from the server."""
-    logger.info("Disconnected from the server.")
-
-
+    logger.info("Disconnected from the server. Trying to reconnect...")
+    sio.connect() # Add reconnection attempt
 
 @sio.on('print_zebra')
 def on_print(data):

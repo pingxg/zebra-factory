@@ -1,3 +1,15 @@
+/**
+ * DOMContentLoaded event handler that initializes the order table search and 
+ * editing functionality.
+ *
+ * - Gets references to key DOM elements
+ * - Defines populateOrderTable() to populate the table from data
+ * - Handles search button click:
+ *   - Gets date range input
+ *   - Calls API to fetch data
+ *   - Populates table 
+ * - TODOs for initializing datepicker, toggling views, enabling editing
+ */
 document.addEventListener('DOMContentLoaded', () => {
     const searchBtn = document.getElementById('search-btn');
     const orderTable = document.getElementById('order-table');

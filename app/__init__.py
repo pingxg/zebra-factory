@@ -9,6 +9,18 @@ login_manager = LoginManager()
 socketio = SocketIO()
 
 def create_app(config_name):
+    """Creates the Flask application instance.
+    
+    Initializes and configures the Flask app, SQLAlchemy, Flask-Login, 
+    Flask-SocketIO, loads environment variables, registers blueprints and template
+    filters.
+    
+    Args:
+        config_name: The configuration to use for the app.
+    
+    Returns:
+        The configured Flask app instance.
+    """
     load_dotenv()  # Load environment variables from .env
 
     app = Flask(__name__, template_folder='templates', static_folder='static')
