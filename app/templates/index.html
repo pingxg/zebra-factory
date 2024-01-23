@@ -47,10 +47,20 @@
                             <td class="px-5 py-3 text-sm text-gray-700 font-medium text-center">
                                 {{ product }}
                             </td>
-                            <td class="px-5 py-3 text-xs font-thin text-gray-700 text-center">
+                            <td class="px-5 py-3 text-xs font-thin text-gray-700 text-center
+                                        {% if (order_info[1]|float / order_info[0]|float * 100) >= completion_threshold|float %}
+                                            text-green-600 font-bold
+                                        {% else %}
+                                            text-red-600 font-bold
+                                        {% endif %}">
                                 {{ '%.1f' % (order_info[1]|float / order_info[0]|float * 100) if order_info[0]|float != 0 else 'N/A' }} %
                             </td>
-                            <td class="px-5 py-3 text-xs font-thin text-gray-700 text-center">
+                            <td class="px-5 py-3 text-xs font-thin text-gray-700 text-center
+                            {% if (order_info[1]|float / order_info[0]|float * 100) >= completion_threshold|float %}
+                                text-green-600 font-bold
+                            {% else %}
+                                text-red-600 font-bold
+                            {% endif %}">
                                 {{ '%.2f' % (order_info[1]|float) }} / {{ '%.2f' % (order_info[0]|float) }}
                             </td>
                         </tr>
