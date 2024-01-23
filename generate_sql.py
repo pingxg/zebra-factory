@@ -29,7 +29,7 @@ import csv
 import os
 
 # Path to your CSV file
-csv_file_path = 'vk03.csv'
+csv_file_path = 'vk04.csv'
 
 # Start of the SQL statement
 sql = "INSERT INTO data.salmon_orders (date, product, customer, quantity, price) VALUES "
