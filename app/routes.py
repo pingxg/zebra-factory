@@ -117,11 +117,10 @@ def index():
     elif 'next_date' in request.form:
         selected_date += timedelta(days=1)
 
-    order_details = None
     if selected_date:
-        order_details = (
+        salmon_details = (
             db.session.query(
-                Order.id, 
+                Order.id,
                 Order.customer, 
                 Order.date, 
                 Order.product,
@@ -135,27 +134,73 @@ def index():
             .outerjoin(ProductName, Order.product == ProductName.product_name)
             .outerjoin(OrderWeight, Order.id == OrderWeight.order_id)
             .filter(Order.date == selected_date)
+            .filter(ProductName.product_type == "Lohi")
             .group_by(Order.id)
             .outerjoin(Customer, Order.customer == Customer.customer)
-            .order_by(ProductName.product_type.asc(), Customer.priority.asc(), Order.product.asc(), Order.customer.asc())
+            .order_by(Order.product.asc(), Customer.priority.asc(), Order.customer.asc())
+            .all()
+        )
+    
+        veg_details = (
+            db.session.query(
+                Order.id,
+                Order.customer, 
+                Order.date, 
+                Order.product,
+                (func.coalesce(Order.price * 1.14, 0)).label("price"),
+                Order.quantity,
+                (func.coalesce(func.sum(OrderWeight.quantity), 0)).label("total_produced"),
+                Customer.priority,
+                Customer.packing,
+                ProductName.product_type,
+            )
+            .outerjoin(ProductName, Order.product == ProductName.product_name)
+            .outerjoin(OrderWeight, Order.id == OrderWeight.order_id)
+            .filter(Order.date == selected_date)
+            .filter(ProductName.product_type == "Vegetable")
+            .group_by(Order.id)
+            .outerjoin(Customer, Order.customer == Customer.customer)
+            .order_by(ProductName.product_type.asc(), Customer.priority.asc(), Order.customer.asc(), Order.product.asc())
             .all()
         )
 
         grouped_orders = {}
         totals = {}  # Dictionary to store the total for each product group
-        from pprint import pprint
-        for order in order_details:
-            if order[9] not in grouped_orders:
-                grouped_orders[order[9]] = {}
-            if f'Priority {order[7]}' not in grouped_orders[order[9]]:
-                grouped_orders[order[9]][f'Priority {order[7]}'] = []
-            grouped_orders[order[9]][f'Priority {order[7]}'].append(order)
-            if order[3] not in totals:
-                totals[order[3]] = []
-                totals[order[3]].append(0)
-                totals[order[3]].append(0)
-            totals[order[3]][0] += (order[5])
-            totals[order[3]][1] += (order[6])
+
+        for s_order in salmon_details:
+            if s_order[9] not in grouped_orders:
+                grouped_orders[s_order[9]] = {}
+            if s_order[3] not in grouped_orders[s_order[9]]:
+                grouped_orders[s_order[9]][s_order[3]] = []
+            grouped_orders[s_order[9]][s_order[3]].append(s_order)
+
+            if s_order[3] not in totals:
+                totals[s_order[3]] = []
+                totals[s_order[3]].append(0)
+                totals[s_order[3]].append(0)
+            totals[s_order[3]][0] += (s_order[5])
+            totals[s_order[3]][1] += (s_order[6])
+
+        if "Lohi" in grouped_orders.keys():
+            # Check if the key exists and then move it
+            if "Frozen Lohi Trimmings" in grouped_orders["Lohi"].keys():
+                value = grouped_orders["Lohi"].pop("Frozen Lohi Trimmings")  # Remove the key and get its value
+                grouped_orders["Lohi"]["Frozen Lohi Trimmings"] = value      # Insert it again, which puts it at the end
+
+        for v_order in veg_details:
+            if v_order[9] not in grouped_orders:
+                grouped_orders[v_order[9]] = {}
+            if f'Priority {v_order[7]}' not in grouped_orders[v_order[9]]:
+                grouped_orders[v_order[9]][f'Priority {v_order[7]}'] = []
+            grouped_orders[v_order[9]][f'Priority {v_order[7]}'].append(v_order)
+
+            if v_order[3] not in totals:
+                totals[v_order[3]] = []
+                totals[v_order[3]].append(0)
+                totals[v_order[3]].append(0)
+            totals[v_order[3]][0] += (v_order[5])
+            totals[v_order[3]][1] += (v_order[6])
+
     return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, timedelta=timedelta)
 
 

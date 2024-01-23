@@ -135,7 +135,6 @@
                     <h3 class="text-lg md:text-xl font-semibold text-gray-700">Amount</h3>
                     <span class="text-md md:text-lg text-gray-600">{{ "%.2f"|format(order[6]) }} / {{ order[5]|float }} kg</span>
                 </div>
-
             </div>
 
             {% if weight_details %}
@@ -150,6 +149,7 @@
                         <div class="absolute left-1/2 transform -translate-x-1/2 text-gray-500 text-xs">
                             {{ weight[2].strftime('%H:%M:%S') }}
                         </div>
+
                         <div class="flex">
                             <form action="{{ url_for('main.edit_weight', weight_id=weight[0], order_id=order[0]) }}" method="post" class="inline-block mr-2">
                                 <button title="Edit" class="flex items-center p-2 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-full hover:from-blue-500 hover:to-blue-600 transition duration-300 ease-in-out edit-btn" data-weight-id="{{ weight[0] }}" data-current-weight="{{ weight[1] }}" data-order-id="{{ order[0] }}">
@@ -160,7 +160,6 @@
                             <button title="Delete" class="flex items-center p-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-full hover:from-red-500 hover:to-red-600 transition duration-300 ease-in-out" onclick="showDeleteConfirmation('{{ url_for('main.delete_weight', weight_id=weight[0], order_id=order[0]) }}');">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
-
                         </div>
                     </div>
                 {% endfor %}
@@ -174,7 +173,6 @@
                     name="scale_reading" 
                     class="border border-gray-300 px-3 py-2 h-12 text-gray-700 w-full rounded mb-4 " 
                     placeholder="Enter scale reading">
-
 
                 <!-- "Add Reading" Button -->
                 <button type="submit" 
@@ -200,7 +198,6 @@
                     name="batch_number" 
                     class="border border-gray-300 px-3 py-2 h-12 text-gray-700 w-full rounded mb-4 {{ 'opacity-50 cursor-not-allowed' if order[6] >= order[5]|float*completion_threshold|float else '' }}" 
                     placeholder="Enter batch number">
-
             </form>
         </div>
     </div>

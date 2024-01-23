@@ -48,7 +48,7 @@
                                 {{ product }}
                             </td>
                             <td class="px-5 py-3 text-xs font-thin text-gray-700 text-center">
-                                {{ '%.1f' % (order_info[1]|float/order_info[0]|float*100) }} %
+                                {{ '%.1f' % (order_info[1]|float / order_info[0]|float * 100) if order_info[0]|float != 0 else 'N/A' }} %
                             </td>
                             <td class="px-5 py-3 text-xs font-thin text-gray-700 text-center">
                                 {{ '%.2f' % (order_info[1]|float) }} / {{ '%.2f' % (order_info[0]|float) }}
@@ -77,6 +77,7 @@
             
             <div id="LohiOrders" class="orders-content">
                 {% for product_type, order_detailes in grouped_orders.items() %}
+
                     {% if "Lohi" in product_type %}
                         {% for priority, detailes in order_detailes.items() %}
                             <div class="flex items-center justify-center gap-2 my-4">
