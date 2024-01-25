@@ -27,6 +27,7 @@ class Customer(db.Model):
     phone = db.Column(db.String)
     priority = db.Column(db.Integer)
     packing = db.Column(db.String)
+    fish_size = db.Column(db.String)
 
 class Order(db.Model):
     """Order model
@@ -42,6 +43,8 @@ class Order(db.Model):
     price = db.Column(db.Float)
     quantity = db.Column(db.Integer)
     weights = db.relationship('OrderWeight', backref='salmon_order', lazy=True, cascade='all, delete, delete-orphan')
+    fish_size = db.Column(db.String)
+
 
 class OrderWeight(db.Model):
     """OrderWeight model

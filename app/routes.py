@@ -6,7 +6,7 @@ from . import db, login_manager, socketio
 import os
 from datetime import date, datetime, timedelta
 from collections import defaultdict
-from sqlalchemy import func
+from sqlalchemy import func, case
 import pytz
 import re
 from pdfrw import PdfReader, PdfWriter
@@ -130,6 +130,11 @@ def index():
                 Customer.priority,
                 Customer.packing,
                 ProductName.product_type,
+                case(
+                    [(func.length(Order.fish_size) == 0, Customer.fish_size),  # If Order.fish_size is empty, use Customer.fish_size
+                    (func.length(Customer.fish_size) == 0, Order.fish_size)],  # If Customer.fish_size is empty, use Order.fish_size
+                    else_=func.coalesce(Order.fish_size, Customer.fish_size)
+                ).label("fish_size")
             )
             .outerjoin(ProductName, Order.product == ProductName.product_name)
             .outerjoin(OrderWeight, Order.id == OrderWeight.order_id)
@@ -139,11 +144,9 @@ def index():
             .order_by(Customer.priority.asc(), Order.customer.asc(),  Order.product.asc())
             .all()
         )
-    
 
         grouped_orders = {}
         totals = {}  # Dictionary to store the total for each product group
-
 
         for order in order_details:
             if order[9] not in grouped_orders:
@@ -158,7 +161,7 @@ def index():
                 totals[order[3]].append(0)
             totals[order[3]][0] += (order[5])
             totals[order[3]][1] += (order[6])
-
+        print(grouped_orders)
     return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, timedelta=timedelta)
 
 
@@ -207,6 +210,11 @@ def order_detail(order_id):
             (func.coalesce(func.sum(OrderWeight.quantity), 0)).label("total_produced"),
             Customer.priority,
             Customer.packing,
+            case(
+                [(func.length(Order.fish_size) == 0, Customer.fish_size),  # If Order.fish_size is empty, use Customer.fish_size
+                (func.length(Customer.fish_size) == 0, Order.fish_size)],  # If Customer.fish_size is empty, use Order.fish_size
+                else_=func.coalesce(Order.fish_size, Customer.fish_size)
+            ).label("fish_size")
         )
         .outerjoin(OrderWeight, Order.id == OrderWeight.order_id)
         .filter(Order.id == order_id)
