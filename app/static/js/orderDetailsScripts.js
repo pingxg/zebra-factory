@@ -68,6 +68,7 @@ function showPrintToast() {
     }, 3000);  // Toast will be visible for 3 seconds
 }
 
+
 document.addEventListener('DOMContentLoaded', (event) => {
     let customerNameSpan = document.querySelector(".customer-name");
     let containerWidth = customerNameSpan.parentElement.offsetWidth;
@@ -77,8 +78,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         customerNameSpan.style.fontSize = (currentSize - 1) + "px";
     }
 });
-
-
 
 
 document.addEventListener('DOMContentLoaded', function() {

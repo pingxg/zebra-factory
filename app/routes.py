@@ -96,7 +96,8 @@ def emit_keepalive_response(data):
 
 @bp.context_processor
 def inject_global_vars():
-    return dict(completion_threshold=os.environ.get('COMPLETION_THRESHOLD', 0.9))
+    return dict(completion_threshold=os.environ.get('COMPLETION_THRESHOLD', 0.9),
+                completion_threshold_upper=os.environ.get('COMPLETION_THRESHOLD_UPPER', 1.3))
 
 
 @bp.route('/', methods=['GET', 'POST'])
@@ -161,7 +162,7 @@ def index():
                 totals[order[3]].append(0)
             totals[order[3]][0] += (order[5])
             totals[order[3]][1] += (order[6])
-        print(grouped_orders)
+
     return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, timedelta=timedelta)
 
 
@@ -253,7 +254,6 @@ def edit_weight(weight_id):
 @login_required
 def delete_weight(weight_id):
     weight = OrderWeight.query.filter_by(id=weight_id).first()
-    
     if not weight:
         return "Weight not found", 404
 
@@ -263,7 +263,7 @@ def delete_weight(weight_id):
     return redirect(url_for('main.order_detail', order_id=weight.order_id))
 
 
-@bp.route('/order_editing', methods=['GET', 'POST'])
+@bp.route('/order-editing', methods=['GET', 'POST'])
 @login_required
 def order_editing():
     week_str = request.args.get('week', calculate_current_iso_week())
@@ -306,11 +306,10 @@ def order_editing():
 
     # List of dates in the week for column headers
     week_dates = [start_date + timedelta(days=i) for i in range(7)]
-    # Render the order_editing template with necessary data
     return render_template('order_editing.html', week_str=week_str, orders_by_customer=orders_by_customer, week_dates=week_dates)
 
 
-@bp.route('/download_delivery_note')
+@bp.route('/download-delivery-note')
 @login_required
 def download_delivery_note():
     date = request.args.get('date')
@@ -379,9 +378,6 @@ def generate_delivery_note(date, customer=None):
 
 def get_data_for_pdf(date, customer=None):
 
-    # Retrieve and convert the environment variable
-    completion_threshold = float(os.getenv('COMPLETION_THRESHOLD', '0.9'))  # Default value can be set
-
     subquery = (
         db.session.query(
             OrderWeight.order_id,
@@ -405,7 +401,6 @@ def get_data_for_pdf(date, customer=None):
     .outerjoin(subquery, Order.id == subquery.c.order_id) \
     .outerjoin(Customer, Order.customer == Customer.customer)\
     .filter(Order.date == date)\
-    .filter(subquery.c.delivered >= completion_threshold * Order.quantity)\
     .order_by(Order.customer.asc(), Order.product.asc())
 
     # Apply customer filter if customer is provided
@@ -463,19 +458,70 @@ def get_data_for_pdf(date, customer=None):
 
 
 
-
-@bp.route('/add_order')
+@bp.route('/add-order', methods=['GET', 'POST'])
 @login_required
 def add_order():
-    date = request.args.get('date')
-    customer = request.args.get('customer')
+    data = request.json
 
-    # Perform your logic to generate a PDF based on the date and customer
-    # This is a placeholder for your PDF generation logic
-    pdf_file_path = generate_delivery_note(date, customer) 
+    return jsonify({'status': 'success', 'message': 'Order added successfully'})
 
-    # Send the generated PDF file back to the client
-    return send_file(pdf_file_path, as_attachment=True)
+
+
+@bp.route('/get-order-info/<int:order_id>')
+def get_order_info(order_id):
+    # Retrieve order from database
+    # Using SQLAlchemy ORM to retrieve the order with total produced and weight details
+    order = (
+        db.session.query(
+            Order.id, 
+            Order.customer, 
+            Order.date, 
+            Order.product,
+            (func.coalesce(Order.price * 1.14, 0)).label("price"),
+            Order.quantity,
+            case(
+                [(func.length(Order.fish_size) == 0, Customer.fish_size),  # If Order.fish_size is empty, use Customer.fish_size
+                (func.length(Customer.fish_size) == 0, Order.fish_size)],  # If Customer.fish_size is empty, use Order.fish_size
+                else_=func.coalesce(Order.fish_size, Customer.fish_size)
+            ).label("fish_size")
+        )
+        .filter(Order.id == order_id)
+        .first()
+    )
+    print(order)
+    return jsonify(order)
+
+@bp.route('/update-order/<int:order_id>', methods=['POST'])
+@login_required
+def update_order(order_id):
+    if request.method == 'POST':
+        if not order_id:
+            return jsonify({'status': 'error', 'message': 'Order ID not provided'}), 400
+
+        # Fetch the order from the database
+        order = Order.query.filter_by(id=order_id).first()
+        if not order:
+            return jsonify({'status': 'error', 'message': 'Order not found'}), 404
+
+        # Update order details
+        order.price = request.form.get('price')
+        order.quantity = request.form.get('quantity')
+        
+        # Commit changes to the database
+        # db.session.commit()
+        return jsonify({'status': 'success', 'message': 'Order updated successfully', 'order_id': order_id})
+
+    return jsonify({'status': 'error', 'message': 'Invalid request method'}), 405
+
+
+@bp.route('/delete-order/<int:order_id>', methods=['DELETE'])
+@login_required
+def delete_order(order_id):
+    # Delete the order from the database
+    # ...
+
+    return jsonify({'status': 'success', 'message': 'Order deleted successfully'})
+
 
 
 def calculate_current_iso_week():

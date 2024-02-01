@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_socketio import SocketIO
 from dotenv import load_dotenv
+from decimal import Decimal
+from flask.json import JSONEncoder
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -35,6 +37,18 @@ def create_app(config_name):
     from . import routes
 
     from datetime import datetime, timedelta
+
+
+    class CustomJSONEncoder(JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, Decimal):
+                # Convert Decimal to float
+                return float(obj)
+            return super(CustomJSONEncoder, self).default(obj)
+
+    # Set the custom JSON encoder
+    app.json_encoder = CustomJSONEncoder
+
 
     def adjust_week(week_str, delta_weeks):
         year, week = map(int, week_str.split('-W'))
