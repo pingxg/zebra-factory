@@ -38,9 +38,14 @@
                 
             </form>
 
-            {% if totals %}
+            {% if totals and grouped_details %}
 
             <div class="my-3 w-full bg-white shadow-md rounded-lg overflow-hidden">
+                <div class="flex items-center justify-center gap-2 my-2 mx-6">
+                    <hr class="w-full border-t border-gray-300">
+                    <span class="text-sm text-gray-500 font-medium whitespace-nowrap">Total Info</span>
+                    <hr class="w-full border-t border-gray-300">
+                </div>
                 <table class="w-full">
                     {% for product, order_info in totals.items() %}
                         <tr class="grid grid-cols-3 divide-x divide-gray-200">
@@ -66,6 +71,37 @@
                         </tr>
                     {% endfor %}
                 </table>
+
+
+                
+                <table border="1" class="w-full border-collapse border border-gray-300">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-700">
+                            <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">箱类型 Box</th>
+                            <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">产品 Product</th>
+                            <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">尺寸 Size</th>
+                            <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">整箱 Full box</th>
+                            <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">半箱 Half box</th>
+                        </tr>
+                    </thead>
+                    {% for row in data_for_template %}
+                        <tr>
+                            {% if loop.first or row.category != data_for_template[loop.index0 - 1].category %}
+                                <td rowspan="{{ row.merge_info.category_rowspan }}" class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300">{{ row.category }}</td>
+                            {% endif %}
+                            {% if loop.first or row.subcategory != data_for_template[loop.index0 - 1].subcategory %}
+                                <td rowspan="{{ row.merge_info.subcategory_rowspan }}" class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300">{{ row.subcategory }}</td>
+                            {% endif %}
+                            <td class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300">{{ row.item }}</td>
+                            <td class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300">{{ row.full }}</td>
+                            <td class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300">{{ row.half if row.half > 0 else '' }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+                
+                
+                
+                
                 
                 
             </div>

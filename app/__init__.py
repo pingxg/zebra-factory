@@ -27,6 +27,7 @@ def create_app(config_name):
 
     app = Flask(__name__, template_folder='templates', static_folder='static')
     app.config.from_object(config_name)
+    app.jinja_env.add_extension('jinja2.ext.do')
 
     db.init_app(app)
     login_manager.init_app(app)
@@ -66,6 +67,10 @@ def create_app(config_name):
         # Convert back to string if needed, or return the datetime object
         return new_date.strftime(date_format)
 
+    @app.template_filter('sum_list')
+    def sum_list(sequence):
+        return sum(sequence)
+    
     app.register_blueprint(routes.bp)
 
     # Define and add the custom filter
@@ -76,5 +81,5 @@ def create_app(config_name):
     @app.template_filter('add_days')
     def add_days_filter(date_str, days):
         return add_days(date_str, days)
-        
+
     return app

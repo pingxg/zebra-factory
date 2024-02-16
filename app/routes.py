@@ -17,6 +17,7 @@ import time
 import logging
 from xhtml2pdf import pisa
 
+from pprint import pprint as pp
 
 bp = Blueprint('main', __name__)
 
@@ -148,7 +149,7 @@ def index():
 
         grouped_orders = {}
         totals = {}  # Dictionary to store the total for each product group
-
+        details = {}
         for order in order_details:
             if order[9] not in grouped_orders:
                 grouped_orders[order[9]] = {}
@@ -163,7 +164,54 @@ def index():
             totals[order[3]][0] += (order[5])
             totals[order[3]][1] += (order[6])
 
-    return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, timedelta=timedelta)
+
+            if order[9] == 'Lohi':
+                key_name = f'{order[8]} | {order[3]} | {order[10]}'
+                box_info = calculate_salmon_box(order[5])
+                if key_name not in details.keys():
+                    details[key_name] = box_info
+                else:
+                    details[key_name] = tuple(a + b for a, b in zip(details[key_name], box_info))
+
+        totals = {key: totals[key] for key in sorted(totals)}
+        details = {key: details[key] for key in sorted(details)}
+        # Preprocess data
+        grouped_details = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+        for key, (full, half) in details.items():
+            box_type, product_type, size = key.split(' | ')
+            grouped_details[box_type][product_type][size] = (full, half)
+
+        # Flatten the structure and calculate row spans
+        data_for_template = []
+        category_rowspan_tracker = {}
+
+        # Iterate through categories and subcategories
+        for category, subcategories in grouped_details.items():
+            category_rowspan = sum(len(items) for items in subcategories.values())
+            category_rowspan_tracker[category] = category_rowspan
+            for subcategory, items in subcategories.items():
+                subcategory_rowspan = len(items)
+                for item, values in items.items():
+                    row = {
+                        "category": category,
+                        "subcategory": subcategory,
+                        "item": item,
+                        "full": values[0],
+                        "half": values[1],
+                        "merge_info": {
+                            "category_rowspan": category_rowspan_tracker.get(category, 0),
+                            "subcategory_rowspan": subcategory_rowspan
+                        }
+                    }
+                    # Append row to data list
+                    data_for_template.append(row)
+                # After processing the first item of a subcategory, subsequent items should not repeat the subcategory name
+                subcategory_rowspan = 0
+            # Reset category rowspan tracker for this category after processing
+            category_rowspan_tracker[category] = 0
+
+
+    return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, grouped_details=grouped_details, data_for_template=data_for_template,timedelta=timedelta)
 
 
 @bp.route('/order/<int:order_id>', methods=['GET', 'POST'])
@@ -455,6 +503,32 @@ def get_data_for_pdf(date, customer=None):
             store_dict[store]['contain_other'] = True
 
     return list(store_dict.values())
+
+def calculate_salmon_box(amount, threshold=2):
+    full_box, half_box = 0, 0
+    # Convert amount to a float for simplicity
+    amount = float(amount)
+    if amount == 0:
+        full_box, half_box = 0, 0
+
+    if amount < 10:
+        full_box, half_box = 0, 1
+    
+    if amount == 10:
+        full_box, half_box = 1, 0
+    
+    # Check if amount is divisible by 10
+    if amount % 10 == 0:
+        full_box, half_box = amount / 10, 0
+    
+    # If not divisible by 10, check the threshold
+    lower_bound = amount - (amount % 10)  # Lower multiple of 10
+    if (amount - lower_bound) <= threshold:
+        full_box, half_box = lower_bound / 10, 0
+    else:
+        full_box, half_box = lower_bound / 10, 1
+
+    return (int(full_box), int(half_box))
 
 
 

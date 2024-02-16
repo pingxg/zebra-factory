@@ -21,4 +21,5 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     REMEMBER_COOKIE_DURATION = timedelta(days=30)
     SECRET_KEY = os.environ.get('SECRET_KEY')
+    
 
