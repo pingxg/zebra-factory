@@ -16,3 +16,4 @@ MarkupSafe==1.1.1
 xhtml2pdf==0.2.13
 pdfrw==0.4
 reportlab==4.0.7
+numpy==1.22.2
