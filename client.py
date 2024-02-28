@@ -73,7 +73,6 @@ def main():
 
     try:
         sio.connect(link)
-        
         # Start the keepalive loop in a separate thread
         keepalive_thread = threading.Thread(target=keepalive_loop)
         keepalive_thread.start()

@@ -275,17 +275,6 @@ def zebra_generator(df):
             product_name = f"{row['product']}"
 
 
-        # if row['farmer'] == 'Nordlaks Havbruk AS':
-        #     farmer_info = "929911946"
-        #     farmer_ggn = "4059883202717"
-        #     exporter = "Nordlaks Sales AS"
-        #     exporter_info = "CoC 4063651427851"
-        # elif row['farmer'] == 'Kirkenes Processing AS':
-        #     farmer_info = "917056595"
-        #     farmer_ggn = "4056186507785"
-        #     exporter = "Lerøy Seafood AS"
-        #     exporter_info = "N-5003 Bergen, Norway"
-
         zpl_label = zpl_template_x99_y63.format(
             order_id=row['order_id'],
             store=row['store'],
@@ -294,11 +283,6 @@ def zebra_generator(df):
             temperature_info=temperature_info,
             expiry_info=expiry_info,
             batch_number=row['date_z'].replace(".",""),
-            # farmer=row['farmer'],
-            # farmer_info=farmer_info,
-            # farmer_ggn=farmer_ggn,
-            # exporter=exporter,
-            # exporter_info=exporter_info,
         )
         zpl_labels.append(zpl_label)
     return zpl_labels
