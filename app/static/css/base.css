@@ -78,3 +78,32 @@
 .breathing-icon {
     animation: breathing 5s ease-in-out infinite;
 }
+
+
+/* Global styles for a sleek, Apple-like scrollbar */
+
+/* For Webkit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 12px; /* Adjust the scrollbar width */
+  height: 12px; /* Adjust the scrollbar height for horizontal scrollbars */
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1); /* Semi-transparent track */
+  border-radius: 10px; /* Rounded corners for the track */
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.5); /* Dark, semi-transparent thumb */
+  border-radius: 10px; /* Rounded corners for the thumb */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.8); /* Darker thumb on hover for better visibility */
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin; /* Slimmer scrollbar */
+  scrollbar-color: rgba(0, 0, 0, 0.5) rgba(0, 0, 0, 0.1); /* Thumb and track color */
+}
