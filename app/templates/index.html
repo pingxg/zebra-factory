@@ -19,7 +19,7 @@
                     <input 
                     type="date" 
                     id="selected_date" 
-                    name="selected_date" 
+                    name="selected_date"
                     value="{{ selected_date }}" 
                     class="border text-center border-gray-300 px-2 md:px-4 py-2 md:py-1 text-xl md:text-3xl flex-grow rounded-lg font-bold text-gray-700 overflow-hidden">
                 </div>
@@ -72,7 +72,11 @@
                     {% endfor %}
                 </table>
 
-
+                <div class="flex items-center justify-center gap-2 my-2 mx-6">
+                    <hr class="w-full border-t border-gray-300">
+                    <span class="text-sm text-gray-500 font-medium whitespace-nowrap">Production Info</span>
+                    <hr class="w-full border-t border-gray-300">
+                </div>
                 
                 <table border="1" class="w-full border-collapse border border-gray-300">
                     <thead>
@@ -108,16 +112,7 @@
                         </tr>
                     {% endfor %}
                 </table>
-                
-                
-                
-                
-                
-                
             </div>
-            
-            
-                
             {% endif %}
 
 
@@ -129,11 +124,9 @@
                     <button class="tab-button flex-1 py-2 px-4 text-sm font-medium transition duration-300 ease-in-out focus:outline-none hover:bg-gray-100 focus:bg-gray-200 text-gray-700 hover:text-gray-900 focus:text-gray-900 rounded-t-md" onclick="showOrders('{{ product_type }}')">{{ product_type }}</button>
                 {% endfor %}
             </div>
-            
-            
+
             <div id="LohiOrders" class="orders-content">
                 {% for product_type, order_detailes in grouped_orders.items() %}
-
                     {% if "Lohi" in product_type %}
                         {% for priority, detailes in order_detailes.items() %}
                             <div class="flex items-center justify-center gap-2 my-4">
