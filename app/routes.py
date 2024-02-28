@@ -222,6 +222,7 @@ def index():
                 subcategory_rowspan = 0
             # Reset category rowspan tracker for this category after processing
             category_rowspan_tracker[category] = 0
+        grouped_orders = {k: v for k, v in sorted(grouped_orders.items())}
 
     return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, grouped_details=grouped_details, data_for_template=data_for_template,timedelta=timedelta)
 
