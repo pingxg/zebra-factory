@@ -77,41 +77,43 @@
                     <span class="text-sm text-gray-500 font-medium whitespace-nowrap">Production Info</span>
                     <hr class="w-full border-t border-gray-300">
                 </div>
-                
-                <table border="1" class="w-full border-collapse border border-gray-300">
-                    <thead>
-                        <tr class="bg-gray-200 text-gray-700">
-                            <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">箱类型 Box</th>
-                            <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">产品 Product</th>
-                            <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">尺寸 Size</th>
-                            <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">整箱 Full box</th>
-                            <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">半箱 Half box</th>
-                        </tr>
-                    </thead>
-                    {% for row in data_for_template %}
-                        <tr>
-                            {% if loop.first or row.category != data_for_template[loop.index0 - 1].category %}
-                                <td rowspan="{{ row.merge_info.category_rowspan }}" class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300">{{ row.category }}</td>
-                            {% endif %}
-                            {% if loop.first or row.merge_info.category_subcategory_unique != data_for_template[loop.index0 - 1].merge_info.category_subcategory_unique %}
-                                <td rowspan="{{ row.merge_info.subcategory_rowspan }}" class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300">{{ row.subcategory }}</td>
-                            {% endif %}
-                            <td class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300">{{ row.item }}</td>
-                            <td class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300
-                            {% if row.full_unfinished == 0 %}
-                                text-green-600 font-bold
-                            {% else %}
-                                text-red-600 font-bold
-                            {% endif %}">{{ row.full_total - row.full_unfinished }}/{{ row.full_total }}</td>
-                            <td class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300
-                            {% if row.half_unfinished == 0 %}
-                                text-green-600 font-bold
-                            {% else %}
-                                text-red-600 font-bold
-                            {% endif %}">{{ row.half_total - row.half_unfinished }}/{{ row.half_total }}</td>
-                        </tr>
-                    {% endfor %}
-                </table>
+                <div class="overflow-auto shadow">
+                    <table border="1" class="w-full border-collapse border border-gray-300">
+                        <thead>
+                            <tr class="bg-gray-200 text-gray-700">
+                                <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">箱类型 Box</th>
+                                <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">产品 Product</th>
+                                <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">尺寸 Size</th>
+                                <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">整箱 Full box</th>
+                                <th class="px-5 py-3 text-sm font-bold text-center border border-gray-300">半箱 Half box</th>
+                            </tr>
+                        </thead>
+                        {% for row in data_for_template %}
+                            <tr>
+                                {% if loop.first or row.category != data_for_template[loop.index0 - 1].category %}
+                                    <td rowspan="{{ row.merge_info.category_rowspan }}" class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300">{{ row.category }}</td>
+                                {% endif %}
+                                {% if loop.first or row.merge_info.category_subcategory_unique != data_for_template[loop.index0 - 1].merge_info.category_subcategory_unique %}
+                                    <td rowspan="{{ row.merge_info.subcategory_rowspan }}" class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300">{{ row.subcategory }}</td>
+                                {% endif %}
+                                <td class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300">{{ row.item }}</td>
+                                <td class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300
+                                {% if row.full_unfinished == 0 %}
+                                    text-green-600 font-bold
+                                {% else %}
+                                    text-red-600 font-bold
+                                {% endif %}">{{ row.full_total - row.full_unfinished }}/{{ row.full_total }}</td>
+                                <td class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300
+                                {% if row.half_unfinished == 0 %}
+                                    text-green-600 font-bold
+                                {% else %}
+                                    text-red-600 font-bold
+                                {% endif %}">{{ row.half_total - row.half_unfinished }}/{{ row.half_total }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+
             </div>
             {% endif %}
 
