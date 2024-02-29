@@ -1,366 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
-    <pdf>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delivery Note</title>
     <style>
-        body {
-            background-color: white;
-            transform: scale(3);
-            transform-origin: top left;
-        }
-        .container {
-            position: relative;
-            width: 700px;
-            height: 1000px;
-            margin: 0 0;
-            overflow: auto;
+        @page {
+            size: A4 portrait;
+            margin: 2cm;
+            @frame header_frame {
+                -pdf-frame-content: header_content;
+                left: 40pt;
+                width: 512pt;
+                top: 50pt;
+                height: 160pt;
+
+            }
+            @frame content_frame {
+                left: 40pt;
+                width: 512pt;
+                top: 210pt;
+                height: 480pt;
+
+            }
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                left: 40pt;
+                width: 512pt;
+                top: 720pt;
+                height: 90pt;
+            }
         }
 
-        h1 {
-            text-align: center;
-        }
-        
-        hr {
-        border: none; /* Removes default border */
-        height: 2px; /* Height of the line */
-        background-color: #333; /* Color of the line */
-        width: 90%; /* Width of the line */
-        margin: 10px auto; /* Centers the line and adds space above and below */
-        }
-
-
-        .hr-footer {
+        .hr {
         border: none; /* Removes default border */
         height: 1px; /* Height of the line */
         background-color: #333; /* Color of the line */
         width: 90%; /* Width of the line */
         /* margin: auto; */
-        margin-top: 30%; 
         }
-
-
-        table {
-            width: 90%;
-            border-collapse: collapse;
-            margin-left: auto;
-            margin-right: auto;
-            overflow: auto;
-        }
-
-        table, th, td {
-            border: 0.5px dashed black;
-            margin-left: 5%;
-            margin-right: 5%;
-        }
-
-        th, td {
-            padding: 8px 12px;
-            text-align: center;
-        }
-        
-        table th {
-            font-size: 14px; /* or whatever size you desire */
-        }
-        .customer-container {
-            width: 70%;
-            overflow: auto;
-            border: none;
-            float: left;
-            margin: 0px 10px 10px 8%; 
-
-        }
-
-        .customer-info th {
-            text-align: right;
-            border: none;
-        }
-
-        .customer-info td {
-            text-align: left;
-            border: none;
-        }
-        .order-container {
-            width: 85%;
-            margin: auto;
-            float: center;
-        }
-
-        .price-container {
-            font-size: 12px;
-            margin-right: 5%;
-            width: 40%;
-            overflow: auto;
-            float: right;
-            border: none;
-
-        }
-        .price-info th {
-            text-align: right;
-            border: none;
-        }
-
-        .price-info td {
-            text-align: left;
-            border: none;
-        }
-        .product-info-container {
-            font-size: 12px;
-            margin-right: 5%;
-            width: 40%;
-            overflow: auto;
-            float: right;
-            border: none;
-        }
-
-        /* Styles for the container and columns */
-        .row {
-            display: flex;
-            margin-right: 5%;
-            margin-left: 5%;
-            margin-top: 0px;
-            margin-bottom: 0px;
-            justify-content: space-between;
-            font-size: 12px;  /* Small font size */
-        }
-
-
-        .column {
-            flex: 1;  /* Each column takes up equal width */
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        .left {
-            text-align: left;
-        }
-
-        .center {
-            text-align: center;
-        }
-
-        .right {
-            text-align: right;
-        }
-
-        .oval {
-            width: 100px;
-            height: 50px;
-            background-color: #f4f4f4;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            border-radius: 50%;
-        }
-
-        .oval p {
-            margin: 0;
-            font-size: 13px;
-            font-weight: bold;
-            line-height: 1.5;
-        }
-
-        .note{
-            margin-left: 7%;
-            /* margin-top: 58%; */
-            margin-right: 10px;
-            margin-bottom: 0px;
-            font-size: 11.5px;
-            position: absolute;
-            bottom: 10%;
-        }
-
-
-        footer {
-            padding: 0px;
-            margin: 0;
-            position: absolute;
-            bottom: 5%;
-            left: 0%;
-            float: center;
-            width: 100%;
-            /* display: flex;
-            justify-content: space-between; */
-
-        }
-
-        /* Styling for the three fields in the footer */
-        .footer-field {
-            display: inline-block;
-            width: 33.3%;
-            text-align: center;
-            vertical-align: top;
-            font-size: 12px;
-            box-sizing: border-box;
-
-        }
-
     </style>
 </head>
+
+
 <body>
+    <div id="header_content" >
+        <h1>
+            Delivery Note<br>
+            Issue Date: {{ data.date }}
+        </h1>
+        <hr>
+        {% if data %}
+            <table style="font-size: 15px;">
+                <tbody>
+                    <tr>
+                        <th style="text-align: left;">Store</th>
+                        <td>{{ data.store }}</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left;">Company</th>
+                        <td>{{ data.customer }}</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left;">Address</th>
+                        <td>{{ data.address }}</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left;">Contact</th>
+                        <td>{{ data.phone }}</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left;">Delivery Date</th>
+                        <td>{{ data.date }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        {% endif %}
 
-<div class="container">
-    <h1 style="opacity: 0;">Spartao Oy</h1>
-
-    <hr>
-    <div class="row">
-        <div class="column left">Delivery Receipt</div>
-        <div class="column center">Issue Date: {{ date }}</div>
-        <div class="column right">
-            <canvas id="myOval" width="100" height="50"></canvas>
-        </div>
     </div>
-    
-    <script>
-        // Get the canvas element and its context
-        const canvas = document.getElementById('myOval');
-        const ctx = canvas.getContext('2d');
-    
-        // Draw the oval border
-        ctx.beginPath();
-        ctx.ellipse(60, 15, 30, 15, 0, 0, 2 * Math.PI); // Parameters are x, y, radiusX, radiusY, rotation, startAngle, endAngle
-        ctx.strokeStyle = '#000';  // Set border color
-        ctx.lineWidth = 1;         // Set border width
-        ctx.stroke();
-    
-        // Set text properties
-        ctx.fillStyle = 'black';
-        ctx.font = '8px Arial';
-        ctx.textAlign = 'center';
-        
-        // Draw the texts
-        ctx.fillText('FI', 60, 8);
-        ctx.fillText('1428', 60, 18);
-        ctx.fillText('EY', 60, 28);
-    </script>
 
-    
-    <table class="customer-info customer-container">
-        <tbody>
-            <tr>
-                <th >Store</th>
-                <td>{{ store }}</td>
-            </tr>
-            <tr>
-                <th >Customer</th>
-                <td>{{ customer }}</td>
-            </tr>
-            <tr>
-                <th>Address</th>
-                <td>{{ address }}</td>
-            </tr>
-            <tr>
-                <th>Contact</th>
-                <td>{{ phone }}</td>
-            </tr>
-            <tr>
-                <th>Delivery Date</th>
-                <td>{{ date }}</td>
-            </tr>
-            <tr>
-                <th>Order ID</th>
-                <td>{{ order_id }}</td>
-            </tr>
-        </tbody>
-    </table>
-    <br>
 
-    <table class="order-container">
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>Ordered Weight (kg)</th>
-                <th>Unit Price (€/kg, VAT14)</th>
-                <th>Delivered Weight (kg)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% if multiple_row %}
-                {% for i in range(product|length) %}
-                    <tr>
-                        <td>{{ product[i] }}</td>
-                        <td>{{ weight[i] }}</td>
-                        <td>{{ price[i] }}</td>
-                        <td>{{ delivered[i] }}</td>
-                    </tr>
-                {% endfor %}
-            {% else %}
-                <tr>
-                    <td>{{ product }}</td>
-                    <td>{{ weight }}</td>
-                    <td>{{ "%.2f"|format(price) }}</td>
-                    <td>{{ "%.2f"|format(delivered) }}</td>
-                </tr>
-            {% endif %}
-        </tbody>
-    </table>
-    <br>
-
-    <table class="price-info price-container">
-        <tbody>
-            <tr>
-                <th >Delivered (kg)</th>
-                    <td>{{ "%.2f"|format(delivered) }}</td>
-            </tr>
-            <tr>
-                <th>Recipient's signature</th>
-                <td></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <table class="price-info product-info-container">
-        <tbody>
-            {% if "Lohi" in product %}
-                <tr>
-                    <th >Production date</th>
-                    <td>{{ date }}</td>
-                </tr>
-                {% if "Frozen" not in product %}
-                    <tr>
-                        <th >Expiry date (+6 days)</th>
-                        <td>{{ expiry_date_fresh }}</td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <th >Expiry date (+90 days)</th>
-                        <td>{{ expiry_date_frozen }}</td>
-                    </tr>
-                {% endif %}
-                <tr>
-                    <th>Country of origin</th>
-                    <td>Norway</td>
-                </tr>
-            {% endif %}
-            <tr>
-                <th>Contact</th>
-                <td>04578319456</td>
-            </tr>
-
-        </tbody>
-    </table>
-    <br>
-
-    <p class="note">
-        NOTE: Sales are open Mon-Fri 7am-3pm. Sat 7am-4pm.<br>
-        
-        P<br>
+    <div id="footer_content">
         O- The product or a fish product made from it may not be delivered to other EU member states except Finland and Sweden.<br>
         X: The product or the fish product made from it may not be delivered to other countries except Finland, Sweden and Latvia.<br>
-
-    </p>
-
-    <footer>
         <hr>
-        <div class="footer-field">Y-tunnus: 2938534-6</div><div class="footer-field">Nihtisillantie 3B, 02630 Espoo</div><div class="footer-field">1 / 1</div>
-    </footer>
+        <div>
+            Y-tunnus: 2938534-6<br>
+            Address: Nihtisillantie 3B, 02630 Espoo<br>
+            Phone: 045 7831 9456<br>
+            Page <pdf:pagenumber> / <pdf:pagecount>
+        </div>
+        
+    </div>
+
+
+    <div>
+
+    {% if data %}
+    <hr>
+        <table style="font-size: 14px;">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Ordered kg</th>
+                    <th>Price €/kg, VAT14</th>
+                    <th>Delivered kg</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if data.order_detail %}
+                {% for i in range(data.order_detail|length) %}
+                    <tr>
+                        <td style="text-align: left;">{{ data.order_detail[i].product }}</td>
+                        <td style="text-align: center;">{{ data.order_detail[i].weight }}</td>
+                        <td style="text-align: center;">{{ data.order_detail[i].price }}</td>
+                        <td style="text-align: center;">{{ data.order_detail[i].delivered }}</td>
+                    </tr>
+                {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+
+        <br>
+        <br>
+        <br>
+        <table >
+            <tbody>
+                {% if data.contain_lohi %}
+                    <tr>
+                        <th style="text-align: left;">Production date (fresh lohi)</th>
+                        <td>{{ data.date }}</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left;">Expiry date (+6d, fresh lohi)</th>
+                        <td>{{ data.date | add_days(6) }}</td>
+                    </tr>
+                {% endif %}
+
+                {% if data.contain_frozen %}
+                    <tr>
+                        <th style="text-align: left;">Expiry date (+90d, frozen lohi)</th>
+                        <td>{{  data.date | add_days(90) }}</td>
+                    </tr>
+                {% endif %}
+
+                {% if data.contain_lohi or data.contain_frozen %}
+                    <tr>
+                        <th style="text-align: left;">Country of origin (lohi)</th>
+                        <td>Norway</td>
+                    </tr>
+                {% endif %}
+                {% if data.contain_other %}
+                    <tr>
+                        <th style="text-align: left;">Expiry date (non-lohi product)</th>
+                        <td>Check packadge</td>
+                    </tr>
+                {% endif %}
+
+                <tr></tr>
+                <tr></tr>
+                <tr>
+                    <th style="font-size: 15px;text-align: left;">Recipient's signature</th>
+                    <td></td>
+                </tr>
+
+
+            </tbody>
+        </table>
+    {% endif %}
+
 </div>
 
 
-
 </body>
-</pdf>
 </html>
