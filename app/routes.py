@@ -26,8 +26,6 @@ bp = Blueprint('main', __name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-
-
 # Routes
 @login_manager.user_loader
 def load_user(user_id):
@@ -402,7 +400,7 @@ def generate_delivery_note(date, customer=None):
     
     if data:
         for i in range(len(data)):
-            html_content = render_template('salmon_delivery_template_copy_copy.html', data=data[i])
+            html_content = render_template('salmon_delivery_template.html', data=data[i])
             pdf_file_name = f"{date}_{customer}.pdf" if customer else f"{date}_{i:03d}.pdf"
             pdf_file_path = os.path.join(os.getcwd(), "temp", pdf_file_name)
             convert_html_to_pdf(html_content, pdf_file_path)
@@ -545,19 +543,10 @@ def calculate_salmon_box(amount, threshold=2):
 
 
 
-@bp.route('/add-order', methods=['GET', 'POST'])
-@login_required
-def add_order():
-    data = request.json
-
-    return jsonify({'status': 'success', 'message': 'Order added successfully'})
-
-
-
 @bp.route('/get-order-info/<int:order_id>')
+@login_required
 def get_order_info(order_id):
     # Retrieve order from database
-    # Using SQLAlchemy ORM to retrieve the order with total produced and weight details
     order = (
         db.session.query(
             Order.id, 
@@ -567,47 +556,81 @@ def get_order_info(order_id):
             (func.coalesce(Order.price * 1.14, 0)).label("price"),
             Order.quantity,
             case(
-                [(func.length(Order.fish_size) == 0, Customer.fish_size),  # If Order.fish_size is empty, use Customer.fish_size
-                (func.length(Customer.fish_size) == 0, Order.fish_size)],  # If Customer.fish_size is empty, use Order.fish_size
+                [(func.length(Order.fish_size) == 0, Customer.fish_size),
+                (func.length(Customer.fish_size) == 0, Order.fish_size)],
                 else_=func.coalesce(Order.fish_size, Customer.fish_size)
             ).label("fish_size")
         )
+        .join(Customer, Order.customer == Customer.customer)
         .filter(Order.id == order_id)
         .first()
     )
-    print(order)
-    return jsonify(order)
+    if order:
+        print(order)
+        # Manually mapping the selected columns to their values
+        order_dict = {
+            "id": order.id,
+            "customer": order.customer,
+            "date": order.date.isoformat(),
+            "product": order.product,
+            "price": order.price,
+            "quantity": order.quantity,
+            "fish_size": order.fish_size,
+            "original_price": order.price,
+            "original_quantity": order.quantity,
+            "original_fish_size": order.fish_size,
+        }
+        return jsonify(order_dict)
+    else:
+        return jsonify({"error": "Order not found"}), 404
+
+
+@bp.route('/add-order', methods=['GET', 'POST'])
+@login_required
+def add_order():
+    data = request.json
+    return jsonify({'status': 'success', 'message': 'Order added successfully'})
+
 
 @bp.route('/update-order/<int:order_id>', methods=['POST'])
 @login_required
 def update_order(order_id):
+    data = request.json
+    print(data)
+    if not data:
+        return jsonify({'status': 'error', 'message': 'No data provided'}), 400
+    
     if request.method == 'POST':
         if not order_id:
             return jsonify({'status': 'error', 'message': 'Order ID not provided'}), 400
 
         # Fetch the order from the database
         order = Order.query.filter_by(id=order_id).first()
-        if not order:
+
+        if order:
+            order.price = data['price']/1.14
+            order.quantity = data['quantity']
+            order.fish_size = data['fish_size']
+            db.session.commit()
+            return jsonify({'status': 'success', 'message': 'Order updated successfully', 'order_id': order_id})
+        else:
             return jsonify({'status': 'error', 'message': 'Order not found'}), 404
-
-        # Update order details
-        order.price = request.form.get('price')
-        order.quantity = request.form.get('quantity')
-        
-        # Commit changes to the database
-        # db.session.commit()
-        return jsonify({'status': 'success', 'message': 'Order updated successfully', 'order_id': order_id})
-
-    return jsonify({'status': 'error', 'message': 'Invalid request method'}), 405
 
 
 @bp.route('/delete-order/<int:order_id>', methods=['DELETE'])
 @login_required
 def delete_order(order_id):
-    # Delete the order from the database
-    # ...
+    if not order_id:
+        return jsonify({'status': 'error', 'message': 'Order ID not provided'}), 400
 
-    return jsonify({'status': 'success', 'message': 'Order deleted successfully'})
+    # Delete the order from the database
+    order = Order.query.filter_by(id=order_id).first()
+    if order:
+        db.session.delete(order)
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': 'Order deleted successfully'})
+    else:
+        return jsonify({'status': 'error', 'message': 'Order not found'}), 404
 
 
 

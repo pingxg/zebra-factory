@@ -8,7 +8,7 @@
 
 {% block body %}
 <div class="flex flex-col p-2">
-    <form action="/order-editing" method="get" class="mb-4 p-2 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg shadow-md">
+    <form action="/order-editing" method="get" class="sticky mb-4 p-2 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg shadow-md">
             <div class="mb-2 flex text-center items-center">
                 <input 
                 type="week" 
@@ -37,7 +37,7 @@
     
 
 
-    <div class="overflow-x-auto shadow-lg rounded-lg max-h-96 table-wrp block ">
+    <div class="overflow-x-auto shadow-lg rounded-lg max-h-96 table-wrp block">
         <table class="w-full text-left table-auto bg-white">
             <thead class="text-xm text-gray-700 uppercase bg-gray-100 text-center sticky top-0 items-center">
                 <tr>
@@ -126,37 +126,32 @@
         <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:align-middle sm:max-w-lg sm:w-full transform scale-90">
             <form id="updateOrderForm" method="post">
                 <div class="bg-white grid mx-auto sm:grid-cols-2 gap-4 px-4 py-4 sm:px-6 sm:py-5 text-left"> 
+                    <input type="hidden" name="id" id="hiddenOrderID" value="">
+
                     <div>
                         <h3 class="leading-6 font-medium text-gray-900">
                             Customer Name
                         </h3>
-                        <div class="mt-0.5 mb-1">
-                            <!-- <input type="text" id="updateOrderPriceInput" name="date" class="border border-gray-300 px-3 py-2 w-full rounded" placeholder="Enter new price"> -->
-                            <select id="customerSelect" name="customer" class="border border-gray-300 px-3 py-2 w-full rounded">
-                                <option value="">Select a customer</option>
-                                <!-- Options will be added here dynamically -->
-                            </select>
-                        </div>
+                        <p id="displayCustomerName" class="mt-0.5 mb-1 border border-gray-300 px-3 py-2 w-full rounded">
+                            <!-- Customer name will be displayed here -->
+                        </p>
 
                     </div>
                     <div>
                         <h3 class="leading-6 font-medium text-gray-900">
                             Delivery Date
                         </h3>
-                        <div class="mt-0.5 mb-1">
-                            <input type="date" id="updateOrderDateInput" name="date" class="border border-gray-300 px-3 py-2 w-full rounded" placeholder="Enter new price">
-                        </div>
+                        <p id="displayOrderDate" class="mt-0.5 mb-1 border border-gray-300 px-3 py-2 w-full rounded">
+                            <!-- Delivery date will be displayed here -->
+                        </p>
                     </div>
                     <div>
                         <h3 class="leading-6 font-medium text-gray-900">
                             Product Name
                         </h3>
-                        <div class="mt-0.5 mb-1">
-                            <select id="productSelect" name="product" class="border border-gray-300 px-3 py-2 w-full rounded">
-                                <option value="">Select a product</option>
-                                <!-- Options will be added here dynamically -->
-                            </select>
-                        </div>
+                        <p id="displayProductName" class="mt-0.5 mb-1 border border-gray-300 px-3 py-2 w-full rounded">
+                            <!-- Product name will be displayed here -->
+                        </p>
                     </div>
                     <div>
                         <h3 class="leading-6 font-medium text-gray-900">
@@ -196,14 +191,12 @@
                         Save
                     </button>
                     <button type="button" id="saveEditOrderUpdateBtn" class="flex-1 w-full sm:w-auto mt-3 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:mt-0">
-                        Save&Edit
+                        Details
                     </button>
                     <button type="button" id="cancelOrderUpdateBtn" class="flex-1 w-full sm:w-auto mt-3 inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0">
                         Cancel
                     </button>
                 </div>
-
-
             </form>
         </div>
     </div>
