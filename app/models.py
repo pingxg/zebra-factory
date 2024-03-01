@@ -1,5 +1,6 @@
 from . import db
 from flask_login import UserMixin
+from datetime import datetime
 
 
 class User(UserMixin, db.Model):
@@ -27,7 +28,9 @@ class Customer(db.Model):
     phone = db.Column(db.String)
     priority = db.Column(db.Integer)
     packing = db.Column(db.String)
+    location_internal_id = db.Column(db.Integer)
     fish_size = db.Column(db.String)
+    active = db.Column(db.Integer)
 
 class Order(db.Model):
     """Order model
@@ -44,6 +47,7 @@ class Order(db.Model):
     quantity = db.Column(db.Integer)
     weights = db.relationship('OrderWeight', backref='salmon_order', lazy=True, cascade='all, delete, delete-orphan')
     fish_size = db.Column(db.String)
+    entry_time = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 class OrderWeight(db.Model):
@@ -69,6 +73,7 @@ class ProductName(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_name = db.Column(db.String, db.ForeignKey('salmon_orders.product'))
     product_type = db.Column(db.String)
+    active = db.Column(db.Integer)
 
 class MaterialInfo(db.Model):
     """MaterialInfo model
