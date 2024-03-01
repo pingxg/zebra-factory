@@ -1,17 +1,32 @@
 // Function to open a modal
-function openModal(modalID) {
-    document.getElementById(modalID).classList.remove('hidden');
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('hidden');
+        // Add Escape key listener for this modal
+        escapeKeyListener = function(event) {
+            if (event.key === "Escape" || event.key === "Esc") {
+                closeModal(modalId);
+            }
+        };
+        document.addEventListener('keydown', escapeKeyListener);
+    }
 }
 
 // Function to close a modal
-function closeModal(modalID) {
-    document.getElementById(modalID).classList.add('hidden');
-    const form = document.getElementById('updateOrderForm');
-    saveButton = document.getElementById('saveOrderUpdateBtn');
-    saveButton.disabled = true;
-    saveButton.classList.add('bg-gray-400', 'text-gray-500', 'cursor-not-allowed');
-    saveButton.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'text-white');
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('hidden');
+        document.removeEventListener('keydown', escapeKeyListener);
+        // Reset the form within the modal
+        const form = modal.querySelector('form');
+        if (form) {
+            form.reset();
+        }
+    }
 }
+
 
 // Function to fetch order details and then open the modal with populated data
 async function populateUpdateModal(orderId) {
@@ -24,13 +39,6 @@ async function populateUpdateModal(orderId) {
         document.getElementById('displayProductName').textContent = orderDetails.product;
         document.getElementById('updateOrderPriceInput').value = parseFloat(orderDetails.price).toFixed(2);
         document.getElementById('updateOrderQuantityInput').value = parseFloat(orderDetails.quantity).toFixed(2);
-        // const selectedOption = document.getElementById('fishSizeSelect').querySelector(`option[value="${orderDetails.fish_size}"]`);
-        // if (selectedOption) {
-        //     selectedOption.selected = true;
-        // } else {
-        //   // Handle cases where the order's fish size isn't in the available options
-        //     console.warn(`Fish size "${orderDetails.fish_size}" not found in select options`);
-        // }
         const fishSizeSelect = document.getElementById('fishSizeSelect');
 
         if (!orderDetails.product.toLowerCase().includes("lohi")) {
@@ -52,6 +60,18 @@ async function populateUpdateModal(orderId) {
     }
 }
 
+
+function populateAddOrderModal(date = null, customer = null) {
+    // Fetch order details if an orderId is provided, otherwise set defaults
+    // Set default values for date and customer if provided
+    populateSelectFields(); // Populate select fields when opening the modal
+    console.log(date);
+    console.log(customer);
+    if (date) document.getElementById('addOrderDateInput').value = date;
+    if (customer) document.getElementById('customersSelect').value = customer;
+    // Handle enabling/disabling or showing/hiding fields as needed
+    openModal('addOrderModal'); // Open the modal
+}
 
 
 
@@ -110,14 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
     saveOrderUpdateBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'text-white');
 });
 
-
-// DOMContentLoaded listener to setup event listeners once the document is fully loaded
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('cancelOrderUpdateBtn').addEventListener('click', function(event) {
-        event.preventDefault(); // Prevents the default action if it's a submit button.
-        closeModal('updateOrderModal');
-    });
-});
 
 document.addEventListener('DOMContentLoaded', function() {
     const updateOrderForm = document.getElementById('updateOrderForm');
@@ -183,5 +195,131 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             console.log("Fetch error:", error);  // Log the error
         });
+    });
+});
+
+
+const selectFieldsDataCache = {
+    customers: null,
+    products: null,
+    fishSizes: null
+};
+
+async function populateSelectFields() {
+    const endpoints = {
+        customers: '/api/customers',
+        products: '/api/products',
+        fishSizes: '/api/fish-sizes'
+    };
+    for (const [key, value] of Object.entries(endpoints)) {
+        const select = document.getElementById(`${key}Select`);
+        // Clear existing options before appending new ones
+        select.innerHTML = '';
+        // Add a default "Select" option
+        const defaultOption = new Option(`Select`, '');
+        select.appendChild(defaultOption);
+
+        // Use cached data if available
+        if (!selectFieldsDataCache[key]) {
+            try {
+                const response = await fetch(value);
+                selectFieldsDataCache[key] = await response.json();
+            } catch (error) {
+                console.error(`Failed to fetch ${key}:`, error);
+            }
+        }
+
+        // Proceed to populate the select field with cached data
+        selectFieldsDataCache[key].forEach(item => {
+            const option = new Option(item);
+            select.appendChild(option);
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    populateSelectFields();
+});
+
+document.getElementById('addOrderForm').addEventListener('submit', async function(event) {
+    event.preventDefault(); // Prevent the default form submission
+
+    const form = event.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    try {
+        const response = await fetch('/add-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+
+        if (!response.ok) throw new Error('Failed to add order');
+
+        alert('Order added successfully!');
+        closeModal('addOrderModal'); // Assuming closeModal is your function to close the modal
+        window.location.reload();  // Refresh the page to show the updated value
+    } catch (error) {
+        console.error('Error adding order:', error);
+        alert('Error adding order. Please try again.');
+    }
+});
+
+function checkFormInputs() {
+    const fields = document.querySelectorAll('#addOrderForm .required');
+    let allFilled = true;
+    fields.forEach(field => {
+        if (!field.value) {
+            allFilled = false;
+        }
+    });
+    document.getElementById('addOrderBtn').disabled = !allFilled;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const fields = document.querySelectorAll('#addOrderForm .required');
+    fields.forEach(field => {
+        field.addEventListener('input', checkFormInputs);
+        field.addEventListener('change', checkFormInputs);
+    });
+    // Initial check in case of pre-filled values
+    checkFormInputs();
+});
+
+// DOMContentLoaded listener to setup event listeners once the document is fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('cancelAddOrderBtn').addEventListener('click', function(event) {
+        event.preventDefault(); // Prevents the default action if it's a submit button.
+        closeModal('addOrderModal');
+    });
+});
+
+// DOMContentLoaded listener to setup event listeners once the document is fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('cancelOrderUpdateBtn').addEventListener('click', function(event) {
+        event.preventDefault(); // Prevents the default action if it's a submit button.
+        closeModal('updateOrderModal');
+    });
+});
+
+
+// DOMContentLoaded listener to setup event listeners once the document is fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    const productsSelect = document.getElementById('productsSelect');
+    const fishSizesSelect = document.getElementById('fishSizesSelect');
+
+    productsSelect.addEventListener('change', function(event) {
+        // Assuming the presence of "lohi" is checked in the option's text
+        const selectedOptionText = productsSelect.options[productsSelect.selectedIndex].text.toLowerCase();
+        
+        // Check if "lohi" is present in the selected option's text
+        if (selectedOptionText.includes("lohi")) {
+            fishSizesSelect.disabled = false; // Enable fishSizesSelect if "lohi" is present
+        } else {
+            fishSizesSelect.disabled = true; // Disable fishSizesSelect if "lohi" is not present
+            fishSizesSelect.value = ''; // Optionally reset the value
+        }
     });
 });

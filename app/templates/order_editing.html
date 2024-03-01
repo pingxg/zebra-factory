@@ -42,9 +42,10 @@
             <thead class="text-xm text-gray-700 uppercase bg-gray-100 text-center sticky top-0 items-center">
                 <tr>
                     <th class="px-6 py-3 border-b border-gray-300 border-r">Customer
-                        <a href="{{ url_for('main.add_order') }}" class="flex justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
+
+                        <button onclick="populateAddOrderModal()" class="flex justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out w-full">
                             <i class="fas fa-plus"></i>
-                        </a>
+                        </button>
                     </th>
                     {% for date in week_dates %}
                         <th class="px-6 py-3 border-b border-gray-300 border-r">{{ date.strftime('%Y-%m-%d') }}
@@ -84,24 +85,23 @@
                                 <div class="flex w-full justify-center items-center">
 
                                     {% if dates[date] %}
-                                        <a href="{{ url_for('main.add_order') }}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
+                                        <!-- <a href="{{ url_for('main.add_order',date=date.strftime('%Y-%m-%d'), customer=customer) }}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
                                             <i class="fas fa-plus"></i>
-                                        </a>
-
-                                        <!-- <form action="{{ url_for('main.add_order',date=date.strftime('%Y-%m-%d'), customer=customer) }}" method="post" class="flex flex-grow py-2 justify-center items-center">
-                                            <button title="AddOrder" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
-                                                <i class="fas fa-plus"></i>
-                                            </button>
-                                        </form> -->
-
+                                        </a> -->
+                                        <button onclick="populateAddOrderModal(this.getAttribute('data-date'), this.getAttribute('data-customer'))" data-date="{{date.strftime('%Y-%m-%d')}}" data-customer="{{customer}}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
                                         <a href="{{ url_for('main.download_delivery_note', date=date.strftime('%Y-%m-%d'), customer=customer) }}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
                                             <i class="fas fa-download"></i>
                                         </a>
                                     {% else %}
                                         <div class="w-full h-full flex py-0 justify-center items-center">
-                                            <a href="{{ url_for('main.add_order', date=date.strftime('%Y-%m-%d'), customer=customer) }}" class="flex w-full h-full justify-center items-center text-gray-300 hover:text-gray-600 text-opacity-0 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-6 transition duration-100 ease-in-out">
+                                            <!-- <a href="{{ url_for('main.add_order', date=date.strftime('%Y-%m-%d'), customer=customer) }}" class="flex w-full h-full justify-center items-center text-gray-300 hover:text-gray-600 text-opacity-0 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-6 transition duration-100 ease-in-out">
                                                 <i class="fas fa-plus"></i>
-                                            </a>
+                                            </a> -->
+                                            <button onclick="populateAddOrderModal(this.getAttribute('data-date'), this.getAttribute('data-customer'))" data-date="{{date.strftime('%Y-%m-%d')}}" data-customer="{{customer}}" class="flex w-full h-full justify-center items-center text-gray-300 hover:text-gray-600 text-opacity-0 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-6 transition duration-100 ease-in-out w-full">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
                                         </div>
                                     {% endif %}
                                 </div>
@@ -120,29 +120,23 @@
         <div class="fixed inset-0 transition-opacity" aria-hidden="true">
             <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
         </div>
-
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        
         <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:align-middle sm:max-w-lg sm:w-full transform scale-90">
             <form id="updateOrderForm" method="post">
                 <div class="bg-white grid mx-auto sm:grid-cols-2 gap-4 px-4 py-4 sm:px-6 sm:py-5 text-left"> 
                     <input type="hidden" name="id" id="hiddenOrderID" value="">
-
                     <div>
                         <h3 class="leading-6 font-medium text-gray-900">
                             Customer Name
                         </h3>
                         <p id="displayCustomerName" class="mt-0.5 mb-1 border border-gray-300 px-3 py-2 w-full rounded">
-                            <!-- Customer name will be displayed here -->
                         </p>
-
                     </div>
                     <div>
                         <h3 class="leading-6 font-medium text-gray-900">
                             Delivery Date
                         </h3>
                         <p id="displayOrderDate" class="mt-0.5 mb-1 border border-gray-300 px-3 py-2 w-full rounded">
-                            <!-- Delivery date will be displayed here -->
                         </p>
                     </div>
                     <div>
@@ -150,7 +144,6 @@
                             Product Name
                         </h3>
                         <p id="displayProductName" class="mt-0.5 mb-1 border border-gray-300 px-3 py-2 w-full rounded">
-                            <!-- Product name will be displayed here -->
                         </p>
                     </div>
                     <div>
@@ -169,7 +162,6 @@
                             <input type="number" step="0.01" id="updateOrderQuantityInput" name="quantity" class="border border-gray-300 px-3 py-2 w-full rounded" placeholder="Enter new quantity">
                         </div>
                     </div>
-
                     <div>
                         <h3 class="leading-6 font-medium text-gray-900">
                             Fish Size
@@ -177,7 +169,6 @@
                         <div class="mt-0.5 mb-1">
                             <select id="fishSizeSelect" name="fishSize" class="border border-gray-300 px-3 py-2 w-full rounded">
                                 <option value="">Select a fish size</option>
-                                <!-- Options will be added here dynamically -->
                             </select>
                         </div>
                     </div>
@@ -202,5 +193,77 @@
     </div>
 </div>
 
+
+<div id="addOrderModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
+    <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:align-middle sm:max-w-lg sm:w-full transform scale-90">
+            <form id="addOrderForm" method="post">
+                <div class="bg-white grid mx-auto sm:grid-cols-2 gap-4 px-4 py-4 sm:px-6 sm:py-5 text-left"> 
+                    <div>
+                        <h3 class="leading-6 font-medium text-gray-900">
+                            Customer Name *
+                        </h3>
+                        <select id="customersSelect" name="customer" required class="border border-gray-300 px-3 py-2 w-full rounded">
+                            <option value="">Select</option>
+                        </select>
+                    </div>
+                    <div>
+                        <h3 class="leading-6 font-medium text-gray-900">
+                            Delivery Date *
+                        </h3>
+                        <input type="date" id="addOrderDateInput" name="date" required class="mt-0.5 mb-1 border border-gray-300 px-3 py-2 w-full rounded">
+                    </div>
+                    
+                    <div>
+                        <h3 class="leading-6 font-medium text-gray-900">
+                            Product Name *
+                        </h3>
+                        <select id="productsSelect" name="product" required class="border border-gray-300 px-3 py-2 w-full rounded">
+                            <option value="">Select</option>
+                        </select>
+                    </div>
+                    <div>
+                        <h3 class="leading-6 font-medium text-gray-900">
+                            Price (VAT14) *
+                        </h3>
+                        <div class="mt-0.5 mb-1">
+                            <input type="number" step="0.01" id="addOrderPriceInput" name="price" required class="border border-gray-300 px-3 py-2 w-full rounded" placeholder="Enter new price">
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="leading-6 font-medium text-gray-900">
+                            Quantity (KG) *
+                        </h3>
+                        <div class="mt-0.5 mb-1">
+                            <input type="number" step="0.01" id="addOrderQuantityInput" name="quantity" required class="border border-gray-300 px-3 py-2 w-full rounded" placeholder="Enter new quantity">
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="leading-6 font-medium text-gray-900">
+                            Fish Size
+                        </h3>
+                        <div class="mt-0.5 mb-1">
+                            <select id="fishSizesSelect" name="fishSize" class="border border-gray-300 px-3 py-2 w-full rounded">
+                                <option value="">Select</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 items-center px-4 py-3 sm:px-6 sm:flex sm:justify-center sm:space-x-4">
+                    <button type="submit" id="addOrderBtn" class="flex-1 w-full sm:w-auto mt-3 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:mt-0">
+                        Add
+                    </button>
+                    <button type="button" id="cancelAddOrderBtn" class="flex-1 w-full sm:w-auto mt-3 inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

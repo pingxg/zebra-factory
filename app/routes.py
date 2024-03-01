@@ -144,7 +144,6 @@ def index():
             .order_by(Customer.priority.asc(), Customer.packing.asc(), Order.product.asc(), "fish_size")
             .all()
         )
-
         grouped_orders = {}
         totals = {}  # Dictionary to store the total for each product group
         details = {}
@@ -566,7 +565,6 @@ def get_order_info(order_id):
         .first()
     )
     if order:
-        print(order)
         # Manually mapping the selected columns to their values
         order_dict = {
             "id": order.id,
@@ -589,14 +587,33 @@ def get_order_info(order_id):
 @login_required
 def add_order():
     data = request.json
-    return jsonify({'status': 'success', 'message': 'Order added successfully'})
+    if not data:
+        return jsonify({'status': 'error', 'message': 'No data provided'}), 400
+    # Create a new instance of the Order model with the data from the request
+    try:
+        new_order = Order(
+            customer=data['customer'],
+            product=data['product'],
+            price=float(data['price'])/1.14,  # Assuming the price needs to be adjusted
+            quantity=float(data['quantity']),
+            fish_size=data['fishSize'] if 'fishSize' in data else None,
+            date=datetime.strptime(data.get('date'), '%Y-%m-%d').date()
+        )
+        # Add the new order to the session and commit it to the database
+        db.session.add(new_order)
+        db.session.commit()
 
+        return jsonify({'status': 'success', 'message': 'Order added successfully'})
+
+    except Exception as e:
+        # Rollback in case of error
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @bp.route('/update-order/<int:order_id>', methods=['POST'])
 @login_required
 def update_order(order_id):
     data = request.json
-    print(data)
     if not data:
         return jsonify({'status': 'error', 'message': 'No data provided'}), 400
     
@@ -632,6 +649,23 @@ def delete_order(order_id):
     else:
         return jsonify({'status': 'error', 'message': 'Order not found'}), 404
 
+
+@bp.route('/api/customers')
+def get_customers():
+    customers = Customer.query.filter(Customer.active == 1).order_by(Customer.customer.asc()).all()
+    return jsonify([customer.customer for customer in customers])
+
+@bp.route('/api/products')
+def get_products():
+    products = ProductName.query.filter(ProductName.active == 1).order_by(ProductName.product_name.asc()).all()
+    return jsonify([product.product_name for product in products])
+
+@bp.route('/api/fish-sizes')
+def get_fish_sizes():
+    # Query distinct fish_size values
+    fish_sizes = Customer.query.with_entities(Customer.fish_size).distinct().order_by(Customer.fish_size.asc()).all()
+    fish_sizes = [size[0] for size in fish_sizes if size[0] is not None and size[0] != '']  # Convert to list and filter out None
+    return jsonify(fish_sizes)
 
 
 def calculate_current_iso_week():
