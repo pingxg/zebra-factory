@@ -26,6 +26,80 @@ function closeModal(modalId) {
         }
     }
 }
+function showToast(message, type = 'success') {
+    let toastElement = document.getElementById(type === 'error' ? 'errorToast' : 'toast');
+
+    // Dynamically construct the HTML content with the message
+    toastElement.innerHTML = `
+        <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'} mr-2"></i> 
+        ${message}
+        <button id="${type}ToastClose" class="absolute top-1/2 right-4 transform -translate-y-1/2 text-2xl leading-none hover:text-gray-100">&times;</button>
+    `;
+
+    // Show the toast
+    toastElement.style.opacity = '1';
+    toastElement.style.transform = 'translate(-50%, 0)';
+    toastElement.classList.add('opacity-100');
+
+    // Close button functionality: Re-select the close button because its previous reference was lost when innerHTML was reset
+    document.getElementById(`${type}ToastClose`).addEventListener('click', () => {
+        toastElement.style.opacity = '0';
+        setTimeout(() => {
+            toastElement.style.transform = 'translate(-50%, -100%)';
+            toastElement.classList.remove('opacity-100');
+        }, 300); // Delay to allow for opacity transition
+    });
+
+    // Automatically hide the toast after a delay
+    setTimeout(() => {
+        toastElement.style.opacity = '0';
+        setTimeout(() => {
+            toastElement.style.transform = 'translate(-50%, -100%)';
+            toastElement.classList.remove('opacity-100');
+        }, 300); // Match this delay with your CSS transition-duration for opacity
+    }, 3000); // Duration before the toast hides
+}
+
+
+
+
+// function showToast() {
+//     const toast = document.getElementById('toast');
+//     const closeBtn = document.getElementById('toastClose');
+    
+//     toast.style.opacity = '1';
+//     toast.style.transform = 'translate(-50%, 0)';
+    
+//     closeBtn.onclick = function() {
+//         toast.style.opacity = '0';
+//         toast.style.transform = 'translate(-50%, -100%)';
+//     };
+    
+//     setTimeout(() => {
+//         toast.style.opacity = '0';
+//         toast.style.transform = 'translate(-50%, -100%)';
+//     }, 5000);  // Toast will be visible for 3 seconds
+// }
+
+// function showErrorToast() {
+//     const toast = document.getElementById('errorToast');
+//     const closeBtn = document.getElementById('errorToastClose');
+
+//     toast.style.opacity = '1';
+//     toast.style.transform = 'translate(-50%, 0)';
+    
+//     closeBtn.onclick = function() {
+//         toast.style.opacity = '0';
+//         toast.style.transform = 'translate(-50%, -100%)';
+//     };
+    
+//     setTimeout(() => {
+//         toast.style.opacity = '0';
+//         toast.style.transform = 'translate(-50%, -100%)';
+//     }, 3000);  // Toast will be visible for 3 seconds
+// }
+
+
 
 
 // Function to fetch order details and then open the modal with populated data
@@ -65,8 +139,6 @@ function populateAddOrderModal(date = null, customer = null) {
     // Fetch order details if an orderId is provided, otherwise set defaults
     // Set default values for date and customer if provided
     populateSelectFields(); // Populate select fields when opening the modal
-    console.log(date);
-    console.log(customer);
     if (date) document.getElementById('addOrderDateInput').value = date;
     if (customer) document.getElementById('customersSelect').value = customer;
     // Handle enabling/disabling or showing/hiding fields as needed
@@ -156,8 +228,10 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.status === 200) {
                 window.location.reload();  // Refresh the page to show the updated value
+                showToast('Order updated successfully!', 'success');
             } else {
-                alert('Error updating order.');
+                showToast('Failed to update order.', 'error');
+                // alert('Error updating order.');
             }
         })
         .catch(error => {
@@ -173,7 +247,6 @@ document.addEventListener('DOMContentLoaded', function() {
         event.preventDefault(); // Prevents the default action if it's a submit button.
         // Show confirmation dialog
         const userConfirmed = confirm("Are you sure you want to delete this order?\nAll weight details will be lost!");
-        
         if (!userConfirmed) {
             return; // User clicked Cancel, so do not proceed with deletion
         }
@@ -188,8 +261,10 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.status === 200) {
                 window.location.reload();  // Refresh the page to show the updated value
+                showToast('Order deleted successfully!', 'success');
             } else {
-                alert('Error deleting order.');
+                showToast('Failed to delete order.', 'error');
+                // alert('Error deleting order.');
             }
         })
         .catch(error => {
@@ -257,13 +332,16 @@ document.getElementById('addOrderForm').addEventListener('submit', async functio
         });
 
         if (!response.ok) throw new Error('Failed to add order');
-
-        alert('Order added successfully!');
+        // sessionStorage.setItem('showToastAfterReload', 'Order added successfully!');
+        // alert('Order added successfully!');
+        showToast('Order added successfully!', 'success');
         closeModal('addOrderModal'); // Assuming closeModal is your function to close the modal
         window.location.reload();  // Refresh the page to show the updated value
     } catch (error) {
+        // showErrorToast();
+        showToast('Failed to add order.', 'error');
         console.error('Error adding order:', error);
-        alert('Error adding order. Please try again.');
+        // alert('Error adding order. Please try again.');
     }
 });
 
