@@ -21,5 +21,9 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     REMEMBER_COOKIE_DURATION = timedelta(days=30)
     SECRET_KEY = os.environ.get('SECRET_KEY')
-    
-
+    ROLE_PERMISSIONS = {
+        'admin': ['add_weight', 'print_labels', 'edit_order', 'upload_delivery_note', 'view'],
+        'editor': ['add_weight', 'print_labels', 'view'],
+        'driver': ['upload_delivery_note', 'view'],
+        'viewer': ['view'],
+    }

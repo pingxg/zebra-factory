@@ -1,16 +1,14 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
-from flask_socketio import SocketIO
+from .config import Config
+from .extensions import db, login_manager, socketio
+from .template_filters import register_template_filters
 from dotenv import load_dotenv
-from decimal import Decimal
-from flask.json import JSONEncoder
+from .blueprints.auth import auth_bp
+# from .blueprints.orders import orders_bp
+# from .blueprints.main import main_bp
 
-db = SQLAlchemy()
-login_manager = LoginManager()
-socketio = SocketIO()
 
-def create_app(config_name):
+def create_app() -> Flask:
     """Creates the Flask application instance.
     
     Initializes and configures the Flask app, SQLAlchemy, Flask-Login, 
@@ -24,62 +22,31 @@ def create_app(config_name):
         The configured Flask app instance.
     """
     load_dotenv()  # Load environment variables from .env
-
     app = Flask(__name__, template_folder='templates', static_folder='static')
-    app.config.from_object(config_name)
-    app.jinja_env.add_extension('jinja2.ext.do')
+    app.config.from_object(Config)
 
+    # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
+    socketio.init_app(app, cors_allowed_origins="*")
+
+    app.jinja_env.add_extension('jinja2.ext.do')
+
     login_manager.login_view = 'main.login'
 
-    socketio.init_app(app, cors_allowed_origins="*")
-    
+    # Register blueprints
     from . import routes
 
-    from datetime import datetime, timedelta
-
-
-    class CustomJSONEncoder(JSONEncoder):
-        def default(self, obj):
-            if isinstance(obj, Decimal):
-                # Convert Decimal to float
-                return float(obj)
-            return super(CustomJSONEncoder, self).default(obj)
-
-    # Set the custom JSON encoder
+    # Custom JSON encoder
+    from .utils.helper import CustomJSONEncoder
     app.json_encoder = CustomJSONEncoder
 
-
-    def adjust_week(week_str, delta_weeks):
-        year, week = map(int, week_str.split('-W'))
-        start_of_week = datetime.fromisocalendar(year, week, 1)
-        adjusted_date = start_of_week + timedelta(weeks=delta_weeks)
-        adjusted_year, adjusted_week, _ = adjusted_date.isocalendar()
-        adjusted_week_str = f"{adjusted_year}-W{adjusted_week:02d}"
-        return adjusted_week_str
-
-    def add_days(date_str, days, date_format="%Y-%m-%d"):
-        # Convert the string to a datetime object
-        dt = datetime.strptime(date_str, date_format)
-        # Add the specified number of days
-        new_date = dt + timedelta(days=days)
-        # Convert back to string if needed, or return the datetime object
-        return new_date.strftime(date_format)
-
-    @app.template_filter('sum_list')
-    def sum_list(sequence):
-        return sum(sequence)
-    
     app.register_blueprint(routes.bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+    # app.register_blueprint(orders_bp, url_prefix='/orders')
 
-    # Define and add the custom filter
-    @app.template_filter('adjust_week')
-    def adjust_week_filter(week_str, delta_weeks):
-        return adjust_week(week_str, delta_weeks)
-    # Define and add the custom filter
-    @app.template_filter('add_days')
-    def add_days_filter(date_str, days):
-        return add_days(date_str, days)
+
+    # Register custom template filters
+    register_template_filters(app)
 
     return app

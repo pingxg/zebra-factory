@@ -1,8 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for, flash, send_file, make_response, abort
-from flask_login import login_required, logout_user, login_user
-from werkzeug.security import check_password_hash
-from .models import User, Customer, Order, OrderWeight, ProductName, MaterialInfo
-from . import db, login_manager, socketio
+from flask_login import login_required
+from .models import Customer, Order, OrderWeight, ProductName, MaterialInfo
+from . import db, socketio
 import os
 from datetime import date, datetime, timedelta
 from collections import defaultdict
@@ -11,13 +10,12 @@ import pytz
 import re
 from pdfrw import PdfReader, PdfWriter
 import shutil
-import threading
-import time
 import numpy as np
 import logging
 from xhtml2pdf import pisa
+from app.utils.auth_decorators import permission_required, role_required
+from .utils.date_utils import calculate_current_iso_week
 
-from pprint import pprint as pp
 
 bp = Blueprint('main', __name__)
 
@@ -25,46 +23,6 @@ bp = Blueprint('main', __name__)
 # Set up logging with timestamp
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-# Routes
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-
-@bp.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        user = User.query.filter_by(email=email).first()
-
-        try:
-            # Check if user exists and password is correct
-            if user and check_password_hash(user.password, password):
-                remember_me = False
-                print(request.form.get('remember'))
-                if 'remember' in request.form and request.form.get('remember') =="on":
-                    remember_me = True
-                    login_user(user, remember=remember_me)
-                else:
-                    login_user(user)
-                return redirect(url_for('main.index'))
-
-            else:
-                flash("Invalid email or password.", 'danger')
-                return redirect(url_for('main.login'))
-        except ValueError:
-            flash("Invalid email or password.", 'danger')
-            return redirect(url_for('main.login'))
-
-    return render_template('login.html')
-
-@bp.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('main.login'))
 
 
 @bp.route('/emit_print_zebra', methods=['POST'])
@@ -221,7 +179,7 @@ def index():
             category_rowspan_tracker[category] = 0
         grouped_orders = {k: v for k, v in sorted(grouped_orders.items())}
 
-    return render_template('index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, grouped_details=grouped_details, data_for_template=data_for_template,timedelta=timedelta)
+    return render_template('orders/home.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, grouped_details=grouped_details, data_for_template=data_for_template, timedelta=timedelta)
 
 
 @bp.route('/order/<int:order_id>', methods=['GET', 'POST'])
@@ -230,7 +188,6 @@ def order_detail(order_id):
     if request.method == 'POST':
         scale_reading = float(request.form['scale_reading'])
         batch_number = request.form['batch_number']
-
         try:
             batch_number = int(batch_number)
         except:
@@ -242,7 +199,6 @@ def order_detail(order_id):
                 .order_by(MaterialInfo.date.desc())
                 .first()
             )
-            print(int(batch_number[0]))
 
         weight = OrderWeight(
             order_id=order_id, 
@@ -291,7 +247,7 @@ def order_detail(order_id):
     if not order:
         return "Order not found", 404
 
-    return render_template('order_detail.html', order=order, show_toast=show_toast, weight_details=weight_details)
+    return render_template('orders/order_detail.html', order=order, show_toast=show_toast, weight_details=weight_details)
 
 
 @bp.route('/weight/<int:weight_id>/edit', methods=['GET', 'POST'])
@@ -321,9 +277,9 @@ def delete_weight(weight_id):
     return redirect(url_for('main.order_detail', order_id=weight.order_id))
 
 
-@bp.route('/order-editing', methods=['GET', 'POST'])
+@bp.route('/order', methods=['GET', 'POST'])
 @login_required
-def order_editing():
+def order():
     week_str = request.args.get('week', calculate_current_iso_week())
 
     year, week = map(int, week_str.split('-W'))
@@ -364,7 +320,7 @@ def order_editing():
 
     # List of dates in the week for column headers
     week_dates = [start_date + timedelta(days=i) for i in range(7)]
-    return render_template('order_editing.html', week_str=week_str, orders_by_customer=orders_by_customer, week_dates=week_dates)
+    return render_template('orders/order.html', week_str=week_str, orders_by_customer=orders_by_customer, week_dates=week_dates)
 
 
 @bp.route('/download-delivery-note')
@@ -399,7 +355,7 @@ def generate_delivery_note(date, customer=None):
     
     if data:
         for i in range(len(data)):
-            html_content = render_template('salmon_delivery_template.html', data=data[i])
+            html_content = render_template('printing/salmon_delivery_template.html', data=data[i])
             pdf_file_name = f"{date}_{customer}.pdf" if customer else f"{date}_{i:03d}.pdf"
             pdf_file_path = os.path.join(os.getcwd(), "temp", pdf_file_name)
             convert_html_to_pdf(html_content, pdf_file_path)
@@ -435,7 +391,6 @@ def generate_delivery_note(date, customer=None):
 
 
 def get_data_for_pdf(date, customer=None):
-
     subquery = (
         db.session.query(
             OrderWeight.order_id,
@@ -539,8 +494,6 @@ def calculate_salmon_box(amount, threshold=2):
         full_box, half_box = lower_bound / 10, 1
 
     return [int(full_box), int(half_box)]
-
-
 
 @bp.route('/get-order-info/<int:order_id>')
 @login_required
@@ -668,25 +621,25 @@ def get_fish_sizes():
     return jsonify(fish_sizes)
 
 
-def calculate_current_iso_week():
-    # Get the current date
-    current_date = datetime.now()
+# def calculate_current_iso_week():
+#     # Get the current date
+#     current_date = datetime.now()
 
-    # Calculate the start and end of the current ISO week
-    # ISO weeks start on Monday and end on Sunday
-    start_of_week = current_date - timedelta(days=current_date.weekday())
-    end_of_week = start_of_week + timedelta(days=6)
+#     # Calculate the start and end of the current ISO week
+#     # ISO weeks start on Monday and end on Sunday
+#     start_of_week = current_date - timedelta(days=current_date.weekday())
+#     end_of_week = start_of_week + timedelta(days=6)
 
-    # Format the dates to match the `input[type=week]` value format (YYYY-W##)
-    # Where ## is the ISO week number
-    week_number = current_date.isocalendar()[1]
-    year = start_of_week.year
+#     # Format the dates to match the `input[type=week]` value format (YYYY-W##)
+#     # Where ## is the ISO week number
+#     week_number = current_date.isocalendar()[1]
+#     year = start_of_week.year
 
-    # Pad the week number with leading zero if necessary
-    week_number_str = f"{week_number:02d}"
+#     # Pad the week number with leading zero if necessary
+#     week_number_str = f"{week_number:02d}"
 
-    # Combine into the full string
-    week_range_str = f"{year}-W{week_number_str}"
+#     # Combine into the full string
+#     week_range_str = f"{year}-W{week_number_str}"
 
-    return week_range_str
+#     return week_range_str
 

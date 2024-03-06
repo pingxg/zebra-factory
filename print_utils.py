@@ -7,8 +7,6 @@ from PIL import Image
 import shutil
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-
-
 import hashlib
 import random
 import string

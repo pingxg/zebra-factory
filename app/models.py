@@ -8,11 +8,12 @@ class User(UserMixin, db.Model):
     
     Represents a user with id, email, password and name.
     """
-    __tablename__ = "user"
+    __tablename__ = "salmon_user"
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String, unique=True)
-    password = db.Column(db.String)
-    name = db.Column(db.String)
+    email = db.Column(db.String(45), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(45), nullable=False)
+    role = db.Column(db.String(45), nullable=False, default="viewer")  # Add role attribute
 
 class Customer(db.Model):
     """Customer model 

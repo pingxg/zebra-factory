@@ -55,20 +55,16 @@
     <div class="relative min-h-screen">
         <!-- Top Navbar -->
         <div class="bg-gradient-to-r from-black to-gray-800 p-4 shadow-md fixed w-full z-40">
-
             <div class="container mx-auto flex justify-between items-center">
-
                     <a id="hamburger-btn" class="nav-toggle">
                         <span class="bar"></span>
                         <span class="bar"></span>
                         <span class="bar"></span>
                     </a>
-
-
                 <div>
                     <!-- Status Icon -->
-                        <span id="status-icon" class="fas fa-circle text-red-500 mr-3"></span>
-                    <a href="{{ url_for('main.logout') }}" class="transition duration-300 ease-in-out bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-full shadow-md border border-gray-600 hover:border-gray-500">
+                    <!-- <span id="status-icon" class="fas fa-circle text-red-500 mr-3"></span> -->
+                    <a href="{{ url_for('auth.logout') }}" class="transition duration-300 ease-in-out bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-full shadow-md border border-gray-600 hover:border-gray-500">
                         Logout
                     </a>
                 </div>
@@ -78,28 +74,26 @@
         <!-- Main content and sidebar wrapper -->
         <div class="flex flex-col md:flex-row">
             <!-- Sidebar, fixed and full height -->
-            <div id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full transition duration-200 ease-in-out z-20 w-60 bg-black bg-opacity-80 backdrop-filter backdrop-blur-lg">
+            <div id="sidebar" class="pt-16 fixed inset-y-0 left-0 transform -translate-x-full transition duration-200 ease-in-out z-20 w-60 bg-black bg-opacity-80 backdrop-filter backdrop-blur-lg">
                 <!-- Sidebar content -->
                 <nav class="text-white w-60 p-4 space-y-4">
-                    <a href="/" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray700">Home</a>
                     <a href="/" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Home</a>
-                    <a href="/order-editing" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Order</a>
+                    <a href="/order" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Order</a>
                     <a href="/customer" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Customer</a>
-                    <a href="/order" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Product</a>
+                    <a href="/product" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Product</a>
+                    <a href="/inventory" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Inventory</a>
+                    <a href="/label" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Label</a>
                 </nav>
             </div>
-
             {% endif %}
             {% endblock %}
 
             <!-- Page Content -->
-            <div class="pt-16 w-full flex-1">
+            <div class="w-full flex-1">
                 {% block body %}{% endblock %}
             </div>
         </div>
     </div>
 
 </body>
-
-
 </html>
