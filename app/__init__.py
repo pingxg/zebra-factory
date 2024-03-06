@@ -32,7 +32,7 @@ def create_app() -> Flask:
 
     app.jinja_env.add_extension('jinja2.ext.do')
 
-    login_manager.login_view = 'main.login'
+    login_manager.login_view = 'auth.login'
 
     # Register blueprints
     from . import routes
