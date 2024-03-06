@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for, flash, send_file, make_response, abort
+from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for, send_file, abort
 from flask_login import login_required
 from .models import Customer, Order, OrderWeight, ProductName, MaterialInfo
 from . import db, socketio
@@ -7,14 +7,12 @@ from datetime import date, datetime, timedelta
 from collections import defaultdict
 from sqlalchemy import func, case
 import pytz
-import re
-from pdfrw import PdfReader, PdfWriter
-import shutil
 import numpy as np
 import logging
-from xhtml2pdf import pisa
-from app.utils.auth_decorators import permission_required, role_required
+# from app.utils.auth_decorators import permission_required, role_required
 from .utils.date_utils import calculate_current_iso_week
+from .utils.helper import calculate_salmon_box
+from .utils.pdf_utils import generate_delivery_note
 
 
 bp = Blueprint('main', __name__)
@@ -179,7 +177,7 @@ def index():
             category_rowspan_tracker[category] = 0
         grouped_orders = {k: v for k, v in sorted(grouped_orders.items())}
 
-    return render_template('orders/home.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, grouped_details=grouped_details, data_for_template=data_for_template, timedelta=timedelta)
+    return render_template('main/index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, grouped_details=grouped_details, data_for_template=data_for_template, timedelta=timedelta)
 
 
 @bp.route('/order/<int:order_id>', methods=['GET', 'POST'])
@@ -335,166 +333,6 @@ def download_delivery_note():
         abort(404)
 
 
-def generate_delivery_note(date, customer=None):
-    # Utility function
-    def convert_html_to_pdf(source_html, output_filename):
-        # open output file for writing (truncated binary)
-        with open(output_filename, "w+b") as result_file:
-            pisa_status = pisa.CreatePDF(
-                    source_html,
-                    dest=result_file)
-        return pisa_status.err
-    data = get_data_for_pdf(date, customer)
-
-    if os.path.exists(os.path.join(os.getcwd(), "temp")):
-        # Remove the directory and all its contents
-        shutil.rmtree(os.path.join(os.getcwd(), "temp"))
-
-    if not os.path.exists(os.path.join(os.getcwd(), "temp")):
-        os.makedirs(os.path.join(os.getcwd(), "temp"))
-    
-    if data:
-        for i in range(len(data)):
-            html_content = render_template('printing/salmon_delivery_template.html', data=data[i])
-            pdf_file_name = f"{date}_{customer}.pdf" if customer else f"{date}_{i:03d}.pdf"
-            pdf_file_path = os.path.join(os.getcwd(), "temp", pdf_file_name)
-            convert_html_to_pdf(html_content, pdf_file_path)
-        matching_files = []
-        if customer is None:
-            # Regular expression pattern to match 'yyyy-mm-dd_{index}'
-            pattern = r'^\d{4}-\d{2}-\d{2}_\d+.pdf$'
-            # List to store matching file paths
-            
-            # Iterate through files in the directory
-            for filename in os.listdir("temp" ):
-                if re.match(pattern, filename):
-                    full_path = os.path.join("temp", filename)
-                    matching_files.append(full_path)
-                    matching_files.append(full_path)
-
-            pdf_file_name = f"{date}.pdf"
-        else:
-            matching_files.append(os.path.join("temp", pdf_file_name))
-            matching_files.append(os.path.join("temp", pdf_file_name))
-
-        writer = PdfWriter()
-        pdf_file_path = os.path.join(os.getcwd(), "temp", pdf_file_name)
-        for inpfn in sorted(matching_files):
-            writer.addpages(PdfReader(inpfn).pages)
-        writer.write(pdf_file_path)
-
-        
-    else:
-        return False
-    return pdf_file_path
-
-
-
-def get_data_for_pdf(date, customer=None):
-    subquery = (
-        db.session.query(
-            OrderWeight.order_id,
-            func.coalesce(func.sum(OrderWeight.quantity), 0).label("delivered")
-        )
-        .group_by(OrderWeight.order_id)
-        .subquery()
-    )
-
-    query = db.session.query(
-        Order.customer.label("store"), 
-        Customer.company.label("customer"),
-        Customer.address,
-        Customer.phone,
-        Order.date,
-        Order.product,
-        (func.coalesce(Order.price * 1.14, 0)).label("price"),
-        Order.quantity.label("weight"),
-        subquery.c.delivered,
-    )\
-    .outerjoin(subquery, Order.id == subquery.c.order_id) \
-    .outerjoin(Customer, Order.customer == Customer.customer)\
-    .filter(Order.date == date)\
-    .order_by(Order.customer.asc(), Order.product.asc())
-
-    # Apply customer filter if customer is provided
-    if customer:
-        query = query.filter(Customer.customer == customer)
-
-    # Finalize the query
-    data = query.all()
-
-    store_dict = defaultdict(lambda: {
-        'store': '',
-        'customer': '',
-        'address': '',
-        'phone': '',
-        'date': '',
-        'order_detail': [],
-        'contain_frozen':False,
-        'contain_lohi':False,
-        'contain_other':False,
-    })
-
-    for order in data:
-        store, customer, address, phone, date, product, price, weight, delivered = order
-
-        # Convert Decimal and datetime.date to a more friendly format if necessary
-        price = float(price) if price is not None else 0.0
-        weight = float(weight) if weight is not None else 0.0
-        delivered = float(delivered) if delivered is not None else 0.0
-        date = date.strftime('%Y-%m-%d')
-
-        if store not in store_dict:
-            store_dict[store].update({
-                'store': store,
-                'customer': customer,
-                'address': address,
-                'phone': phone,
-                'date': date
-            })
-
-        store_dict[store]['order_detail'].append({
-            'id': len(store_dict[store]['order_detail']) + 1,
-            'product': product,
-            'weight': str(round(weight,2)),
-            'price': str(round(price,2)),
-            'delivered': str(round(delivered,2))
-        })
-        if 'Frozen' in product:
-            store_dict[store]['contain_frozen'] = True
-        elif 'Frozen' not in product and 'Lohi' in product:
-            store_dict[store]['contain_lohi'] = True
-        elif 'Lohi' not in product:
-            store_dict[store]['contain_other'] = True
-
-    return list(store_dict.values())
-
-def calculate_salmon_box(amount, threshold=2):
-    full_box, half_box = 0, 0
-    # Convert amount to a float for simplicity
-    amount = float(amount)
-    if amount <= 0:
-        full_box, half_box = 0, 0
-
-    if amount < 10:
-        full_box, half_box = 0, 1
-    
-    if amount == 10:
-        full_box, half_box = 1, 0
-    
-    # Check if amount is divisible by 10
-    if amount % 10 == 0:
-        full_box, half_box = amount / 10, 0
-    
-    # If not divisible by 10, check the threshold
-    lower_bound = amount - (amount % 10)  # Lower multiple of 10
-    if (amount - lower_bound) <= threshold:
-        full_box, half_box = lower_bound / 10, 0
-    else:
-        full_box, half_box = lower_bound / 10, 1
-
-    return [int(full_box), int(half_box)]
-
 @bp.route('/get-order-info/<int:order_id>')
 @login_required
 def get_order_info(order_id):
@@ -619,27 +457,3 @@ def get_fish_sizes():
     fish_sizes = Customer.query.with_entities(Customer.fish_size).distinct().order_by(Customer.fish_size.asc()).all()
     fish_sizes = [size[0] for size in fish_sizes if size[0] is not None and size[0] != '']  # Convert to list and filter out None
     return jsonify(fish_sizes)
-
-
-# def calculate_current_iso_week():
-#     # Get the current date
-#     current_date = datetime.now()
-
-#     # Calculate the start and end of the current ISO week
-#     # ISO weeks start on Monday and end on Sunday
-#     start_of_week = current_date - timedelta(days=current_date.weekday())
-#     end_of_week = start_of_week + timedelta(days=6)
-
-#     # Format the dates to match the `input[type=week]` value format (YYYY-W##)
-#     # Where ## is the ISO week number
-#     week_number = current_date.isocalendar()[1]
-#     year = start_of_week.year
-
-#     # Pad the week number with leading zero if necessary
-#     week_number_str = f"{week_number:02d}"
-
-#     # Combine into the full string
-#     week_range_str = f"{year}-W{week_number_str}"
-
-#     return week_range_str
-

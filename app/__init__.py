@@ -4,8 +4,7 @@ from .extensions import db, login_manager, socketio
 from .template_filters import register_template_filters
 from dotenv import load_dotenv
 from .blueprints.auth import auth_bp
-# from .blueprints.orders import orders_bp
-# from .blueprints.main import main_bp
+from .blueprints.main_new import main_bp
 
 
 def create_app() -> Flask:
@@ -42,6 +41,8 @@ def create_app() -> Flask:
     app.json_encoder = CustomJSONEncoder
 
     app.register_blueprint(routes.bp)
+
+    app.register_blueprint(main_bp, url_prefix='/test')
     app.register_blueprint(auth_bp, url_prefix='/auth')
     # app.register_blueprint(orders_bp, url_prefix='/orders')
 

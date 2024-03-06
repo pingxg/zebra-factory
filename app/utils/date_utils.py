@@ -17,8 +17,6 @@ def add_days(date_str, days, date_format="%Y-%m-%d"):
     return new_date.strftime(date_format)
 
 
-
-
 def calculate_current_iso_week():
     # Get the current date
     current_date = datetime.now()
