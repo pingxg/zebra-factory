@@ -1,18 +1,18 @@
+import os
+import logging
+from collections import defaultdict
+import numpy as np
+from datetime import date, datetime, timedelta
+import pytz
+from sqlalchemy import func, case
 from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for, send_file, abort
 from flask_login import login_required
-from .models import Customer, Order, OrderWeight, ProductName, MaterialInfo
 from . import db, socketio
-import os
-from datetime import date, datetime, timedelta
-from collections import defaultdict
-from sqlalchemy import func, case
-import pytz
-import numpy as np
-import logging
-# from app.utils.auth_decorators import permission_required, role_required
+from .models import Customer, Order, Weight, Product, MaterialInfo
 from .utils.date_utils import calculate_current_iso_week
 from .utils.helper import calculate_salmon_box
 from .utils.pdf_utils import generate_delivery_note
+# from app.utils.auth_decorators import permission_required, role_required
 
 
 bp = Blueprint('main', __name__)
@@ -49,11 +49,6 @@ def emit_keepalive_response(data):
     logger.info("Keep alive message reveiced from client, sending response.")
 
 
-@bp.context_processor
-def inject_global_vars():
-    return dict(completion_threshold=os.environ.get('COMPLETION_THRESHOLD', 0.9),
-                completion_threshold_upper=os.environ.get('COMPLETION_THRESHOLD_UPPER', 1.3))
-
 
 @bp.route('/', methods=['GET', 'POST'])
 @login_required
@@ -82,18 +77,18 @@ def index():
                 Order.product,
                 (func.coalesce(Order.price * 1.14, 0)).label("price"),
                 Order.quantity,
-                (func.coalesce(func.sum(OrderWeight.quantity), 0)).label("total_produced"),
+                (func.coalesce(func.sum(Weight.quantity), 0)).label("total_produced"),
                 Customer.priority,
                 Customer.packing,
-                ProductName.product_type,
+                Product.product_type,
                 case(
                     [(func.length(Order.fish_size) == 0, Customer.fish_size),  # If Order.fish_size is empty, use Customer.fish_size
                     (func.length(Customer.fish_size) == 0, Order.fish_size)],  # If Customer.fish_size is empty, use Order.fish_size
                     else_=func.coalesce(Order.fish_size, Customer.fish_size)
                 ).label("fish_size")
             )
-            .outerjoin(ProductName, Order.product == ProductName.product_name)
-            .outerjoin(OrderWeight, Order.id == OrderWeight.order_id)
+            .outerjoin(Product, Order.product == Product.product_name)
+            .outerjoin(Weight, Order.id == Weight.order_id)
             .filter(Order.date == selected_date)
             .group_by(Order.id)
             .outerjoin(Customer, Order.customer == Customer.customer)
@@ -198,7 +193,7 @@ def order_detail(order_id):
                 .first()
             )
 
-        weight = OrderWeight(
+        weight = Weight(
             order_id=order_id, 
             quantity=scale_reading, 
             production_time=datetime.now(pytz.timezone(os.environ.get('TIMEZONE'))),
@@ -220,7 +215,7 @@ def order_detail(order_id):
             Order.product,
             (func.coalesce(Order.price * 1.14, 0)).label("price"),
             Order.quantity,
-            (func.coalesce(func.sum(OrderWeight.quantity), 0)).label("total_produced"),
+            (func.coalesce(func.sum(Weight.quantity), 0)).label("total_produced"),
             Customer.priority,
             Customer.packing,
             case(
@@ -229,16 +224,16 @@ def order_detail(order_id):
                 else_=func.coalesce(Order.fish_size, Customer.fish_size)
             ).label("fish_size")
         )
-        .outerjoin(OrderWeight, Order.id == OrderWeight.order_id)
+        .outerjoin(Weight, Order.id == Weight.order_id)
         .filter(Order.id == order_id)
         .group_by(Order.id)
         .outerjoin(Customer, Order.customer == Customer.customer)
         .first()
     )
     weight_details = (
-        db.session.query(OrderWeight.id, OrderWeight.quantity, OrderWeight.production_time)
-        .filter(OrderWeight.order_id == order_id)
-        .order_by(OrderWeight.production_time.asc())
+        db.session.query(Weight.id, Weight.quantity, Weight.production_time)
+        .filter(Weight.order_id == order_id)
+        .order_by(Weight.production_time.asc())
         .all()
     )
 
@@ -251,7 +246,7 @@ def order_detail(order_id):
 @bp.route('/weight/<int:weight_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_weight(weight_id):
-    weight = OrderWeight.query.filter_by(id=weight_id).first()
+    weight = Weight.query.filter_by(id=weight_id).first()
     
     if not weight:
         return jsonify(success=False, error="Weight not found"), 404
@@ -265,7 +260,7 @@ def edit_weight(weight_id):
 @bp.route('/weight/<int:weight_id>/delete', methods=['POST'])
 @login_required
 def delete_weight(weight_id):
-    weight = OrderWeight.query.filter_by(id=weight_id).first()
+    weight = Weight.query.filter_by(id=weight_id).first()
     if not weight:
         return "Weight not found", 404
 
@@ -303,10 +298,10 @@ def order():
             Order.product,
             (func.coalesce(Order.price * 1.14, 0)).label("price"),
             Order.quantity,
-            (func.coalesce(func.sum(OrderWeight.quantity), 0)).label("total_produced"),
+            (func.coalesce(func.sum(Weight.quantity), 0)).label("total_produced"),
         )
         .filter(Order.date.between(start_date, end_date))
-        .outerjoin(OrderWeight, Order.id == OrderWeight.order_id)
+        .outerjoin(Weight, Order.id == Weight.order_id)
         .order_by(Order.customer.asc(), Order.product.asc())
         .group_by(Order.id)
         .all()
@@ -448,7 +443,7 @@ def get_customers():
 
 @bp.route('/api/products')
 def get_products():
-    products = ProductName.query.filter(ProductName.active == 1).order_by(ProductName.product_name.asc()).all()
+    products = Product.query.filter(Product.active == 1).order_by(Product.product_name.asc()).all()
     return jsonify([product.product_name for product in products])
 
 @bp.route('/api/fish-sizes')

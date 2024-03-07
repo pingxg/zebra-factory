@@ -37,7 +37,7 @@ class Order(db.Model):
     """Order model
     
     Represents an order with id, customer, date, product, 
-    price, quantity and weights (relationship to OrderWeight).
+    price, quantity and weights (relationship to Weight).
     """
     __tablename__ = "salmon_orders"
     id = db.Column(db.Integer, primary_key=True)
@@ -46,13 +46,13 @@ class Order(db.Model):
     product = db.Column(db.String)
     price = db.Column(db.Float)
     quantity = db.Column(db.Integer)
-    weights = db.relationship('OrderWeight', backref='salmon_order', lazy=True, cascade='all, delete, delete-orphan')
+    weights = db.relationship('Weight', backref='salmon_order', lazy=True, cascade='all, delete, delete-orphan')
     fish_size = db.Column(db.String)
     entry_time = db.Column(db.DateTime, default=datetime.utcnow)
 
 
-class OrderWeight(db.Model):
-    """OrderWeight model
+class Weight(db.Model):
+    """Weight model
     
     Represents the weight details of an order with id, order_id (foreign key to Order), 
     quantity, production_time, and batch_number.
@@ -64,8 +64,8 @@ class OrderWeight(db.Model):
     production_time = db.Column(db.DateTime)
     batch_number = db.Column(db.Integer)
 
-class ProductName(db.Model):
-    """ProductName model
+class Product(db.Model):
+    """Product model
     
     Represents a product name with id, product name, 
     and product type (relationship to Order product).
@@ -80,7 +80,7 @@ class MaterialInfo(db.Model):
     """MaterialInfo model
     
     Represents the material information of an order with id, farmer, 
-    date, and batch_number (foreign key to OrderWeight).
+    date, and batch_number (foreign key to Weight).
     """
     __tablename__ = "salmon_material_info"
     id = db.Column(db.Integer, primary_key=True)

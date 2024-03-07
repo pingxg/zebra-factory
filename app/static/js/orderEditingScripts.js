@@ -110,7 +110,7 @@ async function populateUpdateModal(orderId) {
         document.getElementById('hiddenOrderID').value = orderDetails.id;
         document.getElementById('displayCustomerName').textContent = orderDetails.customer;
         document.getElementById('displayOrderDate').textContent = orderDetails.date;
-        document.getElementById('displayProductName').textContent = orderDetails.product;
+        document.getElementById('displayProduct').textContent = orderDetails.product;
         document.getElementById('updateOrderPriceInput').value = parseFloat(orderDetails.price).toFixed(2);
         document.getElementById('updateOrderQuantityInput').value = parseFloat(orderDetails.quantity).toFixed(2);
         const fishSizeSelect = document.getElementById('fishSizeSelect');

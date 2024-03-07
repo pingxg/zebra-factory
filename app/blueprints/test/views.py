@@ -1,20 +1,21 @@
-
 from flask import render_template, request
 from flask_login import login_required
-from ...models import Customer, Order, OrderWeight, ProductName
-from ... import db
-import os
-from datetime import datetime, timedelta
-from collections import defaultdict
+from . import test_bp
+from datetime import date, datetime, timedelta
+from ...models import Customer, Order, Weight, Product, MaterialInfo
 from sqlalchemy import func, case
+from ... import db
+from collections import defaultdict
+import os
 import numpy as np
 from ...utils.helper import calculate_salmon_box
-from . import main_bp
 
 
-@main_bp.route('/', methods=['GET', 'POST'])
+
+@test_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
+
     # selected_date = request.form.get('selected_date') or request.args.get('selected_date', (datetime.today() + timedelta(days=1)).date())
     selected_date_str = request.form.get('selected_date') or request.args.get('selected_date')
     if selected_date_str:
@@ -38,18 +39,18 @@ def index():
                 Order.product,
                 (func.coalesce(Order.price * 1.14, 0)).label("price"),
                 Order.quantity,
-                (func.coalesce(func.sum(OrderWeight.quantity), 0)).label("total_produced"),
+                (func.coalesce(func.sum(Weight.quantity), 0)).label("total_produced"),
                 Customer.priority,
                 Customer.packing,
-                ProductName.product_type,
+                Product.product_type,
                 case(
                     [(func.length(Order.fish_size) == 0, Customer.fish_size),  # If Order.fish_size is empty, use Customer.fish_size
                     (func.length(Customer.fish_size) == 0, Order.fish_size)],  # If Customer.fish_size is empty, use Order.fish_size
                     else_=func.coalesce(Order.fish_size, Customer.fish_size)
                 ).label("fish_size")
             )
-            .outerjoin(ProductName, Order.product == ProductName.product_name)
-            .outerjoin(OrderWeight, Order.id == OrderWeight.order_id)
+            .outerjoin(Product, Order.product == Product.product_name)
+            .outerjoin(Weight, Order.id == Weight.order_id)
             .filter(Order.date == selected_date)
             .group_by(Order.id)
             .outerjoin(Customer, Order.customer == Customer.customer)
@@ -80,6 +81,10 @@ def index():
                 if key_name not in details.keys():
                     details[key_name] = np.array([[0, 0], [0, 0]])
                 box_info_total = np.array(calculate_salmon_box(order[5]))
+                # print(key_name, box_info_total)
+                # else:
+                #     details[key_name] = details[key_name] + np.array([box_info_total, [0, 0]])
+
                 if float(order[6]) < float(order[5])*float(os.environ.get('COMPLETION_THRESHOLD', 0.9)):
                     box_info_unfinished = np.array(calculate_salmon_box(float(order[5])))
                     details[key_name] = details[key_name] + np.vstack([box_info_total, box_info_unfinished])
@@ -88,6 +93,7 @@ def index():
 
         totals = {key: totals[key] for key in sorted(totals)}
         details = {key: details[key] for key in sorted(details)}
+        # print(details)
         # Preprocess data
         grouped_details = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
         for key, value in details.items():
@@ -129,7 +135,3 @@ def index():
         grouped_orders = {k: v for k, v in sorted(grouped_orders.items())}
 
     return render_template('main/index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, grouped_details=grouped_details, data_for_template=data_for_template, timedelta=timedelta)
-
-
-# This import statement should be at the bottom to avoid circular imports
-from app.blueprints.main_new import main_bp

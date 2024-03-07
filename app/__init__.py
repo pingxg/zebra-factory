@@ -1,10 +1,11 @@
+import os
 from flask import Flask
 from .config import Config
 from .extensions import db, login_manager, socketio
 from .template_filters import register_template_filters
 from dotenv import load_dotenv
 from .blueprints.auth import auth_bp
-from .blueprints.main_new import main_bp
+from .blueprints.test import test_bp
 
 
 def create_app() -> Flask:
@@ -33,21 +34,27 @@ def create_app() -> Flask:
 
     login_manager.login_view = 'auth.login'
 
-    # Register blueprints
-    from . import routes
 
     # Custom JSON encoder
     from .utils.helper import CustomJSONEncoder
     app.json_encoder = CustomJSONEncoder
 
-    app.register_blueprint(routes.bp)
 
-    app.register_blueprint(main_bp, url_prefix='/test')
+    @app.context_processor
+    def inject_global_vars():
+        return dict(completion_threshold=os.environ.get('COMPLETION_THRESHOLD', 0.9),
+                    completion_threshold_upper=os.environ.get('COMPLETION_THRESHOLD_UPPER', 1.3))
+
+    # Register blueprints
+    from . import routes
+
+    app.register_blueprint(routes.bp, url_prefix='/')
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    # app.register_blueprint(orders_bp, url_prefix='/orders')
+    app.register_blueprint(test_bp, url_prefix='/test')
 
 
     # Register custom template filters
     register_template_filters(app)
 
     return app
+

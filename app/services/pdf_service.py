@@ -1,17 +1,17 @@
 
 from collections import defaultdict
 from sqlalchemy import func
-from ..models import Customer, Order, OrderWeight
+from ..models import Customer, Order, Weight
 from .. import db
 
 
 def get_data_for_pdf(date, customer=None):
     subquery = (
         db.session.query(
-            OrderWeight.order_id,
-            func.coalesce(func.sum(OrderWeight.quantity), 0).label("delivered")
+            Weight.order_id,
+            func.coalesce(func.sum(Weight.quantity), 0).label("delivered")
         )
-        .group_by(OrderWeight.order_id)
+        .group_by(Weight.order_id)
         .subquery()
     )
 
