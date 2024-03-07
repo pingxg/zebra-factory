@@ -1,7 +1,7 @@
 from flask import render_template, request
 from flask_login import login_required
-from . import test_bp
-from datetime import date, datetime, timedelta
+from . import main_bp
+from datetime import datetime, timedelta
 from ...models import Customer, Order, Weight, Product, MaterialInfo
 from sqlalchemy import func, case
 from ... import db
@@ -12,7 +12,7 @@ from ...utils.helper import calculate_salmon_box
 
 
 
-@test_bp.route('/', methods=['GET', 'POST'])
+@main_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
 

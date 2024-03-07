@@ -32,6 +32,20 @@ class Customer(db.Model):
     location_internal_id = db.Column(db.Integer)
     fish_size = db.Column(db.String)
     active = db.Column(db.Integer)
+    @classmethod
+    def get_active_customers(cls):
+        """
+        Fetch all active customers, ordered alphabetically.
+        """
+        return cls.query.filter(cls.active == 1).order_by(cls.customer.asc()).all()
+    
+    @classmethod
+    def get_distinct_fish_sizes(cls):
+        """
+        Fetch distinct fish sizes from active customers, ordered alphabetically.
+        """
+        fish_sizes = cls.query.with_entities(cls.fish_size).distinct().order_by(cls.fish_size.asc()).all()
+        return [size[0] for size in fish_sizes if size[0]]
 
 class Order(db.Model):
     """Order model
@@ -75,6 +89,12 @@ class Product(db.Model):
     product_name = db.Column(db.String, db.ForeignKey('salmon_orders.product'))
     product_type = db.Column(db.String)
     active = db.Column(db.Integer)
+    @classmethod
+    def get_active_products(cls):
+        """
+        Fetch all active products, ordered alphabetically.
+        """
+        return cls.query.filter(cls.active == 1).order_by(cls.product_name.asc()).all()
 
 class MaterialInfo(db.Model):
     """MaterialInfo model

@@ -58,7 +58,7 @@
                     </th>
                     {% for date in week_dates %}
                         <th class="px-6 py-3 border-b border-gray-300 border-r">{{ date.strftime('%Y-%m-%d') }}
-                            <a href="{{ url_for('main.download_delivery_note', date=date.strftime('%Y-%m-%d')) }}" class="flex justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
+                            <a href="{{ url_for('_main.download_delivery_note', date=date.strftime('%Y-%m-%d')) }}" class="flex justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
                                 <i class="fas fa-download"></i>
                             </a>
                         </th>
@@ -74,7 +74,7 @@
                             <td class="px-6 py-4 border-r items-center">
                                 {% for order in dates[date] %}
                                     <div class="flex items-center">
-                                        <form action="{{ url_for('main.update_order', order_id=order.id) }}" method="post" class="flex flex-grow justify-center items-center">
+                                        <form action="{{ url_for('order.update_order', order_id=order.id) }}" method="post" class="flex flex-grow justify-center items-center">
                                             <button type="button" onclick="populateUpdateModal('{{order.id}}')" class="flex justify-between items-center w-full text-left hover:bg-gray-200 rounded-lg px-1 py-1 transition duration-100 ease-in-out update-order-btn">
                                                 <div class="text-left font-semibold text-gray-800 truncate w-32 sm:text-xx">
                                                     {{ order.product }} ({{ "%.2f"|format(order.price) }})
@@ -97,7 +97,7 @@
                                         <button onclick="populateAddOrderModal(this.getAttribute('data-date'), this.getAttribute('data-customer'))" data-date="{{date.strftime('%Y-%m-%d')}}" data-customer="{{customer}}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
                                             <i class="fas fa-plus"></i>
                                         </button>
-                                        <a href="{{ url_for('main.download_delivery_note', date=date.strftime('%Y-%m-%d'), customer=customer) }}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
+                                        <a href="{{ url_for('_main.download_delivery_note', date=date.strftime('%Y-%m-%d'), customer=customer) }}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
                                             <i class="fas fa-download"></i>
                                         </a>
                                     {% else %}

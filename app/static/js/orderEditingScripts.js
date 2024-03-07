@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function() {
             quantity: parseFloat(formData.get('quantity')),
             fish_size: formData.get('fishSize')
         };
-        fetch(`/update-order/${parseInt(formData.get('id'))}`, {
+        fetch(`/order/update-order/${parseInt(formData.get('id'))}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const formData = new FormData(updateOrderForm);
-        fetch(`/delete-order/${parseInt(formData.get('id'))}`, {
+        fetch(`/order/delete-order/${parseInt(formData.get('id'))}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -282,9 +282,9 @@ const selectFieldsDataCache = {
 
 async function populateSelectFields() {
     const endpoints = {
-        customers: '/api/customers',
-        products: '/api/products',
-        fishSizes: '/api/fish-sizes'
+        customers: '/customer/get-active-customers',
+        products: '/product/get-active-products',
+        fishSizes: '/customer/get-fish-sizes'
     };
     for (const [key, value] of Object.entries(endpoints)) {
         const select = document.getElementById(`${key}Select`);
@@ -323,7 +323,7 @@ document.getElementById('addOrderForm').addEventListener('submit', async functio
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
     try {
-        const response = await fetch('/add-order', {
+        const response = await fetch('/order/add-order', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -332,16 +332,13 @@ document.getElementById('addOrderForm').addEventListener('submit', async functio
         });
 
         if (!response.ok) throw new Error('Failed to add order');
-        // sessionStorage.setItem('showToastAfterReload', 'Order added successfully!');
-        // alert('Order added successfully!');
+
         showToast('Order added successfully!', 'success');
         closeModal('addOrderModal'); // Assuming closeModal is your function to close the modal
         window.location.reload();  // Refresh the page to show the updated value
     } catch (error) {
-        // showErrorToast();
         showToast('Failed to add order.', 'error');
         console.error('Error adding order:', error);
-        // alert('Error adding order. Please try again.');
     }
 });
 
