@@ -61,51 +61,12 @@ function showToast(message, type = 'success') {
 }
 
 
-
-
-// function showToast() {
-//     const toast = document.getElementById('toast');
-//     const closeBtn = document.getElementById('toastClose');
-    
-//     toast.style.opacity = '1';
-//     toast.style.transform = 'translate(-50%, 0)';
-    
-//     closeBtn.onclick = function() {
-//         toast.style.opacity = '0';
-//         toast.style.transform = 'translate(-50%, -100%)';
-//     };
-    
-//     setTimeout(() => {
-//         toast.style.opacity = '0';
-//         toast.style.transform = 'translate(-50%, -100%)';
-//     }, 5000);  // Toast will be visible for 3 seconds
-// }
-
-// function showErrorToast() {
-//     const toast = document.getElementById('errorToast');
-//     const closeBtn = document.getElementById('errorToastClose');
-
-//     toast.style.opacity = '1';
-//     toast.style.transform = 'translate(-50%, 0)';
-    
-//     closeBtn.onclick = function() {
-//         toast.style.opacity = '0';
-//         toast.style.transform = 'translate(-50%, -100%)';
-//     };
-    
-//     setTimeout(() => {
-//         toast.style.opacity = '0';
-//         toast.style.transform = 'translate(-50%, -100%)';
-//     }, 3000);  // Toast will be visible for 3 seconds
-// }
-
-
-
-
 // Function to fetch order details and then open the modal with populated data
 async function populateUpdateModal(orderId) {
     try {
-        const response = await fetch(`/get-order-info/${orderId}`);
+        const response = await fetch(`/order/get/${orderId}`)
+
+        // Get the JSON data from the response
         const orderDetails = await response.json();
         document.getElementById('hiddenOrderID').value = orderDetails.id;
         document.getElementById('displayCustomerName').textContent = orderDetails.customer;
@@ -218,7 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
             quantity: parseFloat(formData.get('quantity')),
             fish_size: formData.get('fishSize')
         };
-        fetch(`/order/update-order/${parseInt(formData.get('id'))}`, {
+        fetch(`/order/update/${parseInt(formData.get('id'))}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -252,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const formData = new FormData(updateOrderForm);
-        fetch(`/order/delete-order/${parseInt(formData.get('id'))}`, {
+        fetch(`/order/delete/${parseInt(formData.get('id'))}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -323,7 +284,7 @@ document.getElementById('addOrderForm').addEventListener('submit', async functio
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
     try {
-        const response = await fetch('/order/add-order', {
+        const response = await fetch('/order/add', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

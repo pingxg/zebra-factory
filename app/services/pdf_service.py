@@ -1,4 +1,3 @@
-
 from collections import defaultdict
 from sqlalchemy import func
 from ..models import Customer, Order, Weight

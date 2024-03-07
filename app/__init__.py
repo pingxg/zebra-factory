@@ -1,18 +1,18 @@
 import os
 from flask import Flask
+from dotenv import load_dotenv
 from .config import Config
 from .extensions import db, login_manager, socketio
 from .template_filters import register_template_filters
-from dotenv import load_dotenv
 from .blueprints.main import main_bp
 from .blueprints.auth import auth_bp
 from .blueprints.order import order_bp
-# from .blueprints.weight import weight_bp
-# from .blueprints.printing import printing_bp
+from .blueprints.weight import weight_bp
+from .blueprints.deliverynote import deliverynote_bp
 from .blueprints.customer import customer_bp
 from .blueprints.product import product_bp
-# from .blueprints.user import user_bp
-
+from .blueprints.print import print_bp
+from .blueprints.error_handling import error_handling_bp
 
 
 def create_app() -> Flask:
@@ -54,17 +54,16 @@ def create_app() -> Flask:
                     completion_threshold_upper=os.environ.get('COMPLETION_THRESHOLD_UPPER', 1.3))
 
     # Register blueprints
-    from . import routes            
-
-    app.register_blueprint(routes.bp, url_prefix='/')
+    app.register_blueprint(error_handling_bp)
     app.register_blueprint(main_bp, url_prefix='/')
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(order_bp, url_prefix='/order')
-    # app.register_blueprint(weight_bp, url_prefix='/weight')
-    # app.register_blueprint(printing_bp, url_prefix='/printing')
+    app.register_blueprint(weight_bp, url_prefix='/weight')
+    app.register_blueprint(print_bp, url_prefix='/print')
+    app.register_blueprint(deliverynote_bp, url_prefix='/deliverynote')
     app.register_blueprint(customer_bp, url_prefix='/customer')
     app.register_blueprint(product_bp, url_prefix='/product')
-    # app.register_blueprint(user_bp, url_prefix='/user')
+    
 
 
     # Register custom template filters

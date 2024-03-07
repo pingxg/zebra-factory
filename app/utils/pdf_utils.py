@@ -1,4 +1,3 @@
-
 import os
 import re
 import shutil
@@ -27,7 +26,7 @@ def generate_delivery_note(date, customer=None):
     
     if data:
         for i in range(len(data)):
-            html_content = render_template('printing/delivery_note_template.html', data=data[i])
+            html_content = render_template('deliverynote/delivery_note_template.html', data=data[i])
             pdf_file_name = f"{date}_{customer}.pdf" if customer else f"{date}_{i:03d}.pdf"
             pdf_file_path = os.path.join(os.getcwd(), "temp", pdf_file_name)
             convert_html_to_pdf(html_content, pdf_file_path)

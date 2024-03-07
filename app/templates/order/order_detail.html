@@ -15,7 +15,7 @@
     <script>
         function emitPrintZebra() {
             const orderId = "{{ order[0] }}";  // Extract order_id from the Jinja2 template
-            fetch('/emit_print_zebra', {
+            fetch('/print/emit_print_zebra', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -34,7 +34,7 @@
         }
         function emitPrintPdf() {
             const orderId = "{{ order[0] }}";  // Extract order_id from the Jinja2 template
-            fetch('/emit_print_pdf', {
+            fetch('/print/emit_print_pdf', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -149,13 +149,13 @@
                         </div>
 
                         <div class="flex">
-                            <form action="{{ url_for('_main.edit_weight', weight_id=weight[0], order_id=order[0]) }}" method="post" class="inline-block mr-2">
+                            <form action="{{ url_for('weight.edit', weight_id=weight[0]) }}" method="post" class="inline-block mr-2">
                                 <button title="Edit" class="flex items-center p-2 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-full hover:from-blue-500 hover:to-blue-600 transition duration-300 ease-in-out edit-btn" data-weight-id="{{ weight[0] }}" data-current-weight="{{ weight[1] }}" data-order-id="{{ order[0] }}">
                                     <i class="fas fa-edit"></i> 
                                 </button>
                             </form>
 
-                            <button title="Delete" class="flex items-center p-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-full hover:from-red-500 hover:to-red-600 transition duration-300 ease-in-out" onclick="showDeleteConfirmation('{{ url_for('_main.delete_weight', weight_id=weight[0], order_id=order[0]) }}');">
+                            <button title="Delete" class="flex items-center p-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-full hover:from-red-500 hover:to-red-600 transition duration-300 ease-in-out" onclick="showDeleteConfirmation('{{ url_for('weight.delete', weight_id=weight[0]) }}');">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -164,9 +164,9 @@
             </div>
             {% endif %}
 
-            <form id="addReading" action="{{ url_for('order.order_detail', order_id=order[0]) }}" method="post" onsubmit="return validateForm();">
+            <form id="addReading" action="{{ url_for('weight.add', order_id=order[0]) }}" method="post" onsubmit="return validateForm();">
                 <!-- Input Box -->
-                <input type="number" step="0.0001" 
+                <input type="number" step="0.0001"
                     id="scale_reading" 
                     name="scale_reading" 
                     class="border border-gray-300 px-3 py-2 h-12 text-gray-700 w-full rounded mb-4  {{ 'opacity-50 cursor-not-allowed' if order[6] > order[5]|float*completion_threshold_upper|float else 'hover:from-green-600 hover:to-green-700' }}"
@@ -196,7 +196,8 @@
                 <input type="number" step="0" 
                     id="batch_number" 
                     name="batch_number" 
-                    class="border border-gray-300 px-3 py-2 h-12 text-gray-700 w-full rounded mb-4 {{ 'opacity-50 cursor-not-allowed' if order[6] >= order[5]|float*completion_threshold|float else '' }}" 
+                    class="border border-gray-300 px-3 py-2 h-12 text-gray-700 w-full rounded mb-4 {{ 'opacity-50 cursor-not-allowed ' if order[6] >= order[5]|float*completion_threshold|float else '' }}"
+                    {{ 'disabled' if not order[6] <= order[5]|float*completion_threshold_upper|float else '' }}
                     placeholder="Enter batch number">
             </form>
         </div>

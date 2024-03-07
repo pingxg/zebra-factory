@@ -1,8 +1,48 @@
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
-from ..models import Order, db
+from ..models import Order,Customer, db
+from sqlalchemy import func, case
 
 class OrderService:
+    @staticmethod
+    def get_order(order_id):
+        try:
+            order = (
+                db.session.query(
+                    Order.id, 
+                    Order.customer, 
+                    Order.date, 
+                    Order.product,
+                    (func.coalesce(Order.price * 1.14, 0)).label("price"),
+                    Order.quantity,
+                    case(
+                        [(func.length(Order.fish_size) == 0, Customer.fish_size),
+                        (func.length(Customer.fish_size) == 0, Order.fish_size)],
+                        else_=func.coalesce(Order.fish_size, Customer.fish_size)
+                    ).label("fish_size")
+                )
+                .join(Customer, Order.customer == Customer.customer)
+                .filter(Order.id == order_id)
+                .first()
+            )
+            if order:
+                # Manually mapping the selected columns to their values
+                order_dict = {
+                    "id": order.id,
+                    "customer": order.customer,
+                    "date": order.date.isoformat(),
+                    "product": order.product,
+                    "price": order.price,
+                    "quantity": order.quantity,
+                    "fish_size": order.fish_size,
+                    "original_price": order.price,
+                    "original_quantity": order.quantity,
+                    "original_fish_size": order.fish_size,
+                }
+                return order_dict
+        except SQLAlchemyError as e:
+            return {'status': 'error', 'message': str(e)}
+
     @staticmethod
     def add_order(data):
         try:

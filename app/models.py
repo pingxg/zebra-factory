@@ -13,7 +13,8 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(45), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
     name = db.Column(db.String(45), nullable=False)
-    role = db.Column(db.String(45), nullable=False, default="viewer")  # Add role attribute
+    role = db.Column(db.String(45), nullable=False, default="viewer")
+
 
 class Customer(db.Model):
     """Customer model 
@@ -32,6 +33,7 @@ class Customer(db.Model):
     location_internal_id = db.Column(db.Integer)
     fish_size = db.Column(db.String)
     active = db.Column(db.Integer)
+    
     @classmethod
     def get_active_customers(cls):
         """
@@ -46,6 +48,7 @@ class Customer(db.Model):
         """
         fish_sizes = cls.query.with_entities(cls.fish_size).distinct().order_by(cls.fish_size.asc()).all()
         return [size[0] for size in fish_sizes if size[0]]
+
 
 class Order(db.Model):
     """Order model
@@ -78,6 +81,7 @@ class Weight(db.Model):
     production_time = db.Column(db.DateTime)
     batch_number = db.Column(db.Integer)
 
+
 class Product(db.Model):
     """Product model
     
@@ -95,6 +99,7 @@ class Product(db.Model):
         Fetch all active products, ordered alphabetically.
         """
         return cls.query.filter(cls.active == 1).order_by(cls.product_name.asc()).all()
+
 
 class MaterialInfo(db.Model):
     """MaterialInfo model

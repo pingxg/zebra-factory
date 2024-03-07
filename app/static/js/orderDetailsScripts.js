@@ -103,8 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("Save button clicked");  // Add this line
 
             const newValue = editInput.value;
-            console.log("Sending fetch request");  // Add this line
-            fetch(`/weight/${currentEditingWeightId}/edit?order_id=${order_id}`, {
+            fetch(`/weight/edit/${currentEditingWeightId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -112,14 +111,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: `edit_weight=${newValue}`,
             })
             .then(response => {
-                console.log("Received response");  // Add this line
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
                 return response.json();
             })
             .then(data => {
-                console.log("Processed data:", data);
                 if (data.success) {
                     window.location.reload();  // Refresh the page to show the updated value
                 } else {

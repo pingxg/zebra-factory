@@ -1,19 +1,18 @@
 
-from flask import Blueprint, render_template, request, jsonify, redirect, session, url_for, send_file, abort
-from flask_login import login_required
-from . import order_bp
-from ...models import Order, Weight, MaterialInfo, Customer
-from ... import db
-from collections import defaultdict
-from ...utils.date_utils import calculate_current_iso_week
-import pytz
-from sqlalchemy import func, case
 import os
+import pytz
 from collections import defaultdict
 from datetime import date, datetime, timedelta
+from flask import render_template, request, jsonify, redirect, session, url_for
+from flask_login import login_required
+from sqlalchemy import func, case
+from . import order_bp
+from ... import db
+from ...models import Order, Weight, MaterialInfo, Customer
+from ...utils.date_utils import calculate_current_iso_week
 from ...services.order_service import OrderService
-
-
+from ...utils.auth_decorators import permission_required, role_required
+from flask_login import current_user
 
 
 @order_bp.route('/', methods=['GET', 'POST'])
@@ -23,14 +22,14 @@ def order():
 
     year, week = map(int, week_str.split('-W'))
     start_date = date.fromisocalendar(year, week, 1)
-    end_date = start_date + timedelta(days=7)
+    end_date = start_date + timedelta(days=6)
 
     # Check if prev_week or next_week buttons were clicked
     if 'prev_week' in request.args:
         start_date -= timedelta(weeks=1)
     elif 'next_week' in request.args:
         start_date += timedelta(weeks=1)
-    end_date = start_date + timedelta(days=7)
+    end_date = start_date + timedelta(days=6)
 
 
     # Update week_str to reflect the new week
@@ -62,40 +61,37 @@ def order():
     return render_template('order/order.html', week_str=week_str, orders_by_customer=orders_by_customer, week_dates=week_dates)
 
 
-
-
 @order_bp.route('/<int:order_id>', methods=['GET', 'POST'])
 @login_required
 def order_detail(order_id):
-    if request.method == 'POST':
-        scale_reading = float(request.form['scale_reading'])
-        batch_number = request.form['batch_number']
-        try:
-            batch_number = int(batch_number)
-        except:
-            print("Batch number not provided")
-            batch_number = (
-                db.session.query(
-                    MaterialInfo.batch_number, 
-                )
-                .order_by(MaterialInfo.date.desc())
-                .first()
-            )
+    # if request.method == 'POST':
+    #     scale_reading = float(request.form['scale_reading'])
+    #     batch_number = request.form['batch_number']
+    #     try:
+    #         batch_number = int(batch_number)
+    #     except:
+    #         print("Batch number not provided")
+    #         batch_number = (
+    #             db.session.query(
+    #                 MaterialInfo.batch_number, 
+    #             )
+    #             .order_by(MaterialInfo.date.desc())
+    #             .first()
+    #         )
 
-        weight = Weight(
-            order_id=order_id, 
-            quantity=scale_reading, 
-            production_time=datetime.now(pytz.timezone(os.environ.get('TIMEZONE'))),
-            batch_number=batch_number
-            )
-        db.session.add(weight)
-        db.session.commit()
-        session['show_toast'] = True
-        return redirect(url_for('order.order_detail', order_id=order_id))
+    #     weight = Weight(
+    #         order_id=order_id, 
+    #         quantity=scale_reading, 
+    #         production_time=datetime.now(pytz.timezone(os.environ.get('TIMEZONE'))),
+    #         batch_number=batch_number
+    #         )
+    #     db.session.add(weight)
+    #     db.session.commit()
+    #     session['show_toast'] = True
+    #     return redirect(url_for('order.order_detail', order_id=order_id))
 
-    show_toast = session.pop('show_toast', False)
+    # show_toast = session.pop('show_toast', False)
 
-    # Using SQLAlchemy ORM to retrieve the order with total produced and weight details
     order = (
         db.session.query(
             Order.id, 
@@ -125,16 +121,24 @@ def order_detail(order_id):
         .order_by(Weight.production_time.asc())
         .all()
     )
-
     if not order:
         return "Order not found", 404
 
-    return render_template('order/order_detail.html', order=order, show_toast=show_toast, weight_details=weight_details)
+    return render_template('order/order_detail.html', order=order, weight_details=weight_details)
 
 
+@permission_required('edit_order')
+@order_bp.route('/get/<int:order_id>', methods=['GET', 'POST'])
+def get_order(order_id):
+    if not order_id:
+        return jsonify({'status': 'error', 'message': 'Order ID not provided'}), 400
+    
+    
+    result = OrderService.get_order(order_id)
+    return jsonify(result)
 
-@order_bp.route('/add-order', methods=['POST'])
-@login_required
+@permission_required('edit_order')
+@order_bp.route('/add', methods=['POST'])
 def add_order():
     data = request.json
     if not data:
@@ -142,8 +146,8 @@ def add_order():
     result = OrderService.add_order(data)
     return jsonify(result)
 
-@order_bp.route('/update-order/<int:order_id>', methods=['POST'])
-@login_required
+@permission_required('edit_order')
+@order_bp.route('/update/<int:order_id>', methods=['POST'])
 def update_order(order_id):
     data = request.json
     if not data or not order_id:
@@ -152,8 +156,8 @@ def update_order(order_id):
     return jsonify(result)
 
 
-@order_bp.route('/delete-order/<int:order_id>', methods=['DELETE'])
-@login_required
+@permission_required('edit_order')
+@order_bp.route('/delete/<int:order_id>', methods=['DELETE'])
 def delete_order(order_id):
     if not order_id:
         return jsonify({'status': 'error', 'message': 'Order ID not provided'}), 400

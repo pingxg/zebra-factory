@@ -4,19 +4,24 @@ from . import main_bp
 from datetime import datetime, timedelta
 from ...models import Customer, Order, Weight, Product, MaterialInfo
 from sqlalchemy import func, case
-from ... import db
+from ... import db, socketio
 from collections import defaultdict
 import os
 import numpy as np
 from ...utils.helper import calculate_salmon_box
+from ...utils.auth_decorators import permission_required
 
+
+@socketio.on('keepalive')
+@login_required
+def emit_keepalive_response(data):
+    status = {'status': 'online'}  # Prepare the status information
+    socketio.emit('keepalive_response', {})
 
 
 @main_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
-
-    # selected_date = request.form.get('selected_date') or request.args.get('selected_date', (datetime.today() + timedelta(days=1)).date())
     selected_date_str = request.form.get('selected_date') or request.args.get('selected_date')
     if selected_date_str:
         selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()

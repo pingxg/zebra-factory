@@ -58,7 +58,7 @@
                     </th>
                     {% for date in week_dates %}
                         <th class="px-6 py-3 border-b border-gray-300 border-r">{{ date.strftime('%Y-%m-%d') }}
-                            <a href="{{ url_for('_main.download_delivery_note', date=date.strftime('%Y-%m-%d')) }}" class="flex justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
+                            <a href="{{ url_for('deliverynote.generate_pdf', date=date.strftime('%Y-%m-%d')) }}" class="flex justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
                                 <i class="fas fa-download"></i>
                             </a>
                         </th>
@@ -97,7 +97,7 @@
                                         <button onclick="populateAddOrderModal(this.getAttribute('data-date'), this.getAttribute('data-customer'))" data-date="{{date.strftime('%Y-%m-%d')}}" data-customer="{{customer}}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
                                             <i class="fas fa-plus"></i>
                                         </button>
-                                        <a href="{{ url_for('_main.download_delivery_note', date=date.strftime('%Y-%m-%d'), customer=customer) }}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
+                                        <a href="{{ url_for('deliverynote.generate_pdf', date=date.strftime('%Y-%m-%d'), customer=customer) }}" class="flex flex-grow justify-center items-center text-gray-300 hover:text-gray-600 bg-transparent hover:bg-gray-200 rounded-lg px-2 py-1 transition duration-100 ease-in-out">
                                             <i class="fas fa-download"></i>
                                         </a>
                                     {% else %}
