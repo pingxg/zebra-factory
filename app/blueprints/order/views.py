@@ -3,7 +3,7 @@ import os
 import pytz
 from collections import defaultdict
 from datetime import date, datetime, timedelta
-from flask import render_template, request, jsonify, redirect, session, url_for
+from flask import render_template, request, jsonify, redirect, session, url_for, flash
 from flask_login import login_required
 from sqlalchemy import func, case
 from . import order_bp
@@ -64,34 +64,6 @@ def order():
 @order_bp.route('/<int:order_id>', methods=['GET', 'POST'])
 @login_required
 def order_detail(order_id):
-    # if request.method == 'POST':
-    #     scale_reading = float(request.form['scale_reading'])
-    #     batch_number = request.form['batch_number']
-    #     try:
-    #         batch_number = int(batch_number)
-    #     except:
-    #         print("Batch number not provided")
-    #         batch_number = (
-    #             db.session.query(
-    #                 MaterialInfo.batch_number, 
-    #             )
-    #             .order_by(MaterialInfo.date.desc())
-    #             .first()
-    #         )
-
-    #     weight = Weight(
-    #         order_id=order_id, 
-    #         quantity=scale_reading, 
-    #         production_time=datetime.now(pytz.timezone(os.environ.get('TIMEZONE'))),
-    #         batch_number=batch_number
-    #         )
-    #     db.session.add(weight)
-    #     db.session.commit()
-    #     session['show_toast'] = True
-    #     return redirect(url_for('order.order_detail', order_id=order_id))
-
-    # show_toast = session.pop('show_toast', False)
-
     order = (
         db.session.query(
             Order.id, 
@@ -115,6 +87,7 @@ def order_detail(order_id):
         .outerjoin(Customer, Order.customer == Customer.customer)
         .first()
     )
+    
     weight_details = (
         db.session.query(Weight.id, Weight.quantity, Weight.production_time)
         .filter(Weight.order_id == order_id)
@@ -125,7 +98,6 @@ def order_detail(order_id):
         return "Order not found", 404
 
     return render_template('order/order_detail.html', order=order, weight_details=weight_details)
-
 
 @permission_required('edit_order')
 @order_bp.route('/get/<int:order_id>', methods=['GET', 'POST'])
@@ -145,6 +117,7 @@ def add_order():
         return jsonify({'status': 'error', 'message': 'No data provided'}), 400
     result = OrderService.add_order(data)
     return jsonify(result)
+
 
 @permission_required('edit_order')
 @order_bp.route('/update/<int:order_id>', methods=['POST'])

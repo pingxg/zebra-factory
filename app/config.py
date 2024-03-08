@@ -19,3 +19,11 @@ class Config:
         'cutter': ['edit_weight', 'print_label', 'download_delivery_note'],
         'driver': ['upload_delivery_note', 'download_delivery_note'],
     }
+    
+    TOASTR_TIMEOUT  = 2000
+    TOASTR_EXTENDED_TIMEOUT = 1000
+    TOASTR_POSITION_CLASS = 'toast-top-center'
+    TOASTR_NEWS_ON_TOP = 'true'
+    TOASTR_PREVENT_DUPLICATES = 'true'
+    TOASTR_CLOSE_BUTTON = 'false'
+    TOASTR_CLOSE_DURATION = 100

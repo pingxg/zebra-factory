@@ -2,7 +2,7 @@ import os
 from flask import Flask
 from dotenv import load_dotenv
 from .config import Config
-from .extensions import db, login_manager, socketio
+from .extensions import db, login_manager, socketio, toastr
 from .template_filters import register_template_filters
 from .blueprints.main import main_bp
 from .blueprints.auth import auth_bp
@@ -37,7 +37,8 @@ def create_app() -> Flask:
     db.init_app(app)
     login_manager.init_app(app)
     socketio.init_app(app, cors_allowed_origins="*")
-
+    toastr.init_app(app)
+    
     app.jinja_env.add_extension('jinja2.ext.do')
 
     login_manager.login_view = 'auth.login'

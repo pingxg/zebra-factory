@@ -11,6 +11,10 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 
+    {{ toastr.include_jquery() }}
+    {{ toastr.include_toastr_css() }}
+    {{ toastr.message() }}
+
     <script>
         var socket = io.connect('https://zebra-factory.onrender.com');
             socket.on('refresh_data', function(data) {
@@ -28,10 +32,8 @@
                     statusIcon.className = 'fas fa-circle text-red-500 mr-3';
                 }
             });
-
     </script>
     <script>
-
         document.addEventListener('DOMContentLoaded', (event) => {
         let navToggle = document.querySelector('.nav-toggle');
         let bars = document.querySelectorAll('.bar');
@@ -43,12 +45,12 @@
         };
         navToggle.addEventListener('click', toggleHamburger);
         })
-
     </script>
     {% block head_content %}{% endblock %}
 
 </head>
 <body>
+    {{ toastr.include_toastr_js() }}
     {% block navbar %}
     {% if current_user.is_authenticated %}
 

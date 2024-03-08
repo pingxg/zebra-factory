@@ -2,53 +2,10 @@
 
 {% block head_content %}
     <title>Login</title>
-    <style>
-        #errorLoginToast {
-            opacity: 0;
-            z-index: 9999;
-            transform: translate(-50%, -100%);
-            transition: opacity 0.3s, transform 0.3s;
-        }
-        
-    </style>
-    <script>
-        function closeLoginErrorToast() {
-            const toast = document.getElementById('errorLoginToast');
-            toast.style.opacity = '0';
-            toast.style.transform = 'translate(-50%, -100%)';
-        }
-
-        function showLoginErrorToast(message) {
-            const toast = document.getElementById('errorLoginToast');
-            const toastMessage = document.getElementById('toastMessage');
-            const closeBtn = document.getElementById('errorLoginToastClose');
-            
-            toastMessage.textContent = message;  // Set the message
-
-            toast.style.opacity = '1';
-            toast.style.transform = 'translate(-50%, 0)';
-
-            // Remove any previous event listeners
-            closeBtn.removeEventListener('click', closeLoginErrorToast);
-            // Add the event listener
-            closeBtn.addEventListener('click', closeLoginErrorToast);
-
-            setTimeout(closeLoginErrorToast, 3000);  // Toast will be visible for 3 seconds
-        }
-        
-        // Call this to remove any lingering event listeners on page reload
-        window.addEventListener('load', () => {
-            const closeBtn = document.getElementById('errorLoginToastClose');
-            const old_element = closeBtn;
-            const new_element = old_element.cloneNode(true);
-            old_element.parentNode.replaceChild(new_element, old_element);
-        });
-    </script>
 {% endblock %}
 
 {% block body %}
 <div class="bg-gray-100 h-screen flex justify-center items-center">
-
     <div class="min-h-screen flex items-center justify-center bg-gray-100 px-4 sm:px-6 lg:px-8 py-12">
         <div class="bg-white bg-opacity-40 backdrop-blur-md p-8 rounded-lg shadow-xl w-full max-w-md border border-gray-200">
             <h1 class="text-2xl font-bold mb-4 text-gray-800 text-center">Login</h1>
@@ -71,22 +28,4 @@
     </div>
     
 </div>
-
-
-<div id="errorLoginToast" class="fixed top-4 left-1/2 transform -translate-x-1/2 p-4 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow-xl opacity-0 transition-all duration-500 ease-in-out max-w-xs w-full">
-    <i class="fas fa-exclamation-circle mr-2"></i> <span id="toastMessage"></span>
-    <button id="errorLoginToastClose" class="absolute top-1/2 right-4 transform -translate-y-1/2 text-2xl leading-none hover:text-gray-100" onclick="closeLoginErrorToast();">&times;</button>
-</div>
-
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        <script>
-            var category = "{{ messages[0][0] }}";
-            var message = "{{ messages[0][1] }}";
-            if (category === 'danger') {
-                showLoginErrorToast(message);
-            }
-        </script>
-    {% endif %}
-{% endwith %}
 {% endblock %}

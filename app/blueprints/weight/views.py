@@ -1,5 +1,5 @@
 import logging
-from flask import Blueprint, request, jsonify, redirect, url_for, session, render_template
+from flask import Blueprint, request, jsonify, redirect, url_for, session, render_template, flash
 from flask_login import login_required
 from ... import db, socketio
 from ...models import Weight, MaterialInfo
@@ -35,6 +35,7 @@ def add(order_id):
         )
     db.session.add(weight)
     db.session.commit()
+    flash('Weight added sucessfully!', 'success')
     # session['show_toast'] = True
     return redirect(url_for('order.order_detail', order_id=order_id))
 
@@ -46,13 +47,15 @@ def edit(weight_id):
     weight = Weight.query.filter_by(id=weight_id).first()
     
     if not weight:
+        flash('Weight record not found!', 'error')
         return jsonify(success=False, error="Weight not found"), 404
 
     if request.method == 'POST':
         edit_val = request.form.get('edit_weight')
         weight.quantity = edit_val
         db.session.commit()
-        return jsonify(success=True)
+        flash('Weight added sucessfully!', 'success')
+        # return jsonify(success=True)
 
 @weight_bp.route('/delete/<int:weight_id>', methods=['POST'])
 @permission_required('edit_weight')
@@ -63,5 +66,6 @@ def delete(weight_id):
 
     db.session.delete(weight)
     db.session.commit()
+    flash('Weight deleted sucessfully!', 'success')
 
     return redirect(url_for('order.order_detail', order_id=weight.order_id))

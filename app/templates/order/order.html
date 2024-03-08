@@ -8,15 +8,6 @@
 
 {% block body %}
 <div class="pt-16 flex flex-col p-2">
-    <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 p-4 bg-gradient-to-r from-indigo-400 to-blue-400 text-white rounded-lg shadow-xl opacity-0 transition-all duration-500 ease-in-out max-w-xs w-full">
-        <i class="fas fa-check-circle mr-2"></i> Successful!
-        <button id="toastClose" class="absolute top-1/2 right-4 transform -translate-y-1/2 text-2xl leading-none hover:text-gray-100">&times;</button>
-    </div>
-    <div id="errorToast" class="fixed top-4 left-1/2 transform -translate-x-1/2 p-4 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow-xl opacity-0 transition-all duration-500 ease-in-out max-w-xs w-full">
-        <i class="fas fa-exclamation-circle mr-2"></i> Error, please try again!
-        <button id="errorToastClose" class="absolute top-1/2 right-4 transform -translate-y-1/2 text-2xl leading-none hover:text-gray-100">&times;</button>
-    </div>
-
     <form action="/order" method="get" class="sticky mb-4 p-2 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg shadow-md">
             <div class="mb-2 flex text-center items-center">
                 <input 
