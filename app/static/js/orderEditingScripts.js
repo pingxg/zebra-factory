@@ -26,40 +26,6 @@ function closeModal(modalId) {
         }
     }
 }
-function showToast(message, type = 'success') {
-    let toastElement = document.getElementById(type === 'error' ? 'errorToast' : 'toast');
-
-    // Dynamically construct the HTML content with the message
-    toastElement.innerHTML = `
-        <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'} mr-2"></i> 
-        ${message}
-        <button id="${type}ToastClose" class="absolute top-1/2 right-4 transform -translate-y-1/2 text-2xl leading-none hover:text-gray-100">&times;</button>
-    `;
-
-    // Show the toast
-    toastElement.style.opacity = '1';
-    toastElement.style.transform = 'translate(-50%, 0)';
-    toastElement.classList.add('opacity-100');
-
-    // Close button functionality: Re-select the close button because its previous reference was lost when innerHTML was reset
-    document.getElementById(`${type}ToastClose`).addEventListener('click', () => {
-        toastElement.style.opacity = '0';
-        setTimeout(() => {
-            toastElement.style.transform = 'translate(-50%, -100%)';
-            toastElement.classList.remove('opacity-100');
-        }, 300); // Delay to allow for opacity transition
-    });
-
-    // Automatically hide the toast after a delay
-    setTimeout(() => {
-        toastElement.style.opacity = '0';
-        setTimeout(() => {
-            toastElement.style.transform = 'translate(-50%, -100%)';
-            toastElement.classList.remove('opacity-100');
-        }, 300); // Match this delay with your CSS transition-duration for opacity
-    }, 3000); // Duration before the toast hides
-}
-
 
 // Function to fetch order details and then open the modal with populated data
 async function populateUpdateModal(orderId) {
@@ -294,11 +260,9 @@ document.getElementById('addOrderForm').addEventListener('submit', async functio
 
         if (!response.ok) throw new Error('Failed to add order');
 
-        showToast('Order added successfully!', 'success');
         closeModal('addOrderModal'); // Assuming closeModal is your function to close the modal
         window.location.reload();  // Refresh the page to show the updated value
     } catch (error) {
-        showToast('Failed to add order.', 'error');
         console.error('Error adding order:', error);
     }
 });

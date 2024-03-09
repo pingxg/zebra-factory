@@ -41,6 +41,7 @@ class OrderService:
                 }
                 return order_dict
         except SQLAlchemyError as e:
+            db.session.rollback()
             return {'status': 'error', 'message': str(e)}
 
     @staticmethod

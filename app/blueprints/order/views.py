@@ -13,6 +13,7 @@ from ...utils.date_utils import calculate_current_iso_week
 from ...services.order_service import OrderService
 from ...utils.auth_decorators import permission_required, role_required
 from flask_login import current_user
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 
 @order_bp.route('/', methods=['GET', 'POST'])
@@ -105,34 +106,99 @@ def get_order(order_id):
     if not order_id:
         return jsonify({'status': 'error', 'message': 'Order ID not provided'}), 400
     
-    
     result = OrderService.get_order(order_id)
     return jsonify(result)
 
-@permission_required('edit_order')
 @order_bp.route('/add', methods=['POST'])
 def add_order():
     data = request.json
     if not data:
+        flash('No data provided. Please fill in the required fields.', 'error')
         return jsonify({'status': 'error', 'message': 'No data provided'}), 400
-    result = OrderService.add_order(data)
-    return jsonify(result)
-
+    try:
+        result = OrderService.add_order(data)
+        flash('Order added successfully!', 'success')
+        return jsonify(result), 200
+    except IntegrityError as e:
+        # This block catches errors like duplicate entries
+        flash('A database integrity error occurred. Please check your data for duplicates or missing fields.', 'error')
+        return jsonify({'status': 'error', 'message': 'Database integrity error'}), 400
+    except SQLAlchemyError as e:
+        # General SQLAlchemy errors
+        flash(f'An unexpected database error occurred: {str(e)}', 'error')
+        return jsonify({'status': 'error', 'message': 'Database error'}), 500
+    except Exception as e:
+        # Catch-all for any other exceptions
+        flash(f'An unexpected error occurred: {str(e)}', 'error')
+        return jsonify({'status': 'error', 'message': 'Unexpected error'}), 500
 
 @permission_required('edit_order')
 @order_bp.route('/update/<int:order_id>', methods=['POST'])
 def update_order(order_id):
     data = request.json
     if not data or not order_id:
+        flash('No data provided or Order ID missing', 'error')
         return jsonify({'status': 'error', 'message': 'No data provided or Order ID missing'}), 400
-    result = OrderService.update_order(order_id, data)
-    return jsonify(result)
+
+    # Check if the order exists before attempting an update
+    existing_order = Order.query.get(order_id)
+    if not existing_order:
+        flash('Order not found', 'error')
+        return jsonify({'status': 'error', 'message': 'Order not found'}), 404
+
+    try:
+        result = OrderService.update_order(order_id, data)
+        if result['status'] == 'success':
+            flash('Order updated successfully', 'success')
+            return jsonify(result), 200
+        else:
+            flash('Failed to update order', 'error')
+            return jsonify({'status': 'error', 'message': 'Failed to update order'}), 400
+    except IntegrityError as e:
+        # Handle specific database integrity issues (e.g., duplicate key value)
+        flash('Database integrity error', 'error')
+        return jsonify({'status': 'error', 'message': 'Database integrity error'}), 400
+    except SQLAlchemyError as e:
+        # Handle general SQLAlchemy errors
+        flash('Database error', 'error')
+        return jsonify({'status': 'error', 'message': 'Database error'}), 500
+    except Exception as e:
+        # Catch-all for any other unexpected errors
+        flash(f'Unexpected error: {str(e)}', 'error')
+        return jsonify({'status': 'error', 'message': 'Unexpected error'}), 500
 
 
 @permission_required('edit_order')
 @order_bp.route('/delete/<int:order_id>', methods=['DELETE'])
 def delete_order(order_id):
     if not order_id:
+        flash('Order ID not provided', 'error')  # For UI-based feedback, if applicable
         return jsonify({'status': 'error', 'message': 'Order ID not provided'}), 400
-    result = OrderService.delete_order(order_id)
-    return jsonify(result)
+
+    # Check if the order exists
+    existing_order = Order.query.get(order_id)
+    if not existing_order:
+        flash('Order not found', 'error')  # For UI-based feedback, if applicable
+        return jsonify({'status': 'error', 'message': 'Order not found'}), 404
+
+    try:
+        result = OrderService.delete_order(order_id)
+        if result['status'] == 'success':
+            flash('Order deleted successfully', 'success')
+            return jsonify(result), 200
+        else:
+            # Handle the case where the deletion was not successful due to business logic
+            flash('Failed to delete order due to business constraints', 'error')
+            return jsonify({'status': 'error', 'message': 'Failed to delete order'}), 400
+    except IntegrityError as e:
+        # Handle specific database integrity issues, e.g., related to foreign key constraints
+        flash('Cannot delete this order because it is referenced by other items.', 'error')
+        return jsonify({'status': 'error', 'message': 'Database integrity error: cannot delete order'}), 400
+    except SQLAlchemyError as e:
+        # Handle general SQLAlchemy errors
+        flash('Database error during order deletion', 'error')
+        return jsonify({'status': 'error', 'message': 'Database error'}), 500
+    except Exception as e:
+        # Catch-all for any other unexpected errors
+        flash(f'Unexpected error during deletion: {str(e)}', 'error')
+        return jsonify({'status': 'error', 'message': 'Unexpected error'}), 500
