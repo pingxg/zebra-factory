@@ -1,72 +1,8 @@
-function validateForm() {
-    var scaleReading = document.getElementById("scale_reading").value;
-    if (scaleReading === "" || scaleReading === null) {
-        showErrorToast();
-        return false; // This will prevent the form from submitting
-    }
-    return true;
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-        flatpickr("#selected_date", {
-            dateFormat: "Y-m-d",
-        });
-    });
-
-
-function showToast() {
-    const toast = document.getElementById('toast');
-    const closeBtn = document.getElementById('toastClose');
-    
-    toast.style.opacity = '1';
-    toast.style.transform = 'translate(-50%, 0)';
-    
-    closeBtn.onclick = function() {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translate(-50%, -100%)';
-    };
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translate(-50%, -100%)';
-    }, 3000);  // Toast will be visible for 3 seconds
-}
-
-function showErrorToast() {
-    const toast = document.getElementById('errorToast');
-    const closeBtn = document.getElementById('errorToastClose');
-
-    toast.style.opacity = '1';
-    toast.style.transform = 'translate(-50%, 0)';
-    
-    closeBtn.onclick = function() {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translate(-50%, -100%)';
-    };
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translate(-50%, -100%)';
-    }, 3000);  // Toast will be visible for 3 seconds
-}
-
-function showPrintToast() {
-    const toast = document.getElementById('printToast');
-    const closeBtn = document.getElementById('printToastClose');
-    
-    toast.style.opacity = '1';
-    toast.style.transform = 'translate(-50%, 0)';
-    
-    closeBtn.onclick = function() {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translate(-50%, -100%)';
-    };
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translate(-50%, -100%)';
-    }, 3000);  // Toast will be visible for 3 seconds
-}
+// document.addEventListener('DOMContentLoaded', function() {
+//         flatpickr("#selected_date", {
+//             dateFormat: "Y-m-d",
+//         });
+//     });
 
 
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -77,6 +13,17 @@ document.addEventListener('DOMContentLoaded', (event) => {
         let currentSize = parseInt(window.getComputedStyle(customerNameSpan).fontSize);
         customerNameSpan.style.fontSize = (currentSize - 1) + "px";
     }
+});
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('addReading'); // Make sure your form has this ID
+    const submitBtn = document.getElementById('submitBtn');
+    form.onsubmit = function() {
+        submitBtn.disabled = true; // Disable the button
+        submitBtn.innerText = 'Processing...'; // Optional: Change button text
+        
+    };
 });
 
 
@@ -103,20 +50,22 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("Save button clicked");  // Add this line
 
             const newValue = editInput.value;
-            fetch(`/weight/edit/${currentEditingWeightId}`, {
+            const response = fetch(`/weight/edit/${currentEditingWeightId}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
                 },
-                body: `edit_weight=${newValue}`,
+                body: JSON.stringify({ edit_weight: newValue }),
             })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
+                console.log("Response:", response);  // Log the response
                 return response.json();
             })
             .then(data => {
+                console.log("Data:", data);  // Log the data
                 if (data.success) {
                     window.location.reload();  // Refresh the page to show the updated value
                 } else {

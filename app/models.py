@@ -49,7 +49,6 @@ class Customer(db.Model):
         fish_sizes = cls.query.with_entities(cls.fish_size).distinct().order_by(cls.fish_size.asc()).all()
         return [size[0] for size in fish_sizes if size[0]]
 
-
 class Order(db.Model):
     """Order model
     
@@ -61,11 +60,15 @@ class Order(db.Model):
     customer = db.Column(db.String, db.ForeignKey('salmon_customer.customer'))
     date = db.Column(db.Date)
     product = db.Column(db.String)
-    price = db.Column(db.Float)
+    price = db.Column(db.Numeric(precision=10, scale=4))
     quantity = db.Column(db.Integer)
     weights = db.relationship('Weight', backref='salmon_order', lazy=True, cascade='all, delete, delete-orphan')
     fish_size = db.Column(db.String)
     entry_time = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('date', 'product', 'customer', 'price', name='unique_order'),
+    )
 
 
 class Weight(db.Model):
