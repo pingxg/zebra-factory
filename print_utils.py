@@ -118,7 +118,8 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 c.company AS customer,
                 c.phone AS phone,
                 o.date, 
-                o.product, 
+                o.product,
+                p.note AS product_note,
                 COALESCE(o.price * 1.14, 0) AS price, 
                 o.quantity AS weight, 
                 w.quantity AS delivered
@@ -128,6 +129,8 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 salmon_order_weight w ON o.id = w.order_id
             LEFT JOIN 
                 salmon_customer c ON o.customer = c.customer
+            LEFT JOIN
+                salmon_product_name p ON o.product = p.product_name
             WHERE
                 o.id = :order_id;
         """)
@@ -234,29 +237,32 @@ def zebra_generator(df):
     ^FO540,195^A0N,20,20^FDTuote / Produkt^FS
     ^FO540,220^A0N,30,30^FD{product}^FS
 
+    ; Add Product note
+    ^FO30,265^A0N,25,35^FDNOTE: {product_note}^FS
+
     ; Add temperature
-    ^FO30,265^A0N,20,20^FDSäilytys/ Förvaring^FS
-    ^FO30,310^A0N,30,30^FD{temperature_info}^FS
+    ^FO30,305^A0N,20,20^FDSäilytys/ Förvaring^FS
+    ^FO30,350^A0N,30,30^FD{temperature_info}^FS
 
     ; Add an Expiration date
-    ^FO240,265^A0N,20,20^FDViimeinen käyttöpäivä^FS
-    ^FO240,285^A0N,20,20^FD/ Sista förbrukningsdag^FS
-    ^FO240,310^A0N,20,20^FD{expiry_info}^FS
+    ^FO240,305^A0N,20,20^FDViimeinen käyttöpäivä^FS
+    ^FO240,325^A0N,20,20^FD/ Sista förbrukningsdag^FS
+    ^FO240,350^A0N,20,20^FD{expiry_info}^FS
 
     ; Add net weight
-    ^FO540,265^A0N,20,20^FDNettopaino / Nettovikt^FS
-    ^FO540,310^A0N,30,30^FD{delivered} KG^FS
+    ^FO540,305^A0N,20,20^FDNettopaino / Nettovikt^FS
+    ^FO540,350^A0N,30,30^FD{delivered} KG^FS
 
     ; Draw a line separator
-    ^FO30,360^GB730,2,2^FS
+    ^FO30,400^GB730,2,2^FS
 
     ; Add order id
-    ^FO30,375^A0N,20,20^FDTilausnumero^FS
-    ^FO30,400^A0N,30,35^FD{order_id}^FS
+    ^FO30,415^A0N,20,20^FDTilausnumero^FS
+    ^FO30,440^A0N,30,35^FD{order_id}^FS
 
     ; Add recipient
-    ^FO240,375^A0N,20,20^FDAsiakas / Kund^FS
-    ^FO240,400^A0N,30,40^FD{store}^FS
+    ^FO240,415^A0N,20,20^FDAsiakas / Kund^FS
+    ^FO240,440^A0N,30,40^FD{store}^FS
 
     ; End of label
     ^XZ
@@ -277,6 +283,7 @@ def zebra_generator(df):
             order_id=row['order_id'],
             store=row['store'],
             product=product_name,
+            product_note=row['product_note'],
             delivered=row['delivered'],
             temperature_info=temperature_info,
             expiry_info=expiry_info,

@@ -2,5 +2,4 @@ __pycache__/
 .env
 temp
 *.csv
-generate_sql.py
 .venv

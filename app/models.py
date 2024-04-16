@@ -96,6 +96,7 @@ class Product(db.Model):
     product_name = db.Column(db.String, db.ForeignKey('salmon_orders.product'))
     product_type = db.Column(db.String)
     active = db.Column(db.Integer)
+    note = db.Column(db.String)
     @classmethod
     def get_active_products(cls):
         """
