@@ -102,13 +102,13 @@
                                     text-green-600 font-bold
                                 {% else %}
                                     text-red-600 font-bold
-                                {% endif %}">{{ row.full_total - row.full_unfinished }}/{{ row.full_total }}</td>
+                                {% endif %}">{{ row.full_total - row.full_unfinished }} / {{ row.full_total }}</td>
                                 <td class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300
                                 {% if row.half_unfinished == 0 %}
                                     text-green-600 font-bold
                                 {% else %}
                                     text-red-600 font-bold
-                                {% endif %}">{{ row.half_total - row.half_unfinished }}/{{ row.half_total }}</td>
+                                {% endif %}">{{ row.half_total - row.half_unfinished }} / {{ row.half_total }}</td>
                             </tr>
                         {% endfor %}
                     </table>
