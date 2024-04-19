@@ -20,7 +20,8 @@ class OrderService:
                         [(func.length(Order.fish_size) == 0, Customer.fish_size),
                         (func.length(Customer.fish_size) == 0, Order.fish_size)],
                         else_=func.coalesce(Order.fish_size, Customer.fish_size)
-                    ).label("fish_size")
+                    ).label("fish_size"),
+                    Order.note
                 )
                 .join(Customer, Order.customer == Customer.customer)
                 .filter(Order.id == order_id)
@@ -39,6 +40,7 @@ class OrderService:
                     "original_price": order.price,
                     "original_quantity": order.quantity,
                     "original_fish_size": order.fish_size,
+                    "note": order.note,
                 }
                 return order_dict
             else:
@@ -69,7 +71,8 @@ class OrderService:
                 price=round(float(order_data.get('price')) / 1.14, 4),
                 quantity=float(order_data.get('quantity')),
                 fish_size=order_data.get('fishSize'),
-                date=datetime.strptime(order_data.get('date'), '%Y-%m-%d').date()
+                date=datetime.strptime(order_data.get('date'), '%Y-%m-%d').date(),
+                note=order_data.get('note')
             )
             db.session.add(new_order)
             db.session.commit()
@@ -79,7 +82,7 @@ class OrderService:
             # Extract more specific error message from e.orig here if needed
             return {'status': 'error', 'message': 'Failed to add order: Unique constraint violation'}, 400
 
- 
+
     @staticmethod
     def update_order(order_id, data):
         try:
@@ -88,6 +91,7 @@ class OrderService:
                 order.price = data['price']/1.14
                 order.quantity = data['quantity']
                 order.fish_size = data['fish_size']
+                order.note = data['note']
                 db.session.commit()
                 return {'status': 'success', 'message': 'Order updated successfully'}, 200
             else:

@@ -117,7 +117,7 @@
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:align-middle sm:max-w-lg sm:w-full transform scale-90">
             <form id="updateOrderForm" method="post">
-                <div class="bg-white grid mx-auto sm:grid-cols-2 gap-4 px-4 py-4 sm:px-6 sm:py-5 text-left"> 
+                <div class="bg-white grid mx-auto sm:grid-cols-1 gap-4 px-4 py-4 sm:px-6 sm:py-5 text-left"> 
                     <input type="hidden" name="id" id="hiddenOrderID" value="">
                     <div>
                         <h3 class="leading-6 font-medium text-gray-900">
@@ -162,8 +162,17 @@
                         </h3>
                         <div class="mt-0.5 mb-1">
                             <select id="fishSizeSelect" name="fishSize" class="border border-gray-300 px-3 py-2 w-full rounded">
-                                <option value="">Select a fish size</option>
+                                <option value="大L">大L</option>
+                                <option value="小S">小S</option>
                             </select>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="leading-6 font-medium text-gray-900">
+                            Note
+                        </h3>
+                        <div class="mt-0.5 mb-1">
+                            <input type="text" id="noteInput" name="note" maxlength="120" class="border border-gray-300 px-3 py-2 w-full rounded" placeholder="Enter note (max 120 characters)">
                         </div>
                     </div>
                 </div>
@@ -196,7 +205,7 @@
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:align-middle sm:max-w-lg sm:w-full transform scale-90">
             <form id="addOrderForm" method="post">
-                <div class="bg-white grid mx-auto sm:grid-cols-2 gap-4 px-4 py-4 sm:px-6 sm:py-5 text-left"> 
+                <div class="bg-white grid mx-auto sm:grid-cols-1 gap-4 px-4 py-4 sm:px-6 sm:py-5 text-left"> 
                     <div>
                         <h3 class="leading-6 font-medium text-gray-900">
                             Customer Name *
@@ -244,6 +253,14 @@
                             <select id="fishSizesSelect" name="fishSize" class="border border-gray-300 px-3 py-2 w-full rounded">
                                 <option value="">Select</option>
                             </select>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="leading-6 font-medium text-gray-900">
+                            Note
+                        </h3>
+                        <div class="mt-0.5 mb-1">
+                            <input type="text" id="notesInput" name="note" maxlength="120" class="border border-gray-300 px-3 py-2 w-full rounded" placeholder="Enter note (max 120 characters)">
                         </div>
                     </div>
                 </div>

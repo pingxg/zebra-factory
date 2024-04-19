@@ -1,39 +1,18 @@
-// function initializeFishSizeSelect() {
-//     const fishSizes = ['大L', '小S']; // Define options
-//     const currentFishSize = ''; // Default selected value
-//     const fishSizeSelect = document.getElementById('fishSizeSelect');
-
-//     // Clear existing options
-//     fishSizeSelect.innerHTML = '';
-
-//     // Add options to the select
-//     fishSizes.forEach(size => {
-//         const option = document.createElement('option');
-//         option.value = size;
-//         option.textContent = size;
-//         if (size === currentFishSize) {
-//             option.selected = true; // Set default selected value
-//         }
-//         fishSizeSelect.appendChild(option);
-//     });
-// }
-// document.addEventListener('DOMContentLoaded', initializeFishSizeSelect);
-
-
-
 
 const selectFieldsDataCache = {
     customers: null,
     products: null,
-    fishSizes: null
+    fishSizes: null,
+
 };
 
 async function populateSelectFields() {
     const endpoints = {
         customers: '/customer/get-active-customers',
         products: '/product/get-active-products',
-        fishSizes: '/customer/get-fish-sizes'
+        fishSizes: '/customer/get-fish-sizes',
     };
+
     for (const [key, value] of Object.entries(endpoints)) {
         const select = document.getElementById(`${key}Select`);
         // Clear existing options before appending new ones
@@ -66,8 +45,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-
-
 // Function to fetch order details and then open the modal with populated data
 async function populateUpdateModal(orderId) {
     try {
@@ -81,8 +58,9 @@ async function populateUpdateModal(orderId) {
         document.getElementById('displayProduct').textContent = orderDetails.product;
         document.getElementById('updateOrderPriceInput').value = parseFloat(orderDetails.price).toFixed(2);
         document.getElementById('updateOrderQuantityInput').value = parseFloat(orderDetails.quantity).toFixed(2);
-        const fishSizeSelect = document.getElementById('fishSizeSelect');
+        document.getElementById('noteInput').value = orderDetails.note;
 
+        const fishSizeSelect = document.getElementById('fishSizeSelect');
         if (!orderDetails.product.toLowerCase().includes("lohi")) {
             fishSizeSelect.disabled = true; // Disable the selector if product name does not include "lohi"
             fishSizeSelect.value = "";
@@ -94,7 +72,7 @@ async function populateUpdateModal(orderId) {
             } else {
                 // Handle cases where the order's fish size isn't in the available options
                 console.warn(`Fish size "${orderDetails.fish_size}" not found in select options`);
-            }    
+            }
         }    
         openModal('updateOrderModal'); // Use this function to open the modal after populating it
     } catch (error) {
@@ -161,7 +139,8 @@ document.addEventListener('DOMContentLoaded', function() {
             id: parseInt(formData.get('id')),
             price: parseFloat(formData.get('price')),
             quantity: parseFloat(formData.get('quantity')),
-            fish_size: formData.get('fishSize')
+            fish_size: formData.get('fishSize'),
+            note: formData.get('note'),
         };
         fetch(`/order/update/${parseInt(formData.get('id'))}`, {
             method: 'POST',
