@@ -87,9 +87,6 @@ def index():
                 if key_name not in details.keys():
                     details[key_name] = np.array([[0, 0], [0, 0]])
                 box_info_total = np.array(calculate_salmon_box(order[5]))
-                # print(key_name, box_info_total)
-                # else:
-                #     details[key_name] = details[key_name] + np.array([box_info_total, [0, 0]])
 
                 if float(order[6]) < float(order[5])*float(os.environ.get('COMPLETION_THRESHOLD', 0.9)):
                     box_info_unfinished = np.array(calculate_salmon_box(float(order[5])))
@@ -99,7 +96,6 @@ def index():
 
         totals = {key: totals[key] for key in sorted(totals)}
         details = {key: details[key] for key in sorted(details)}
-        # print(details)
         # Preprocess data
         grouped_details = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
         for key, value in details.items():
@@ -139,5 +135,4 @@ def index():
             # Reset category rowspan tracker for this category after processing
             category_rowspan_tracker[category] = 0
         grouped_orders = {k: v for k, v in sorted(grouped_orders.items())}
-        print(grouped_orders)
     return render_template('main/index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, grouped_details=grouped_details, data_for_template=data_for_template, timedelta=timedelta)
