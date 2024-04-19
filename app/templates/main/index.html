@@ -154,11 +154,19 @@
                                         {% endif %}
                                         ">
                                         <div class="text-white font-semibold text-base sm:text-lg">
-                                            {{ order[1] }}
+                                            {% if order[11] is none or order[11] == '' %}
+                                                {{ order[1] }}
+                                            {% else %}
+                                                *{{ order[1] }}
+                                            {% endif %}
                                         </div>
                                         <div class="flex justify-between items-end">
                                             <p class="text-white font-thin text-base sm:text-s">
-                                                {{ order[3] }}
+                                                {% if order[11] is none or order[11] == '' %}
+                                                    {{ order[3] }}
+                                                {% else %}
+                                                    {{ order[3] }}: {{ order[11] }}
+                                                {% endif %}
                                             </p>
                                             <p class="text-white font-thin text-base sm:text-xl">
                                                 {{ order[6] }} / {{ order[5]|float }} kg
@@ -211,11 +219,19 @@
                                         {% endif %}
                                         ">
                                         <div class="text-white font-semibold text-base sm:text-lg">
-                                            {{ order[1] }}
+                                            {% if order[11] is none or order[11] == '' %}
+                                                {{ order[1] }}
+                                            {% else %}
+                                                *{{ order[1] }}
+                                            {% endif %}
                                         </div>
                                         <div class="flex justify-between items-end">
                                             <p class="text-white font-thin text-base sm:text-s">
-                                                {{ order[3] }}
+                                                {% if order[11] is none or order[11] == '' %}
+                                                    {{ order[3] }}
+                                                {% else %}
+                                                    {{ order[3] }}: {{ order[11] }}
+                                                {% endif %}
                                             </p>
                                             <p class="text-white font-thin text-base sm:text-xl">
                                                 {{ order[6] }} / {{ order[5]|float }} kg

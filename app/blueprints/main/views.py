@@ -52,7 +52,8 @@ def index():
                     [(func.length(Order.fish_size) == 0, Customer.fish_size),  # If Order.fish_size is empty, use Customer.fish_size
                     (func.length(Customer.fish_size) == 0, Order.fish_size)],  # If Customer.fish_size is empty, use Order.fish_size
                     else_=func.coalesce(Order.fish_size, Customer.fish_size)
-                ).label("fish_size")
+                ).label("fish_size"),
+                Order.note
             )
             .outerjoin(Product, Order.product == Product.product_name)
             .outerjoin(Weight, Order.id == Weight.order_id)
@@ -138,5 +139,5 @@ def index():
             # Reset category rowspan tracker for this category after processing
             category_rowspan_tracker[category] = 0
         grouped_orders = {k: v for k, v in sorted(grouped_orders.items())}
-
+        print(grouped_orders)
     return render_template('main/index.html', grouped_orders=grouped_orders, selected_date=selected_date, totals=totals, grouped_details=grouped_details, data_for_template=data_for_template, timedelta=timedelta)

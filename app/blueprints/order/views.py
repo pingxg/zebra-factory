@@ -48,6 +48,7 @@ def order() -> str:
             .group_by(Order.id)
             .all()
         )
+
         # Organize orders by customer and date
         orders_by_customer = defaultdict(lambda: defaultdict(list))
         for order in orders:
@@ -83,7 +84,8 @@ def order_detail(order_id: int) -> str:
                     [(func.length(Order.fish_size) == 0, Customer.fish_size),  # If Order.fish_size is empty, use Customer.fish_size
                     (func.length(Customer.fish_size) == 0, Order.fish_size)],  # If Customer.fish_size is empty, use Order.fish_size
                     else_=func.coalesce(Order.fish_size, Customer.fish_size)
-                ).label("fish_size")
+                ).label("fish_size"),
+                Order.note
             )
             .outerjoin(Weight, Order.id == Weight.order_id)
             .filter(Order.id == order_id)

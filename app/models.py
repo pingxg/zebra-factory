@@ -65,6 +65,7 @@ class Order(db.Model):
     weights = db.relationship('Weight', backref='salmon_order', lazy=True, cascade='all, delete, delete-orphan')
     fish_size = db.Column(db.String)
     entry_time = db.Column(db.DateTime, default=datetime.utcnow)
+    note = db.Column(db.String)
 
     __table_args__ = (
         db.UniqueConstraint('date', 'product', 'customer', 'price', name='unique_order'),
