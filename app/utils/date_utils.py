@@ -21,6 +21,13 @@ def calculate_current_iso_week():
     # Get the current date
     current_date = datetime.now()
 
+    # Determine if current day is Saturday (5) or Sunday (6)
+    if current_date.weekday() == 5 or current_date.weekday() == 6:
+        # Move to Monday of next week
+        days_till_next_monday = 7 - current_date.weekday()
+        current_date += timedelta(days=days_till_next_monday)
+
+
     # Calculate the start and end of the current ISO week
     # ISO weeks start on Monday and end on Sunday
     start_of_week = current_date - timedelta(days=current_date.weekday())
