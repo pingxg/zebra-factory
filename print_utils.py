@@ -267,6 +267,70 @@ def zebra_generator(df):
     ; End of label
     ^XZ
     """
+
+    zpl_template_x55_y70 = """
+    ; Start of label
+    ^XA
+
+    ^FO310,200^GFA,1750,1750,14,,:::::::::::::::P0IF,O07001C,N018I03,N02K0C,N0CK02,M018K01,M02M08,M04M06,M08M02,L01N01,L03O08,L02O04,L04O06,L08O02,L08O01,K01P01,K03Q08,K02Q0C,K06Q04,K04Q04,K0CQ02,K08Q02,K08Q01,J01R01,:J01S08,J02S08,:J02S04,:J04S04,J04L04L04,J04L02L02,J04J03FFL02,J08S02,::J087FCP02,J08C66004,J08842005M01,J08842I08L01,J08842I0400FFC01,J0884200C3I04401,J0884203FDI04401,J08802M04401,I01Q04401,:I01I060386J0401,J080180241L01,J080300241L01,J08FC0022100FFC01,J080400211L01,J08030021EL01,J0800CP01,J08006,J08J01EEL02,J08J0239L02,J08J0211L02,J04J0211L02,:J04J01EE,J04S04,:J02S04,:J02S08,J01S08,:J01R01,K08Q01,K08Q02,:K04Q02,K04Q04,K02Q04,K02Q08,K01Q08,K01P01,L08O03,L04O02,L04O04,L02O08,L01N018,M08M01,M0CM02,M06M04,M03L018,N08K03,N06K06,N03J018,O0EI06,O03C078,P03F8,,:::::::::::::::^FS
+
+
+    ; Set UTF-8 Character Encoding
+    ^CI28
+
+    ; Add Producer info
+    ^FO380,40^A0R,12,12^FDValmistaja / Tillverkare^FS
+    ^FO350,40^A0R,15,15^FDSpartao Oy^FS
+    ^FO330,40^A0R,12,12^FDY-tunnus: 2938534-6^FS
+    ^FO310,40^A0R,12,12^FDOsoite: Nihtisillantie 3B, 02630 Espoo^FS
+    ^FO290,40^A0R,12,12^FDPuh: +358 45 7831 9456^FS
+
+    ; Add the Batch number
+    ^FO380,350^A0R,12,12^FDEränumero / Batchnummer^FS
+    ^FO350,350^A0R,15,15^FD{batch_number}^FS
+
+    ; Add Product origin country
+    ^FO310,350^A0R,12,12^FDAlkuperämaa / Ursprungslandet^FS
+    ^FO290,350^A0R,15,15^FDNorja / Norge^FS
+
+    ; Add Product name
+    ^FO250,40^A0R,12,12^FDAinesosat / Ingredienser^FS
+    ^FO230,40^A0R,15,15^FDViljelty LOHI / Odlad LAX (Salmo Salar)^FS
+    ; Add Product note
+    ^FO210,40^A0R,15,15^FDNOTE: {product_note}^FS
+
+
+    ; Add Product treatment
+    ^FO250,350^A0R,12,12^FDTuote / Produkt^FS
+    ^FO220,350^A0R,25,25^FD{product}^FS
+
+
+    ; Add temperature
+    ^FO170,40^A0R,12,12^FDSäilytys/ Förvaring^FS
+    ^FO130,40^A0R,20,20^FD{temperature_info}^FS
+
+    ; Add an Expiration date
+    ^FO170,200^A0R,12,12^FDViimeinen käyttöpäivä^FS
+    ^FO155,200^A0R,12,12^FD/ Sista förbrukningsdag^FS
+    ^FO130,200^A0R,20,20^FD{expiry_info}^FS
+
+    ; Add net weight
+    ^FO170,350^A0R,12,12^FDNettopaino / Nettovikt^FS
+    ^FO130,350^A0R,20,20^FD{delivered} KG^FS
+
+
+    ; Add order id
+    ^FO90,40^A0R,12,12^FDTilausnumero^FS
+    ^FO60,40^A0R,20,25^FD{order_id}^FS
+
+    ; Add recipient
+    ^FO90,200^A0R,12,12^FDAsiakas / Kund^FS
+    ^FO60,200^A0R,20,25^FD{store}^FS
+
+    ; End of label
+    ^XZ
+    """
+    
     zpl_labels = []
     for _, row in df.iterrows():
         if 'Frozen' in row['product']:
@@ -279,7 +343,7 @@ def zebra_generator(df):
             product_name = f"{row['product']}"
 
 
-        zpl_label = zpl_template_x99_y63.format(
+        zpl_label = zpl_template_x55_y70.format(
             order_id=row['order_id'],
             store=row['store'],
             product=product_name,
