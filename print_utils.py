@@ -312,11 +312,11 @@ def zebra_generator(df):
     ; Add an Expiration date
     ^FO170,200^A0R,12,12^FDViimeinen käyttöpäivä^FS
     ^FO155,200^A0R,12,12^FD/ Sista förbrukningsdag^FS
-    ^FO130,200^A0R,20,20^FD{expiry_info}^FS
+    ^FO130,200^A0R,20,15^FD{expiry_info}^FS
 
     ; Add net weight
-    ^FO170,350^A0R,12,12^FDNettopaino / Nettovikt^FS
-    ^FO130,350^A0R,20,20^FD{delivered} KG^FS
+    ^FO170,400^A0R,12,12^FDNettopaino / Nettovikt^FS
+    ^FO130,400^A0R,20,20^FD{delivered} KG^FS
 
 
     ; Add order id
