@@ -20,6 +20,8 @@ def get_data_for_pdf(date, customer=None):
         Customer.address,
         Customer.phone,
         Order.date,
+        Customer.note,
+        Customer.priority,
         Order.product,
         (func.coalesce(Order.price * 1.14, 0)).label("price"),
         Order.quantity.label("weight"),
@@ -43,6 +45,8 @@ def get_data_for_pdf(date, customer=None):
         'address': '',
         'phone': '',
         'date': '',
+        'note': '',
+        'priority': '',
         'order_detail': [],
         'contain_frozen':False,
         'contain_lohi':False,
@@ -50,7 +54,7 @@ def get_data_for_pdf(date, customer=None):
     })
 
     for order in data:
-        store, customer, address, phone, date, product, price, weight, delivered = order
+        store, customer, address, phone, date, note, priority, product, price, weight, delivered = order
 
         # Convert Decimal and datetime.date to a more friendly format if necessary
         price = float(price) if price is not None else 0.0
@@ -64,7 +68,9 @@ def get_data_for_pdf(date, customer=None):
                 'customer': customer,
                 'address': address,
                 'phone': phone,
-                'date': date
+                'date': date,
+                'note': note,
+                'priority': priority
             })
 
         store_dict[store]['order_detail'].append({
@@ -80,5 +86,5 @@ def get_data_for_pdf(date, customer=None):
             store_dict[store]['contain_lohi'] = True
         elif 'Lohi' not in product:
             store_dict[store]['contain_other'] = True
-
+    print(list(store_dict.values()))
     return list(store_dict.values())

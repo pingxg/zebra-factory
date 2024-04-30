@@ -13,13 +13,13 @@
                 left: 40pt;
                 width: 512pt;
                 top: 50pt;
-                height: 160pt;
+                height: 230pt;
 
             }
             @frame content_frame {
                 left: 40pt;
                 width: 512pt;
-                top: 210pt;
+                top: 230pt;
                 height: 480pt;
 
             }
@@ -73,6 +73,14 @@
                         <th style="text-align: left;">Delivery Date</th>
                         <td>{{ data.date }}</td>
                     </tr>
+                    <tr>
+                        <th style="text-align: left;">Note</th>
+                        <td>{{ data.note }}</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align: left;">Priority</th>
+                        <td>{{ data.priority }}</td>
+                    </tr>
                 </tbody>
             </table>
         {% endif %}
@@ -81,14 +89,25 @@
 
 
     <div id="footer_content">
-        O- The product or a fish product made from it may not be delivered to other EU member states except Finland and Sweden.<br>
-        X: The product or the fish product made from it may not be delivered to other countries except Finland, Sweden and Latvia.<br>
+        The product or a fish product made from it may not be delivered to other EU member states except Finland and Sweden.<br>
+        The product or the fish product made from it may not be delivered to other countries except Finland, Sweden and Latvia.<br>
         <hr>
         <div>
-            Spartao Oy, Y-tunnus: 2938534-6<br>
-            Address: Nihtisillantie 3B, 02630 Espoo<br>
-            Phone: 045 7831 9456<br>
-            Page <pdf:pagenumber> / <pdf:pagecount>
+            <table style="font-size: 10px;">
+                <tbody>
+                    <tr>
+                        <td style="text-align: left;">Spartao Oy, 2938534-6</td>
+                        <td style="text-align: center;">Page <pdf:pagenumber>/<pdf:pagecount></td>
+                        <td style="text-align: center; font-size: 15px;"><strong>{{ data.priority }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">Nihtisillantie 3B, 02630 Espoo</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">+358 45 7831 9456</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
         
     </div>
@@ -124,7 +143,7 @@
         <br>
         <br>
         <br>
-        <table >
+        <table style="font-size: 12px;">
             <tbody>
                 {% if data.contain_lohi %}
                     <tr>

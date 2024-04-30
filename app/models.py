@@ -28,11 +28,12 @@ class Customer(db.Model):
     address = db.Column(db.String)
     company = db.Column(db.String)
     phone = db.Column(db.String)
-    priority = db.Column(db.Integer)
+    priority = db.Column(db.String)
     packing = db.Column(db.String)
     location_internal_id = db.Column(db.Integer)
     fish_size = db.Column(db.String)
     active = db.Column(db.Integer)
+    note = db.Column(db.String)
     
     @classmethod
     def get_active_customers(cls):
