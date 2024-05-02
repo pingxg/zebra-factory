@@ -30,7 +30,7 @@ def get_data_for_pdf(date, customer=None):
     .outerjoin(subquery, Order.id == subquery.c.order_id) \
     .outerjoin(Customer, Order.customer == Customer.customer)\
     .filter(Order.date == date)\
-    .order_by(Order.customer.asc(), Order.product.asc())
+    .order_by(Customer.priority.asc(), Order.customer.asc(), Order.product.asc())
 
     # Apply customer filter if customer is provided
     if customer:
@@ -86,5 +86,4 @@ def get_data_for_pdf(date, customer=None):
             store_dict[store]['contain_lohi'] = True
         elif 'Lohi' not in product:
             store_dict[store]['contain_other'] = True
-    print(list(store_dict.values()))
     return list(store_dict.values())
