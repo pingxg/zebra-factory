@@ -157,7 +157,7 @@
                                             {% if order[11] is none or order[11] == '' %}
                                                 {{ order[1] }}
                                             {% else %}
-                                                *{{ order[1] }}
+                                                <strong style="color: #FF7F50;">*</strong>{{ order[1] }}
                                             {% endif %}
                                         </div>
                                         <div class="flex justify-between items-end">
@@ -175,7 +175,7 @@
                                             <div class="absolute top-0 right-0 bg-black bg-opacity-40 text-white rounded-lg rounded-bl-lg px-2 py-1 text-s" style="text-transform: capitalize;">
                                                 {% if order[8] and order[8] != '' %}
                                                 {{ order[8] }}
-                                                {% if order[10] and order[10] != '' %}
+                                                {% if order[10] and order[10] != '' and order[10] != '-' %}
                                                     (<span style="font-weight: bold; color: #FF7F50;">{{ order[10] }}</span>)
                                                 {% endif %}
                                             {% endif %}
