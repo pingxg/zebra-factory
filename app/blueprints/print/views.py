@@ -23,4 +23,3 @@ def emit_print_pdf():
     socketio.emit('print_pdf', {'order_id': order_id})
     flash('Print pdf event emitted','success')
     return jsonify({'status': 'Print pdf event emitted'})
-
