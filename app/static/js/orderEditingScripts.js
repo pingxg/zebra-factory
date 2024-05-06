@@ -10,7 +10,7 @@ async function populateSelectFields() {
     const endpoints = {
         customers: '/customer/get-active-customers',
         products: '/product/get-active-products',
-        fishSizes: '/customer/get-fish-sizes',
+        // fishSizes: '/customer/get-fish-sizes',
     };
 
     for (const [key, value] of Object.entries(endpoints)) {
