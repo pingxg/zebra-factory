@@ -49,22 +49,22 @@
                 <table class="w-full">
                     {% for product, order_info in totals.items() %}
                         <tr class="grid grid-cols-3 divide-x divide-gray-200">
-                            <td class="px-5 py-3 text-sm text-gray-700 font-medium text-center">
+                            <td class="px-5 py-3 text-m text-gray-700 font-medium text-center">
                                 {{ product }}
                             </td>
-                            <td class="px-5 py-3 text-xs font-thin text-gray-700 text-center
+                            <td class="px-5 py-3 text-xs text-gray-700 text-center font-bold
                                         {% if (order_info[1]|float / order_info[0]|float) >= completion_threshold|float %}
-                                            text-green-600 font-bold
+                                            text-green-600
                                         {% else %}
-                                            text-red-600 font-bold
+                                            text-red-600
                                         {% endif %}">
                                 {{ '%.1f' % (order_info[1]|float / order_info[0]|float * 100) if order_info[0]|float != 0 else 'N/A' }} %
                             </td>
-                            <td class="px-5 py-3 text-xs font-thin text-gray-700 text-center
+                            <td class="px-5 py-3 text-xs text-gray-700 text-center font-bold
                             {% if (order_info[1]|float / order_info[0]|float) >= completion_threshold|float %}
-                                text-green-600 font-bold
+                                text-green-600
                             {% else %}
-                                text-red-600 font-bold
+                                text-red-600
                             {% endif %}">
                                 {{ '%.2f' % (order_info[1]|float) }} / {{ '%.2f' % (order_info[0]|float) }}
                             </td>
@@ -102,18 +102,17 @@
                                     text-green-600 font-bold
                                 {% else %}
                                     text-red-600 font-bold
-                                {% endif %}">{{ row.full_total - row.full_unfinished }} / {{ row.full_total }}</td>
+                                {% endif %}">{{ row.full_total - row.full_unfinished }}/{{ row.full_total }}</td>
                                 <td class="px-5 py-3 text-xm text-gray-700 text-center border border-gray-300
                                 {% if row.half_unfinished == 0 %}
                                     text-green-600 font-bold
                                 {% else %}
                                     text-red-600 font-bold
-                                {% endif %}">{{ row.half_total - row.half_unfinished }} / {{ row.half_total }}</td>
+                                {% endif %}">{{ row.half_total - row.half_unfinished }}/{{ row.half_total }}</td>
                             </tr>
                         {% endfor %}
                     </table>
                 </div>
-
             </div>
             {% endif %}
 
@@ -222,7 +221,7 @@
                                             {% if order[11] is none or order[11] == '' %}
                                                 {{ order[1] }}
                                             {% else %}
-                                                *{{ order[1] }}
+                                                <strong style="color: #FF7F50;">*</strong>{{ order[1] }}
                                             {% endif %}
                                         </div>
                                         <div class="flex justify-between items-end">
