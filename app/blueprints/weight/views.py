@@ -13,7 +13,7 @@ import os
 def add(order_id):
     if request.method == 'POST':
         scale_reading = float(request.form['scale_reading'])
-        batch_number = request.form['batch_number']
+        # batch_number = request.form['batch_number']
         # try:
         #     batch_number = int(batch_number)
         # except ValueError:
