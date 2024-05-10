@@ -6,7 +6,6 @@ import socketio
 import logging
 from print_utils import pdf_render_print
 
-
 # Set up logging with timestamp
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
