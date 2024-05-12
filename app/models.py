@@ -1,7 +1,7 @@
 from . import db
 from flask_login import UserMixin
 from datetime import datetime
-
+from sqlalchemy.sql import func
 
 class User(UserMixin, db.Model):
     """User model
@@ -71,6 +71,16 @@ class Order(db.Model):
     __table_args__ = (
         db.UniqueConstraint('date', 'product', 'customer', 'price', name='unique_order'),
     )
+
+
+class DeliveryNoteImage(db.Model):
+    """Delivery note model
+    """
+    __tablename__ = "salmon_delivery_note_images"
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('salmon_orders.id'), nullable=False)
+    image_url = db.Column(db.String, nullable=False, unique=True)
+    uploaded_at = db.Column(db.DateTime, default=func.now(), nullable=False)
 
 
 class Weight(db.Model):

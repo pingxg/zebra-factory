@@ -4,10 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css" rel="stylesheet">
+
     <link rel="icon" href="{{ url_for('static', filename='img/logo.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script src="/static/js/baseScript.js" defer></script>
@@ -82,10 +85,10 @@
                 <nav class="text-white w-60 p-4 space-y-4">
                     <a href="/" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Home</a>
                     <a href="/order" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Order</a>
-                    <a href="/customer" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Customer</a>
+                    <!-- <a href="/customer" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Customer</a>
                     <a href="/product" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Product</a>
                     <a href="/inventory" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Inventory</a>
-                    <a href="/label" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Label</a>
+                    <a href="/label" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Label</a> -->
                 </nav>
             </div>
             {% endif %}
