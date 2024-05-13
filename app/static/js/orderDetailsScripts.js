@@ -118,43 +118,54 @@ document.getElementById('cancelDelete').addEventListener('click', function() {
 });
 
 
-Dropzone.options.fileDropzone = {
-    url: '/deliverynote/upload_url',  // Initial URL to get the pre-signed URL
-    method: 'POST', // POST to request the pre-signed URL from your Flask backend
-    paramName: "file",
-    maxFilesize: 5, // MB
-    autoProcessQueue: false, // Don't process files automatically on drop/add
-    dictDefaultMessage: "Drop files here or click to upload.",
-    init: function() {
-        var myDropzone = this;
+Dropzone.autoDiscover = false;
+const uploader = new Dropzone("#upload-widget", {
+  dictDefaultMessage: "Drop or click here to add files",
+  url: "https://endpoint.s3.amazonaws.com/",  // will be overwritten dynamically
+  method: "POST",
+  timeout: 3600000,
+  parallelUploads: 10,
+  maxFilesize: 5,  // MB
+  autoProcessQueue: false,
+  addRemoveLinks: true,
+  createImageThumbnails: false,
+//   previewTemplate: previewTemplate,
+  accept: function (file, done) {
+    const req = new XMLHttpRequest();
+    req.onreadystatechange = () => {
+      if (req.readyState === XMLHttpRequest.DONE) {
+        if (req.status === 200) {
+          const signedPost = JSON.parse(req.responseText);
+          this.options.url = signedPost.url;
+          file.signedPost = signedPost;
+          done();
+        } else {
+          done("Fail to get pre-signed url.");
+        }
+      }
+    };
+    req.open("POST",'/deliverynote/get-presigned-post');
+    req.setRequestHeader("Content-type", "application/json; charset=UTF-8");
+    req.send();
+  },
+});
 
-        this.on("addedfile", function(file) {
-            // Request a pre-signed URL with the filename and content type
-            fetch(`/deliverynote/upload_url?filename=${encodeURIComponent(file.name)}&content_type=${encodeURIComponent(file.type)}`, {
-                method: 'GET'  // Assuming your server expects a GET request
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Use the pre-signed URL for the actual file upload
-                myDropzone.options.url = data.url;
-                myDropzone.processQueue(); // Process the queue once the URL is set
-            })
-            .catch(error => {
-                console.error("Error getting the pre-signed URL:", error);
-                alert("Failed to get upload URL.");
-            });
-        });
+uploader.on('sending', (file, xhr, formData) => {
+  const fields = file.signedPost.fields;
+  Object.keys(fields).forEach(k=>formData.append(k, fields[k]));
+});
 
-        this.on("sending", function(file, xhr, formData) {
-            xhr.setRequestHeader('Content-Type', file.type);  // Set content type header for S3
-        });
+uploader.on("success", () => {
+  uploader.options.autoProcessQueue = true;  // https://github.com/enyo/dropzone/issues/462
+});
 
-        this.on("success", function(file, response) {
-            alert("File successfully uploaded");
-        });
+uploader.on("queuecomplete", () => {
+  uploader.options.autoProcessQueue = false;
+});
 
-        this.on("error", function(file, response) {
-            alert("Error in upload: " + response);
-        });
-    }
-};
+
+document.querySelector("#dropzone-btn").addEventListener("click", function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  uploader.processQueue();
+});

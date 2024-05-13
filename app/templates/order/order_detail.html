@@ -4,6 +4,7 @@
     <title>Order Details</title>
     <script src="/static/js/orderDetailsScripts.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+
     <link rel="stylesheet" href="/static/css/orderDetails.css">
 {% endblock %}
 
@@ -159,9 +160,11 @@
                 </button>
             </form>
 
-            <form action="{{ url_for('deliverynote.upload_url') }}" class="dropzone" id="file-dropzone"></form>
-            
-        </div>
+            <div>
+                <!-- Dropzone -->
+                <form id="upload-widget" class="dropzone"></form>
+                <button id="dropzone-btn" class="btn btn-success btn-block">Upload</button>
+            </div>
     </div>
 
     <div id="editModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
