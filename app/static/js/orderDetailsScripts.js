@@ -1,8 +1,3 @@
-// document.addEventListener('DOMContentLoaded', function() {
-//         flatpickr("#selected_date", {
-//             dateFormat: "Y-m-d",
-//         });
-//     });
 
 function emitPrintZebra() {
     const orderId = "{{ order[0] }}"; 
@@ -118,18 +113,19 @@ document.getElementById('cancelDelete').addEventListener('click', function() {
 });
 
 
+
 Dropzone.autoDiscover = false;
+
 const uploader = new Dropzone("#upload-widget", {
   dictDefaultMessage: "Drop or click here to add files",
   url: "https://endpoint.s3.amazonaws.com/",  // will be overwritten dynamically
   method: "POST",
   timeout: 3600000,
-  parallelUploads: 10,
+  parallelUploads: 100,
   maxFilesize: 5,  // MB
   autoProcessQueue: false,
   addRemoveLinks: true,
   createImageThumbnails: false,
-//   previewTemplate: previewTemplate,
   accept: function (file, done) {
     const req = new XMLHttpRequest();
     req.onreadystatechange = () => {
@@ -144,28 +140,61 @@ const uploader = new Dropzone("#upload-widget", {
         }
       }
     };
-    req.open("POST",'/deliverynote/get-presigned-post');
+    req.open("POST", '/deliverynote/get-presigned-post');
     req.setRequestHeader("Content-type", "application/json; charset=UTF-8");
-    req.send();
+
+    // Add payload to request to include file information
+    const payload = JSON.stringify({ filename: file.name, filetype: file.type });
+    req.send(payload);
   },
 });
 
 uploader.on('sending', (file, xhr, formData) => {
   const fields = file.signedPost.fields;
-  Object.keys(fields).forEach(k=>formData.append(k, fields[k]));
+  Object.keys(fields).forEach(k => formData.append(k, fields[k]));
+  formData.append('Content-Type', file.type);  // Ensure Content-Type is set
 });
 
-uploader.on("success", () => {
-  uploader.options.autoProcessQueue = true;  // https://github.com/enyo/dropzone/issues/462
+uploader.on("success", (file, response) => {
+  const imageUrl = file.signedPost.fields.key;
+  // Store imageUrl in a global array
+  uploadedImages.push(imageUrl);
 });
 
 uploader.on("queuecomplete", () => {
-  uploader.options.autoProcessQueue = false;
-});
+    fetch('/deliverynote/update-image-links', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+        customer_name: customerName,
+        date: date,
+        image_urls: uploadedImages
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            flash(data.message);
+            location.reload();  // Refresh the page upon success
+        } else {
+            alert('Failed to associate images with orders');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+    
+    // Clear the uploadedImages array after processing
+    uploadedImages = [];
+    });
 
+    document.querySelector("#dropzone-btn").addEventListener("click", function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    uploader.processQueue();
+    });
 
-document.querySelector("#dropzone-btn").addEventListener("click", function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  uploader.processQueue();
-});
+// Global array to store uploaded image URLs
+let uploadedImages = [];

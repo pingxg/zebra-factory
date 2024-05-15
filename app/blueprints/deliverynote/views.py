@@ -1,13 +1,16 @@
 import os
 import boto3
 import uuid
+import html
 from botocore.client import Config
-
-from flask import request, send_file, abort, jsonify
+from datetime import datetime
+from flask import request, send_file, abort, jsonify, flash, redirect, url_for
 from flask_login import login_required
 from ...utils.pdf_utils import generate_delivery_note
 from ...utils.auth_decorators import permission_required, roles_required
 from . import deliverynote_bp
+from ... import db
+from ...models import Order, DeliveryNoteImage
 
 @deliverynote_bp.route('/generate', methods=['GET'])
 @roles_required('admin', 'driver', 'cutter')
@@ -20,67 +23,64 @@ def generate_pdf():
     else:
         abort(404)
 
-# Initialize S3 client
-s3_client = boto3.client(
-    's3',
-    region_name=os.getenv('AWS_REGION'),
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
-)
-
-@deliverynote_bp.route('/upload_url', methods=['GET', 'POST'])
-def upload_url():
-    object_name = request.args.get('filename')
-    content_type = request.args.get('content_type', 'application/octet-stream')
-    print(object_name)
-    print(content_type)
-    # Validate the file type
-    if not allowed_file(object_name):
-        return jsonify({"error": "File type not allowed"}), 400
-
-    # Generate a pre-signed URL for uploading
-    try:
-        presigned_url = s3_client.generate_presigned_url(
-            'put_object',
-            Params={
-                'Bucket': os.getenv('AWS_S3_BUCKET_NAME'),
-                'Key': object_name,
-                'ContentType': content_type,
-                # 'ACL': 'public-read'
-            },
-            ExpiresIn=3600  # URL expiration time
-        )
-        print(presigned_url)
-        return jsonify({'url': presigned_url})
-    except Exception as e:
-        abort(500, description=str(e))
-
-def allowed_file(filename):
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'txt'}  # Add or remove file types as needed
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
 @deliverynote_bp.route('/get-presigned-post', methods=['POST'])
+@roles_required('admin', 'driver')
 def get_presigned_post():
     if request.method == 'POST':
+        data = request.get_json()
+        filename = data.get('filename')
+        filetype = data.get('filetype')
+
         # Generate a unique key for the file
-        key = str(uuid.uuid4())
+        key = f"uploads/{uuid.uuid4()}_{filename}"
+
         s3 = boto3.client('s3', config=Config(signature_version='s3v4'))
 
         # Specify the allowed file type and other conditions
         conditions = [
-            # {"acl": "public-read"},  # Optionally set ACL
-            {"Content-Type": "image/jpeg"},  # Limit to JPEG images
-            ["starts-with", "$key", "user/uploads/"]  # Files should be uploaded with a specific prefix
+            {"Content-Type": filetype},  # Use the provided file type
+            ["starts-with", "$key", "uploads/"]  # Files should be uploaded with a specific prefix
         ]
 
         # Generate the pre-signed POST
         post = s3.generate_presigned_post(
             Bucket=os.getenv('AWS_S3_BUCKET_NAME'),
             Key=key,
-            # Conditions=conditions,
+            Conditions=conditions,
             ExpiresIn=3600
         )
 
         # Return the pre-signed POST data
         return jsonify(post)
+
+
+@deliverynote_bp.route('/update-image-links', methods=['POST'])
+@roles_required('admin', 'driver')
+def upload_images():
+    data = request.get_json()
+    customer_name = html.unescape(data.get('customer_name'))
+    date_str = data.get('date')
+    image_urls = data.get('image_urls')  # List of image URLs
+
+    if not customer_name or not date_str or not image_urls:
+        return jsonify({"error": "Missing data"}), 400
+
+    # Convert date string to date object
+    date = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+    # Retrieve all orders for the given customer on the specified date
+    orders = Order.query.filter_by(customer=customer_name, date=date).all()
+
+    if not orders:
+        return jsonify({"error": "No orders found"}), 404
+
+    # For each order, add each image link
+    for order in orders:
+        for url in image_urls:
+            deliver_note_image = DeliveryNoteImage(order_id=order.id, image_url=url)
+            db.session.add(deliver_note_image)
+
+    # Commit the changes to the database
+    db.session.commit()
+
+    return jsonify({"message": "Images uploaded and associated with orders successfully"}), 200
