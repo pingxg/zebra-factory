@@ -198,3 +198,31 @@ uploader.on("queuecomplete", () => {
 
 // Global array to store uploaded image URLs
 let uploadedImages = [];
+
+
+
+
+function showDeleteImageConfirmation(imageId, presignedUrl, deleteUrl) {
+    if (confirm('Are you sure you want to delete this image?')) {
+        fetch(deleteUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ image_id: imageId, presigned_url: presignedUrl })
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                response.json().then(data => {
+                    alert('Error deleting the image: ' + data.error);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting the image.');
+        });
+    }
+}

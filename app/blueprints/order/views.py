@@ -1,11 +1,14 @@
 from collections import defaultdict
+import os
+import boto3
+from botocore.client import Config
 from datetime import date, timedelta
 from flask import render_template, request, jsonify, flash
 from flask_login import login_required
 from sqlalchemy import func, case
 from . import order_bp
 from ... import db
-from ...models import Order, Weight, MaterialInfo, Customer
+from ...models import Order, Weight, MaterialInfo, Customer, DeliveryNoteImage
 from ...utils.date_utils import calculate_current_iso_week
 from ...services.order_service import OrderService
 from ...utils.auth_decorators import permission_required, roles_required
@@ -100,11 +103,34 @@ def order_detail(order_id: int) -> str:
             .order_by(Weight.production_time.asc())
             .all()
         )
+
+
+        # Fetch image details associated with the order
+        images = (
+            db.session.query(DeliveryNoteImage.id, DeliveryNoteImage.image_url)
+            .filter(DeliveryNoteImage.order_id == order_id)
+            .order_by(DeliveryNoteImage.uploaded_at.asc())
+            .all()
+        )
+
         if not order:
             flash('Order not found', 'error')
             return "Order not found", 404
 
-        return render_template('order/order_detail.html', order=order, weight_details=weight_details)
+        s3 = boto3.client('s3', config=Config(signature_version='s3v4'))
+        bucket_name = os.getenv('AWS_S3_BUCKET_NAME')
+        presigned_urls = []
+
+        for image in images:
+            presigned_url = s3.generate_presigned_url('get_object',
+                                                      Params={'Bucket': bucket_name, 'Key': image.image_url},
+                                                      ExpiresIn=3600)  # URL expiration time in seconds
+            presigned_urls.append({
+                "image_id": image.id,
+                "presigned_url": presigned_url
+            })
+
+        return render_template('order/order_detail.html', order=order, weight_details=weight_details, image_details=presigned_urls)
     except SQLAlchemyError as e:
         flash('Database error', 'error')
         return "Database error", 500

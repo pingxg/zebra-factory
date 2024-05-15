@@ -84,3 +84,77 @@ def upload_images():
     db.session.commit()
 
     return jsonify({"message": "Images uploaded and associated with orders successfully"}), 200
+
+
+@deliverynote_bp.route('/get-presigned-urls/<int:order_id>', methods=['GET'])
+@roles_required('admin', 'driver')
+def get_presigned_urls(order_id):
+    # Query to get all image URLs for the given order ID, sorted by update rate (assumed to be the 'updated_at' field)
+    images = DeliveryNoteImage.query.filter_by(order_id=order_id).order_by(DeliveryNoteImage.updated_at).all()
+
+    if not images:
+        return jsonify({"error": "No images found"}), 404
+
+    s3 = boto3.client('s3', config=Config(signature_version='s3v4'))
+    bucket_name = os.getenv('AWS_S3_BUCKET_NAME')
+    presigned_urls = []
+
+    for image in images:
+        presigned_url = s3.generate_presigned_url('get_object',
+                                                  Params={'Bucket': bucket_name, 'Key': image.image_url},
+                                                  ExpiresIn=3600)  # URL expiration time in seconds
+        presigned_urls.append({
+            "image_id": image.id,
+            "presigned_url": presigned_url
+        })
+
+    return jsonify(presigned_urls), 200
+@deliverynote_bp.route('/delete-image', methods=['DELETE'])
+@roles_required('admin', 'driver')
+def delete_image():
+    data = request.get_json()
+    image_id = data.get('image_id')
+    presigned_url = data.get('presigned_url')
+
+    if not presigned_url or not image_id:
+        return jsonify({"error": "Presigned URL and image ID are required"}), 400
+
+    # Extract the key from the presigned URL
+    import urllib
+    from urllib.parse import urlparse
+
+    url_parts = urlparse(presigned_url)
+    key = url_parts.path.lstrip('/').strip()
+    key = urllib.parse.unquote(key)
+
+    s3 = boto3.client(
+        's3',
+        config=Config(signature_version='s3v4'),
+        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+        region_name=os.getenv('AWS_DEFAULT_REGION')
+    )
+    bucket_name = os.getenv('AWS_S3_BUCKET_NAME')
+
+    try:
+        # Attempt to delete the image file from S3
+        response = s3.delete_object(Bucket=bucket_name, Key=key)
+
+        # Check if the image was successfully deleted
+        if response['ResponseMetadata']['HTTPStatusCode'] == 204:
+
+            # Delete the image record from the database
+            image = DeliveryNoteImage.query.get(image_id)
+
+            if image:
+                db.session.delete(image)
+                db.session.commit()
+                flash("Image and corresponding file deleted successfully!", 'success')
+                return jsonify({"message": "Image and corresponding file deleted successfully"}), 200
+            else:
+                return jsonify({"error": "Image record not found in the database"}), 404
+        else:
+            return jsonify({"error": "Failed to delete image from S3"}), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
