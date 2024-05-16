@@ -5,6 +5,31 @@
     <script src="/static/js/orderDetailsScripts.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
 
+
+
+    <script>
+        function emitPrintZebra() {
+            const orderId = "{{ order[0] }}"; 
+            fetch('/print/emit_print_zebra', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ order_id: orderId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'Print event (Zebra) emitted') {
+                    console.log("Print event (Zebra) successfully emitted");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+
+    </script>
     <link rel="stylesheet" href="/static/css/orderDetails.css">
 {% endblock %}
 
@@ -144,6 +169,13 @@
                 </button>
 
                 <!-- "Print Label" Button -->
+                <!-- <button
+                    type="button"
+                    onclick="emitPrintZebra();"
+                    class="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-4 rounded-lg w-full transition duration-300 ease-in-out transform mb-3  {{ 'opacity-50 cursor-not-allowed' if order[6] < order[5]|float*completion_threshold|float else 'hover:from-green-600 hover:to-green-700' }}" 
+                    {{ 'disabled' if order[6] < order[5]|float*completion_threshold|float else '' }}>
+                    <i class="fa-solid fa-receipt"></i> Print Label
+                </button> -->
                 <button
                     type="button"
                     onclick="emitPrintZebra();"
@@ -151,7 +183,6 @@
                     {{ 'disabled' if order[6] < order[5]|float*completion_threshold|float else '' }}>
                     <i class="fa-solid fa-receipt"></i> Print Label
                 </button>
-
             </form>
 
             <div class="flex items-center justify-center gap-2 my-4">

@@ -1,23 +1,4 @@
 
-function emitPrintZebra() {
-    const orderId = "{{ order[0] }}"; 
-    fetch('/print/emit_print_zebra', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ order_id: orderId })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if(data.status === 'Print event (Zebra) emitted') {
-            console.log("Print event (Zebra) successfully emitted");
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-}
 
 
 document.addEventListener('DOMContentLoaded', (event) => {
