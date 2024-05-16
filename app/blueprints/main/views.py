@@ -2,7 +2,7 @@ from flask import render_template, request
 from flask_login import login_required
 from . import main_bp
 from datetime import datetime, timedelta
-from ...models import Customer, Order, Weight, Product, MaterialInfo
+from ...models import Customer, Order, Weight, Product, MaterialInfo, DeliveryNoteImage
 from sqlalchemy import func, case
 from ... import db, socketio
 from collections import defaultdict
@@ -36,6 +36,16 @@ def index():
         selected_date += timedelta(days=1)
 
     if selected_date:
+        image_count_subquery = (
+            db.session.query(
+                DeliveryNoteImage.order_id,
+                func.count(DeliveryNoteImage.id).label('image_count')
+            )
+            .group_by(DeliveryNoteImage.order_id)
+            .subquery()
+        )
+
+
         order_details = (
             db.session.query(
                 Order.id,
@@ -53,10 +63,12 @@ def index():
                     (func.length(Customer.fish_size) == 0, Order.fish_size)],  # If Customer.fish_size is empty, use Order.fish_size
                     else_=func.coalesce(Order.fish_size, Customer.fish_size)
                 ).label("fish_size"),
-                Order.note
+                Order.note,
+                func.coalesce(image_count_subquery.c.image_count, 0).label("image_count")
             )
             .outerjoin(Product, Order.product == Product.product_name)
             .outerjoin(Weight, Order.id == Weight.order_id)
+            .outerjoin(image_count_subquery, Order.id == image_count_subquery.c.order_id)
             .filter(Order.date == selected_date)
             .group_by(Order.id)
             .outerjoin(Customer, Order.customer == Customer.customer)
@@ -82,18 +94,16 @@ def index():
 
         
             if order[9] == 'Lohi':
-
                 key_name = f'{order[8]} | {order[3]} | {order[10]}'
                 if key_name not in details.keys():
                     details[key_name] = np.array([[0, 0], [0, 0]])
                 box_info_total = np.array(calculate_salmon_box(order[5]))
-
                 if float(order[6]) < float(order[5])*float(os.environ.get('COMPLETION_THRESHOLD', 0.9)):
                     box_info_unfinished = np.array(calculate_salmon_box(float(order[5])))
                     details[key_name] = details[key_name] + np.vstack([box_info_total, box_info_unfinished])
                 else:
                     details[key_name] = details[key_name] + np.vstack([box_info_total, [0, 0]])
-
+        print(grouped_orders)
         totals = {key: totals[key] for key in sorted(totals)}
         details = {key: details[key] for key in sorted(details)}
         # Preprocess data

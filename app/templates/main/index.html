@@ -152,7 +152,21 @@
                                             {% endif %}
                                         {% endif %}
                                         ">
+                                        <!-- <div class="text-white font-semibold text-base sm:text-lg">
+                                            {% if order[11] is none or order[11] == '' %}
+                                                {{ order[1] }}
+                                            {% else %}
+                                                <strong style="color: #FF7F50;">*</strong>{{ order[1] }}
+                                            {% endif %}
+                                        </div> -->
                                         <div class="text-white font-semibold text-base sm:text-lg">
+                                            {% if order[6] >= order[5]|float * completion_threshold|float %}
+                                                {% if order[12] > 0 %}
+                                                    <i class="fa-solid fa-circle-check"></i>
+                                                {% else %}
+                                                    <i class="fa-solid fa-truck"></i>
+                                                {% endif %}
+                                            {% endif %}
                                             {% if order[11] is none or order[11] == '' %}
                                                 {{ order[1] }}
                                             {% else %}
@@ -218,6 +232,13 @@
                                         {% endif %}
                                         ">
                                         <div class="text-white font-semibold text-base sm:text-lg">
+                                            {% if order[6] >= order[5]|float * completion_threshold|float %}
+                                                {% if order[12] > 0 %}
+                                                    <i class="fa-solid fa-circle-check"></i>
+                                                {% else %}
+                                                    <i class="fa-solid fa-truck"></i>
+                                                {% endif %}
+                                            {% endif %}
                                             {% if order[11] is none or order[11] == '' %}
                                                 {{ order[1] }}
                                             {% else %}

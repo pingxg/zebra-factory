@@ -109,6 +109,9 @@ def get_presigned_urls(order_id):
         })
 
     return jsonify(presigned_urls), 200
+
+
+
 @deliverynote_bp.route('/delete-image', methods=['DELETE'])
 @roles_required('admin', 'driver')
 def delete_image():
@@ -137,22 +140,28 @@ def delete_image():
     bucket_name = os.getenv('AWS_S3_BUCKET_NAME')
 
     try:
+        # Get the image record by image_id to retrieve the image_url
+        image_record = DeliveryNoteImage.query.get(image_id)
+        if not image_record:
+            return jsonify({"error": "Image record not found in the database"}), 404
+        
+        image_url = image_record.image_url
+
         # Attempt to delete the image file from S3
         response = s3.delete_object(Bucket=bucket_name, Key=key)
-
-        # Check if the image was successfully deleted
+        
+        # Check if the image was successfully deleted from S3
         if response['ResponseMetadata']['HTTPStatusCode'] == 204:
+            # Find all image records with the same image URL
+            images = DeliveryNoteImage.query.filter_by(image_url=image_url).all()
 
-            # Delete the image record from the database
-            image = DeliveryNoteImage.query.get(image_id)
-
-            if image:
+            # Delete all found image records from the database
+            for image in images:
                 db.session.delete(image)
-                db.session.commit()
-                flash("Image and corresponding file deleted successfully!", 'success')
-                return jsonify({"message": "Image and corresponding file deleted successfully"}), 200
-            else:
-                return jsonify({"error": "Image record not found in the database"}), 404
+            db.session.commit()
+            
+            flash("All related image records and corresponding file deleted successfully!", 'success')
+            return jsonify({"message": "All related image records and corresponding file deleted successfully"}), 200
         else:
             return jsonify({"error": "Failed to delete image from S3"}), 500
 
