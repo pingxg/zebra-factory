@@ -41,11 +41,9 @@ def generate_delivery_note(date, customer=None):
                 if re.match(pattern, filename):
                     full_path = os.path.join("temp", filename)
                     matching_files.append(full_path)
-                    matching_files.append(full_path)
 
             pdf_file_name = f"{date}.pdf"
         else:
-            matching_files.append(os.path.join("temp", pdf_file_name))
             matching_files.append(os.path.join("temp", pdf_file_name))
 
         writer = PdfWriter()
