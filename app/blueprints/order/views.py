@@ -117,7 +117,13 @@ def order_detail(order_id: int) -> str:
             flash('Order not found', 'error')
             return "Order not found", 404
 
-        s3 = boto3.client('s3', config=Config(signature_version='s3v4'))
+        s3 = boto3.client(
+            's3',
+            config=Config(signature_version='s3v4'),
+            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+            region_name=os.getenv('AWS_DEFAULT_REGION')
+        )   
         bucket_name = os.getenv('AWS_S3_BUCKET_NAME')
         presigned_urls = []
 

@@ -103,7 +103,6 @@ def index():
                     details[key_name] = details[key_name] + np.vstack([box_info_total, box_info_unfinished])
                 else:
                     details[key_name] = details[key_name] + np.vstack([box_info_total, [0, 0]])
-        print(grouped_orders)
         totals = {key: totals[key] for key in sorted(totals)}
         details = {key: details[key] for key in sorted(details)}
         # Preprocess data
