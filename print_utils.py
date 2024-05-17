@@ -48,66 +48,9 @@ def print_zebra(zpl_data=None, printer_name=os.environ.get('ZEBRA_PRINTER_NAME')
 
 
 
-def print_document(pdf_path, printer_name=os.environ.get('DEFAULT_PRINTER_NAME')):
-    # Path to Adobe Reader or Adobe Acrobat. Adjust if it's located differently on your system.
-    acrobat_path = os.environ.get('ACROBAT_PATH')
-
-    # Command to send to the shell
-    cmd = f'"{acrobat_path}" /N /T "{pdf_path}" "{printer_name}"'
-
-    win32api.WinExec(cmd)
-
-
-def random_string(length=10):
-    characters = string.ascii_letters + string.digits
-    return ''.join(random.choices(characters, k=length))
-
-def generate_random_hash():
-    random_data = random_string()
-    result = hashlib.sha256(random_data.encode()).hexdigest()
-    return result
-
-
-def images_to_pdf(img_path, output_dir='temp', repetition=1):
-    # Create a list to store the images
-    img_list = []
-    img = Image.open(img_path).convert('RGB')
-    
-    # Append the image to the list the specified number of times
-    for _ in range(repetition):
-        img_list.append(img)
-
-    # Save images to a single PDF
-    if img_list:
-        output_path = os.path.join(output_dir, f"{os.path.splitext(img_path)[0].split('/')[1]}.pdf")
-        img_list[0].save(output_path, save_all=True, append_images=img_list[1:])
-        print(f"PDF saved at {output_path}")
-    else:
-        print("No image files found in the folder.")
-
-def delete_directory(directory_path):
-    try:
-        shutil.rmtree(directory_path)
-        print(f"Directory '{directory_path}' has been deleted.")
-    except Exception as e:
-        print(f"Error: {e}")
-
-def create_directory_if_not_exists(directory_path):
-    """
-    Creates the specified directory if it doesn't exist.
-
-    Args:
-    - directory_path (str): The path to the directory to create.
-
-    Returns:
-    - None
-    """
-    if not os.path.exists(directory_path):
-        os.makedirs(directory_path)
 
 
 def pdf_render_print(order_id, file_type, folder_path="temp"):
-    create_directory_if_not_exists(folder_path)
     if not order_id:
         return None
     query = text("""
@@ -162,29 +105,8 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 delivery_note_data[column] = round(df[column].sum(),2)
             else:
                 delivery_note_data[column] = df[column].iloc[0]
-        if file_type =="pdf":
-            env = Environment(loader=FileSystemLoader('.'))
-            template = env.get_template('app/templates/salmon_delivery_template.html')
-            rendered_html = template.render(delivery_note_data)
-            hti = Html2Image(
-                size=(2142, 3000),
-                # custom_flags=['--no-sandbox', '--headless', '--disable-gpu', '--disable-software-rasterizer', '--disable-dev-shm-usage'],
-                output_path=folder_path
-                )
-            # hti.browser_executable = "chromedriver.exe"
-            random_hash = generate_random_hash()
-            image_name = f'{random_hash}.png'
-            image_path = f'{folder_path}/{image_name}'
-            hti.screenshot(
-                html_str=rendered_html,
-                save_as=image_name,
-                )
-            images_to_pdf(image_path, output_dir='temp', repetition=2)
-            if os.path.isfile(os.path.join(folder_path, f"{random_hash}.pdf")):
-                print_document(os.path.join(folder_path, f"{random_hash}.pdf"))
 
-                pass
-        elif file_type =="zpl":
+        if file_type =="zpl":
             zebra_print_list = zebra_generator(df)
             for i in zebra_print_list:
                 print_zebra(zpl_data=i)

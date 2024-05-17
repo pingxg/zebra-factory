@@ -36,19 +36,6 @@ def on_print(data):
     else:
         logger.warning("Received 'print_zebra' event without order ID.")
 
-@sio.on('print_pdf')
-def on_print(data):
-    """Callback for handling 'print_pdf' events from the server."""
-    order_id = data.get('order_id')
-    if order_id:
-        logger.info(f"Received order ID: {order_id}. Printing PDF.")
-        try:
-            pdf_render_print(order_id, file_type="pdf")
-        except Exception as e:
-            logger.error(f"Error while processing order ID {order_id}: {e}")
-    else:
-        logger.warning("Received 'print_pdf' event without order ID.")
-
 
 @sio.on('keepalive_response')
 def on_keepalive_response(data):
