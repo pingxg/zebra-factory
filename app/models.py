@@ -109,6 +109,7 @@ class Product(db.Model):
     product_type = db.Column(db.String)
     active = db.Column(db.Integer)
     note = db.Column(db.String)
+    display_name = db.Column(db.String)
     @classmethod
     def get_active_products(cls):
         """

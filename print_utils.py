@@ -61,7 +61,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 c.company AS customer,
                 c.phone AS phone,
                 o.date, 
-                o.product,
+                p.display_name,
                 p.note AS product_note,
                 COALESCE(o.price * 1.14, 0) AS price, 
                 o.quantity AS weight, 
@@ -261,7 +261,7 @@ def zebra_generator(df):
 
     ; Add recipient
     ^FO70,140^A0R,15,15^FDAsiakas / Kund^FS
-    ^FO30,140^A0R,35,30^FD{store}^FS
+    ^FO30,140^A0R,35,25^FD{store}^FS
 
     ; Add box count
     ^FO70,330^A0R,15,15^FDLaatikoita yhteensä / Totala lådor^FS

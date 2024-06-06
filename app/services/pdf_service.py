@@ -1,6 +1,6 @@
 from collections import defaultdict
 from sqlalchemy import func
-from ..models import Customer, Order, Weight
+from ..models import Customer, Order, Weight, Product
 from .. import db
 
 
@@ -22,13 +22,14 @@ def get_data_for_pdf(date, customer=None):
         Order.date,
         Customer.note,
         Customer.priority,
-        Order.product,
+        Product.display_name,
         (func.coalesce(Order.price * 1.14, 0)).label("price"),
         Order.quantity.label("weight"),
         subquery.c.delivered,
     )\
     .outerjoin(subquery, Order.id == subquery.c.order_id) \
     .outerjoin(Customer, Order.customer == Customer.customer)\
+    .outerjoin(Product, Order.product == Product.product_name)\
     .filter(Order.date == date)\
     .order_by(Customer.priority.asc(), Order.customer.asc(), Order.product.asc())
 
