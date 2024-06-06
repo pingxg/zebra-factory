@@ -61,7 +61,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 c.company AS customer,
                 c.phone AS phone,
                 o.date, 
-                p.display_name,
+                p.display_name AS product,
                 p.note AS product_note,
                 COALESCE(o.price * 1.14, 0) AS price, 
                 o.quantity AS weight, 
