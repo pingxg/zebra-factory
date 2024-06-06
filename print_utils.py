@@ -234,9 +234,6 @@ def zebra_generator(df):
     ; Add Product name
     ^FO270,30^A0R,15,15^FDAinesosat / Ingredienser^FS
     ^FO240,30^A0R,20,20^FDViljelty LOHI / Odlad LAX (Salmo Salar)^FS
-    ; Add Product note
-    ^FO210,30^A0R,20,20^FDNOTE: {product_note}^FS
-
 
     ; Add Product treatment
     ^FO270,360^A0R,15,15^FDTuote / Produkt^FS
