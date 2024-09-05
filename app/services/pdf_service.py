@@ -15,23 +15,23 @@ def get_data_for_pdf(date, customer=None):
     )
 
     query = db.session.query(
-        Order.customer.label("store"), 
+        Order.customer.label("store"),
         Customer.company.label("customer"),
         Customer.address,
         Customer.phone,
         Order.date,
         Customer.note,
-        func.substring_index(Customer.priority, ' ', 1).label("priority"),
+        Customer.priority,
         Product.display_name,
         (func.coalesce(Order.price * 1.14, 0)).label("price"),
         Order.quantity.label("weight"),
         subquery.c.delivered,
-    )\
+    ) \
     .outerjoin(subquery, Order.id == subquery.c.order_id) \
-    .outerjoin(Customer, Order.customer == Customer.customer)\
-    .outerjoin(Product, Order.product == Product.product_name)\
+    .outerjoin(Customer, Order.customer == Customer.customer) \
+    .outerjoin(Product, Order.product == Product.product_name) \
     .filter(Order.date == date)\
-    .order_by(func.substring_index(Customer.priority, ' ', 1).asc(), Order.customer.asc(), Order.product.asc())
+    .order_by(Customer.priority.asc(), Order.customer.asc(), Order.product.asc())
 
     # Apply customer filter if customer is provided
     if customer:

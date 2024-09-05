@@ -10,9 +10,9 @@ class OrderService:
         try:
             order = (
                 db.session.query(
-                    Order.id, 
-                    Order.customer, 
-                    Order.date, 
+                    Order.id,
+                    Order.customer,
+                    Order.date,
                     Order.product,
                     (func.coalesce(Order.price * 1.14, 0)).label("price"),
                     Order.quantity,
