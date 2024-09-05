@@ -21,7 +21,7 @@ def get_data_for_pdf(date, customer=None):
         Customer.phone,
         Order.date,
         Customer.note,
-        Customer.priority,
+        func.substring_index(Customer.priority, ' ', 1).label("priority"),
         Product.display_name,
         (func.coalesce(Order.price * 1.14, 0)).label("price"),
         Order.quantity.label("weight"),
@@ -31,7 +31,7 @@ def get_data_for_pdf(date, customer=None):
     .outerjoin(Customer, Order.customer == Customer.customer)\
     .outerjoin(Product, Order.product == Product.product_name)\
     .filter(Order.date == date)\
-    .order_by(Customer.priority.asc(), Order.customer.asc(), Order.product.asc())
+    .order_by(func.substring_index(Customer.priority, ' ', 1).asc(), Order.customer.asc(), Order.product.asc())
 
     # Apply customer filter if customer is provided
     if customer:

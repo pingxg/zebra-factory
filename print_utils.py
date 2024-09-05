@@ -66,7 +66,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 COALESCE(o.price * 1.14, 0) AS price, 
                 o.quantity AS weight, 
                 w.quantity AS delivered,
-                LEFT(c.priority, 1) AS priority,
+                SUBSTRING_INDEX(c.priority, ' ', 1) AS priority,
                 COUNT(*) OVER () AS box_count
             FROM
                 salmon_orders o

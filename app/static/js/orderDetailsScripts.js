@@ -4,26 +4,26 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     let customerNameSpan = document.querySelector(".customer-name");
     let containerWidth = customerNameSpan.parentElement.offsetWidth;
-    
-    while(customerNameSpan.offsetWidth > containerWidth && parseInt(window.getComputedStyle(customerNameSpan).fontSize) > 10) {
+
+    while (customerNameSpan.offsetWidth > containerWidth && parseInt(window.getComputedStyle(customerNameSpan).fontSize) > 10) {
         let currentSize = parseInt(window.getComputedStyle(customerNameSpan).fontSize);
         customerNameSpan.style.fontSize = (currentSize - 1) + "px";
     }
 });
 
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('addReading'); // Make sure your form has this ID
     const submitBtn = document.getElementById('submitBtn');
-    form.onsubmit = function() {
+    form.onsubmit = function () {
         submitBtn.disabled = true; // Disable the button
         submitBtn.innerText = 'Processing...'; // Optional: Change button text
-        
+
     };
 });
 
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const editBtns = document.querySelectorAll('.edit-btn');
     const editModal = document.getElementById('editModal');
     const editInput = document.getElementById('editWeightInput');
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentEditingWeightId = null;
 
     editBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             event.preventDefault();  // Prevent the default behavior
             currentEditingWeightId = this.getAttribute('data-weight-id');
             order_id = this.getAttribute('data-order-id');
@@ -42,17 +42,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    saveEditBtn.addEventListener('click', function() {
+    saveEditBtn.addEventListener('click', function () {
         console.log("Save button clicked");  // Add this line
 
-            const newValue = editInput.value;
-            const response = fetch(`/weight/edit/${currentEditingWeightId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ edit_weight: newValue }),
-            })
+        const newValue = editInput.value;
+        const response = fetch(`/weight/edit/${currentEditingWeightId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ edit_weight: newValue }),
+        })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -71,9 +71,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.log("Fetch error:", error);  // Log the error
             });
-        });
+    });
 
-    cancelEditBtn.addEventListener('click', function() {
+    cancelEditBtn.addEventListener('click', function () {
         editModal.classList.add('hidden');
     });
 });
@@ -83,12 +83,12 @@ document.addEventListener('DOMContentLoaded', function() {
 function showDeleteConfirmation(deleteUrl) {
     // Set the form's action to the provided delete URL
     document.getElementById('deleteForm').action = deleteUrl;
-    
+
     // Show the delete confirmation modal
     document.getElementById('deleteConfirmationModal').classList.remove('hidden');
 }
 
-document.getElementById('cancelDelete').addEventListener('click', function() {
+document.getElementById('cancelDelete').addEventListener('click', function () {
     // Hide the delete confirmation modal
     document.getElementById('deleteConfirmationModal').classList.add('hidden');
 });
@@ -98,84 +98,84 @@ document.getElementById('cancelDelete').addEventListener('click', function() {
 Dropzone.autoDiscover = false;
 
 const uploader = new Dropzone("#upload-widget", {
-  dictDefaultMessage: "Drop or click here to add files",
-  url: "https://endpoint.s3.amazonaws.com/",  // will be overwritten dynamically
-  method: "POST",
-  timeout: 3600000,
-  parallelUploads: 100,
-  maxFilesize: 5,  // MB
-  autoProcessQueue: false,
-  addRemoveLinks: true,
-  createImageThumbnails: false,
-  accept: function (file, done) {
-    const req = new XMLHttpRequest();
-    req.onreadystatechange = () => {
-      if (req.readyState === XMLHttpRequest.DONE) {
-        if (req.status === 200) {
-          const signedPost = JSON.parse(req.responseText);
-          this.options.url = signedPost.url;
-          file.signedPost = signedPost;
-          done();
-        } else {
-          done("Fail to get pre-signed url.");
-        }
-      }
-    };
-    req.open("POST", '/deliverynote/get-presigned-post');
-    req.setRequestHeader("Content-type", "application/json; charset=UTF-8");
+    dictDefaultMessage: "Drop or click here to add files",
+    url: "https://endpoint.s3.amazonaws.com/",  // will be overwritten dynamically
+    method: "POST",
+    timeout: 3600000,
+    parallelUploads: 100,
+    maxFilesize: 5,  // MB
+    autoProcessQueue: false,
+    addRemoveLinks: true,
+    createImageThumbnails: false,
+    accept: function (file, done) {
+        const req = new XMLHttpRequest();
+        req.onreadystatechange = () => {
+            if (req.readyState === XMLHttpRequest.DONE) {
+                if (req.status === 200) {
+                    const signedPost = JSON.parse(req.responseText);
+                    this.options.url = signedPost.url;
+                    file.signedPost = signedPost;
+                    done();
+                } else {
+                    done("Fail to get pre-signed url.");
+                }
+            }
+        };
+        req.open("POST", '/deliverynote/get-presigned-post');
+        req.setRequestHeader("Content-type", "application/json; charset=UTF-8");
 
-    // Add payload to request to include file information
-    const payload = JSON.stringify({ filename: file.name, filetype: file.type });
-    req.send(payload);
-  },
+        // Add payload to request to include file information
+        const payload = JSON.stringify({ filename: file.name, filetype: file.type });
+        req.send(payload);
+    },
 });
 
 uploader.on('sending', (file, xhr, formData) => {
-  const fields = file.signedPost.fields;
-  Object.keys(fields).forEach(k => formData.append(k, fields[k]));
-  formData.append('Content-Type', file.type);  // Ensure Content-Type is set
+    const fields = file.signedPost.fields;
+    Object.keys(fields).forEach(k => formData.append(k, fields[k]));
+    formData.append('Content-Type', file.type);  // Ensure Content-Type is set
 });
 
 uploader.on("success", (file, response) => {
-  const imageUrl = file.signedPost.fields.key;
-  // Store imageUrl in a global array
-  uploadedImages.push(imageUrl);
+    const imageUrl = file.signedPost.fields.key;
+    // Store imageUrl in a global array
+    uploadedImages.push(imageUrl);
 });
 
 uploader.on("queuecomplete", () => {
     fetch('/deliverynote/update-image-links', {
         method: 'POST',
         headers: {
-        'Content-Type': 'application/json'
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-        customer_name: customerName,
-        date: date,
-        image_urls: uploadedImages
+            customer_name: customerName,
+            date: date,
+            image_urls: uploadedImages
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message) {
-            flash(data.message);
-            location.reload();  // Refresh the page upon success
-        } else {
-            alert('Failed to associate images with orders');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-    
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                flash(data.message);
+                location.reload();  // Refresh the page upon success
+            } else {
+                alert('Failed to associate images with orders');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+
     // Clear the uploadedImages array after processing
     uploadedImages = [];
-    });
+});
 
-    document.querySelector("#dropzone-btn").addEventListener("click", function(e) {
+document.querySelector("#dropzone-btn").addEventListener("click", function (e) {
     e.preventDefault();
     e.stopPropagation();
     uploader.processQueue();
-    });
+});
 
 // Global array to store uploaded image URLs
 let uploadedImages = [];
@@ -192,18 +192,18 @@ function showDeleteImageConfirmation(imageId, presignedUrl, deleteUrl) {
             },
             body: JSON.stringify({ image_id: imageId, presigned_url: presignedUrl })
         })
-        .then(response => {
-            if (response.ok) {
-                location.reload();
-            } else {
-                response.json().then(data => {
-                    alert('Error deleting the image: ' + data.error);
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error deleting the image.');
-        });
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    response.json().then(data => {
+                        alert('Error deleting the image: ' + data.error);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting the image.');
+            });
     }
 }
