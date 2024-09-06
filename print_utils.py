@@ -232,7 +232,7 @@ def zebra_generator(df):
 
     ; Add Priority
     ^FO390,445^A0R,15,12^FDEtusijalla / Prioritet^FS
-    ^FO280,470^A0R,90,90^FD{priority}^FS
+    ^FO280,460^A0R,80,80^FD{priority}^FS
 
 
     ; Add Product origin country
@@ -276,7 +276,7 @@ def zebra_generator(df):
     ; End of label
     ^XZ
     """
-
+    df['priority'] = df['priority'].str.split(' ').str[1]
     zpl_labels = []
     for _, row in df.iterrows():
         if 'Frozen' in row['product']:
