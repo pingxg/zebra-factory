@@ -47,16 +47,6 @@ def print_zebra(zpl_data=None, printer_name=os.environ.get('ZEBRA_PRINTER_NAME')
         win32print.ClosePrinter(hprinter)
 
 
-                # CASE 
-                #     WHEN c.priority = '0 Special handling' THEN '0-SPC'
-                #     WHEN c.priority = '1 Jyväskylä' THEN '1-JYV'
-                #     WHEN c.priority = '1 Tampere' THEN '1-TMP'
-                #     WHEN c.priority = '1 Turku' THEN '1-TUK'
-                #     WHEN c.priority = '3 Helsinki-outer' THEN '3-HEL-O'
-                #     WHEN c.priority = '4 Helsinki-inner' THEN '4-HEL-I'
-                #     WHEN c.priority = '5 Espoo' THEN '5-ESP'
-                # END AS priority,
-
 
 def pdf_render_print(order_id, file_type, folder_path="temp"):
     if not order_id:
