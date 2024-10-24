@@ -13,24 +13,23 @@ import os
 def add(order_id):
     if request.method == 'POST':
         scale_reading = float(request.form['scale_reading'])
-        # batch_number = request.form['batch_number']
-        # try:
-        #     batch_number = int(batch_number)
-        # except ValueError:
-        #     flash('Batch number not specified! Using the previous batch number.', 'info')
-        #     batch_number = (
-        #         db.session.query(
-        #             MaterialInfo.batch_number, 
-        #         )
-        #         .order_by(MaterialInfo.date.desc())
-        #         .first()
-        #     )
+        try:
+            batch_number = int(request.form['batch_number'])
+        except ValueError:
+            # flash('Batch number not specified! Using the previous batch number.', 'info')
+            batch_number = (
+                db.session.query(
+                    MaterialInfo.batch_number, 
+                )
+                .order_by(MaterialInfo.date.desc())
+                .first()
+            )
 
         weight = Weight(
             order_id=order_id, 
             quantity=scale_reading, 
             production_time=datetime.now(pytz.timezone(os.environ.get('TIMEZONE'))),
-            # batch_number=batch_number
+            batch_number=batch_number
         )
         db.session.add(weight)
         db.session.commit()
