@@ -238,8 +238,8 @@
                 </div>
             </form>
             <div style="display: flex; gap: 10px; width: 100%;">
-                <button type="button"
-                    onclick="location.href='{{ url_for('deliverynote.generate_pdf', date=order[2], customer=order[1]) }}'"
+                <button type="button" // Start of Selection // Start of Selection
+                    onclick='location.href={{ url_for("deliverynote.generate_pdf", date=order[2], customer=order[1]) | tojson }}'
                     class="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform mb-3 flex-1 {{ 'opacity-50 cursor-not-allowed' if order[6] < order[5]|float*completion_threshold|float else 'hover:from-green-600 hover:to-green-700' }}"
                     {{ 'disabled' if order[6] < order[5]|float*completion_threshold|float else '' }}>
                     <i class="fa-solid fa-file-pdf"></i> Download Note
