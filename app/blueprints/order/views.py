@@ -9,7 +9,7 @@ from sqlalchemy import func, case
 from . import order_bp
 from ... import db
 from ...models import Order, Weight, MaterialInfo, Customer, DeliveryNoteImage
-from ...utils.date_utils import calculate_current_iso_week
+from ...utils.date_utils import calculate_current_iso_week, adjust_week
 from ...services.order_service import OrderService
 from ...utils.auth_decorators import permission_required, roles_required
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -20,19 +20,16 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 def order() -> str:
     week_str: str = request.args.get("week", calculate_current_iso_week())
 
+    # Adjust the week based on button clicks
+    if "prev_week" in request.args:
+        week_str = adjust_week(week_str, -1)
+    elif "next_week" in request.args:
+        week_str = adjust_week(week_str, 1)
+
+    # Parse the adjusted week string to get start and end dates
     year, week = map(int, week_str.split("-W"))
     start_date: date = date.fromisocalendar(year, week, 1)
     end_date: date = start_date + timedelta(days=6)
-
-    # Check if prev_week or next_week buttons were clicked
-    if "prev_week" in request.args:
-        start_date -= timedelta(weeks=1)
-    elif "next_week" in request.args:
-        start_date += timedelta(weeks=1)
-    end_date = start_date + timedelta(days=6)
-
-    # Update week_str to reflect the new week
-    week_str = f"{start_date.year}-W{start_date.isocalendar()[1]:02d}"
 
     try:
         orders = (
