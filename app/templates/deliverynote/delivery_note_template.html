@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
         @page {
             size: A4 portrait;
             margin: 2cm;
+
             @frame header_frame {
                 -pdf-frame-content: header_content;
                 left: 40pt;
@@ -16,6 +18,7 @@
                 height: 230pt;
 
             }
+
             @frame content_frame {
                 left: 40pt;
                 width: 512pt;
@@ -23,6 +26,7 @@
                 height: 480pt;
 
             }
+
             @frame footer_frame {
                 -pdf-frame-content: footer_content;
                 left: 40pt;
@@ -33,71 +37,78 @@
         }
 
         .hr {
-        border: none; /* Removes default border */
-        height: 1px; /* Height of the line */
-        background-color: #333; /* Color of the line */
-        width: 90%; /* Width of the line */
-        /* margin: auto; */
+            border: none;
+            /* Removes default border */
+            height: 1px;
+            /* Height of the line */
+            background-color: #333;
+            /* Color of the line */
+            width: 90%;
+            /* Width of the line */
+            /* margin: auto; */
         }
     </style>
 </head>
 
 
 <body>
-    <div id="header_content" >
+    <div id="header_content">
         <h1>
             Delivery Note<br>
             Issue Date: {{ data.date }}
         </h1>
         <hr>
         {% if data %}
-            <table style="font-size: 15px;">
-                <tbody>
-                    <tr>
-                        <th style="text-align: left;">Store</th>
-                        <td>{{ data.store }}</td>
-                    </tr>
-                    <tr>
-                        <th style="text-align: left;">Company</th>
-                        <td>{{ data.customer }}</td>
-                    </tr>
-                    <tr>
-                        <th style="text-align: left;">Address</th>
-                        <td>{{ data.address }}</td>
-                    </tr>
-                    <tr>
-                        <th style="text-align: left;">Contact</th>
-                        <td>{{ data.phone }}</td>
-                    </tr>
-                    <tr>
-                        <th style="text-align: left;">Delivery Date</th>
-                        <td>{{ data.date }}</td>
-                    </tr>
-                    <tr>
-                        <th style="text-align: left;">Note</th>
-                        <td>{{ data.note }}</td>
-                    </tr>
-                    <tr>
-                        <th style="text-align: left;">Priority</th>
-                        <td>{{ data.priority }}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <table style="font-size: 15px;">
+            <tbody>
+                <tr>
+                    <th style="text-align: left;">Store</th>
+                    <td>{{ data.store }}</td>
+                </tr>
+                <tr>
+                    <th style="text-align: left;">Company</th>
+                    <td>{{ data.customer }}</td>
+                </tr>
+                <tr>
+                    <th style="text-align: left;">Address</th>
+                    <td>{{ data.address }}</td>
+                </tr>
+                <tr>
+                    <th style="text-align: left;">Contact</th>
+                    <td>{{ data.phone }}</td>
+                </tr>
+                <tr>
+                    <th style="text-align: left;">Delivery Date</th>
+                    <td>{{ data.date }}</td>
+                </tr>
+                <tr>
+                    <th style="text-align: left;">Note</th>
+                    <td>{{ data.note }}</td>
+                </tr>
+                <tr>
+                    <th style="text-align: left;">Priority</th>
+                    <td>{{ data.priority }}</td>
+                </tr>
+            </tbody>
+        </table>
         {% endif %}
 
     </div>
 
 
     <div id="footer_content">
-        The product or a fish product made from it may not be delivered to other EU member states except Finland and Sweden.<br>
-        The product or the fish product made from it may not be delivered to other countries except Finland, Sweden and Latvia.<br>
+        The product or a fish product made from it may not be delivered to other EU member states except Finland and
+        Sweden.<br>
+        The product or the fish product made from it may not be delivered to other countries except Finland, Sweden and
+        Latvia.<br>
         <hr>
         <div>
             <table style="font-size: 10px;">
                 <tbody>
                     <tr>
                         <td style="text-align: left;">Spartao Oy, 2938534-6</td>
-                        <td style="text-align: center;">Page <pdf:pagenumber>/<pdf:pagecount></td>
+                        <td style="text-align: center;">Page <pdf:pagenumber>/<pdf:pagecount>
+                        </td>
                         <td style="text-align: center; font-size: 15px;"><strong>{{ data.priority }}</strong></td>
                     </tr>
                     <tr>
@@ -109,32 +120,30 @@
                 </tbody>
             </table>
         </div>
-        
+
     </div>
 
 
     <div>
 
-    {% if data %}
-    <hr>
+        {% if data %}
+        <hr>
         <table style="font-size: 14px;">
             <thead>
                 <tr>
                     <th>Product</th>
                     <th>Ordered kg</th>
-                    <th>Price €/kg, VAT14</th>
                     <th>Delivered kg</th>
                 </tr>
             </thead>
             <tbody>
                 {% if data.order_detail %}
                 {% for i in range(data.order_detail|length) %}
-                    <tr>
-                        <td style="text-align: left;">{{ data.order_detail[i].product }}</td>
-                        <td style="text-align: center;">{{ data.order_detail[i].weight }}</td>
-                        <td style="text-align: center;">{{ data.order_detail[i].price }}</td>
-                        <td style="text-align: center;">{{ data.order_detail[i].delivered }}</td>
-                    </tr>
+                <tr>
+                    <td style="text-align: left;">{{ data.order_detail[i].product }}</td>
+                    <td style="text-align: center;">{{ data.order_detail[i].weight }}</td>
+                    <td style="text-align: center;">{{ data.order_detail[i].delivered }}</td>
+                </tr>
                 {% endfor %}
                 {% endif %}
             </tbody>
@@ -146,34 +155,34 @@
         <table style="font-size: 12px;">
             <tbody>
                 {% if data.contain_lohi %}
-                    <tr>
-                        <th style="text-align: left;">Production date (fresh lohi)</th>
-                        <td>{{ data.date }}</td>
-                    </tr>
-                    <tr>
-                        <th style="text-align: left;">Expiry date (+6d, fresh lohi)</th>
-                        <td>{{ data.date | add_days(6) }}</td>
-                    </tr>
+                <tr>
+                    <th style="text-align: left;">Production date (fresh lohi)</th>
+                    <td>{{ data.date }}</td>
+                </tr>
+                <tr>
+                    <th style="text-align: left;">Expiry date (+6d, fresh lohi)</th>
+                    <td>{{ data.date | add_days(6) }}</td>
+                </tr>
                 {% endif %}
 
                 {% if data.contain_frozen %}
-                    <tr>
-                        <th style="text-align: left;">Expiry date (+90d, frozen lohi)</th>
-                        <td>{{  data.date | add_days(90) }}</td>
-                    </tr>
+                <tr>
+                    <th style="text-align: left;">Expiry date (+90d, frozen lohi)</th>
+                    <td>{{ data.date | add_days(90) }}</td>
+                </tr>
                 {% endif %}
 
                 {% if data.contain_lohi or data.contain_frozen %}
-                    <tr>
-                        <th style="text-align: left;">Country of origin (lohi)</th>
-                        <td>Norway</td>
-                    </tr>
+                <tr>
+                    <th style="text-align: left;">Country of origin (lohi)</th>
+                    <td>Norway</td>
+                </tr>
                 {% endif %}
                 {% if data.contain_other %}
-                    <tr>
-                        <th style="text-align: left;">Expiry date (non-lohi product)</th>
-                        <td>Check packadge</td>
-                    </tr>
+                <tr>
+                    <th style="text-align: left;">Expiry date (non-lohi product)</th>
+                    <td>Check packadge</td>
+                </tr>
                 {% endif %}
 
                 <tr></tr>
@@ -186,10 +195,11 @@
 
             </tbody>
         </table>
-    {% endif %}
+        {% endif %}
 
-</div>
+    </div>
 
 
 </body>
+
 </html>
