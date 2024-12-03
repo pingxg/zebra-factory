@@ -297,36 +297,36 @@ def zebra_generator(df):
 
     ; Add Product name
     ^FO330,40^A0R,20,20^FDAinesosat / Ingredienser^FS
-    ^FO300,40^A0R,25,25^FDViljelty LOHI / Odlad LAX (Salmo Salar)^FS
+    ^FO290,40^A0R,25,25^FDViljelty LOHI / Odlad LAX (Salmo Salar)^FS
 
     ; Add Product treatment
     ^FO330,470^A0R,20,20^FDTuote / Produkt^FS
-    ^FO300,470^A0R,35,35^FD{product}^FS
+    ^FO290,470^A0R,30,25^FD{product}^FS
 
     ; Add temperature
     ^FO230,40^A0R,20,20^FDSäilytys / Förvaring^FS
-    ^FO180,40^A0R,25,25^FD{temperature_info}^FS
+    ^FO170,40^A0R,25,25^FD{temperature_info}^FS
 
     ; Add an Expiration date
     ^FO230,260^A0R,20,20^FDViimeinen käyttöpäivä^FS
     ^FO200,260^A0R,20,20^FD/ Sista förbrukningsdag^FS
-    ^FO180,260^A0R,25,25^FD{expiry_info}^FS
+    ^FO170,260^A0R,25,25^FD{expiry_info}^FS
 
     ; Add net weight
     ^FO230,520^A0R,20,20^FDNettopaino / Nettovikt^FS
-    ^FO180,570^A0R,35,35^FD{delivered} KG^FS
+    ^FO170,570^A0R,35,35^FD{delivered} KG^FS
 
     ; Add order ID
     ^FO100,40^A0R,20,20^FDTilausnumero^FS
-    ^FO70,40^A0R,25,25^FD{order_id}^FS
+    ^FO60,40^A0R,25,25^FD{order_id}^FS
 
     ; Add recipient
     ^FO100,180^A0R,20,20^FDAsiakas / Kund^FS
-    ^FO60,180^A0R,40,35^FD{store}^FS
+    ^FO50,180^A0R,40,35^FD{store}^FS
 
     ; Add box count
     ^FO100,430^A0R,20,20^FDLaatikoita yhteensä / Totala lådor^FS
-    ^FO60,600^A0R,40,40^FD{box_count} CTN^FS
+    ^FO50,600^A0R,40,40^FD{box_count} CTN^FS
 
     ; End of label
     ^XZ
