@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required, logout_user, login_user
-from werkzeug.security import check_password_hash
-from ... import login_manager
+from werkzeug.security import check_password_hash, generate_password_hash
+from ... import login_manager, db
 from ...models import User
 from . import auth_bp
 
@@ -47,3 +47,10 @@ def logout():
     logout_user()
     flash("Logout successful!" , 'info')
     return redirect(url_for('auth.login'))
+
+
+# def set_user_password(email, new_password):
+#     # Hash the new password
+#     hashed_password = generate_password_hash(new_password, method='pbkdf2:sha256')
+#     # Update the user's password
+#     print(hashed_password)
