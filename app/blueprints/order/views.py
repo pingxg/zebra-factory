@@ -17,6 +17,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 @order_bp.route("/", methods=["GET", "POST"])
 @login_required
+@roles_required("admin")
 def order() -> str:
     week_str: str = request.args.get("week", calculate_current_iso_week())
 
