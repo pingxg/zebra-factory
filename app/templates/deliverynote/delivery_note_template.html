@@ -133,6 +133,7 @@
                 <tr>
                     <th>Product</th>
                     <th>Ordered kg</th>
+                    <th>Price €/kg</th>
                     <th>Delivered kg</th>
                 </tr>
             </thead>
@@ -142,6 +143,7 @@
                 <tr>
                     <td style="text-align: left;">{{ data.order_detail[i].product }}</td>
                     <td style="text-align: center;">{{ data.order_detail[i].weight }}</td>
+                    <td style="text-align: center;">{{ data.order_detail[i].price }}</td>
                     <td style="text-align: center;">{{ data.order_detail[i].delivered }}</td>
                 </tr>
                 {% endfor %}
