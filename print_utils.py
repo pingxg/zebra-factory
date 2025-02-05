@@ -82,7 +82,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
         
         df = pd.DataFrame(result.fetchall(), columns=result.keys())
         df['expiry_date_fresh'] = df['date'] + pd.Timedelta(days=6)
-        df['expiry_date_frozen'] = df['date'] + pd.Timedelta(days=90)
+        df['expiry_date_frozen'] = df['date'] + pd.Timedelta(days=180)
 
         df['date'] = pd.to_datetime(df['date'])
         df['expiry_date_fresh'] = pd.to_datetime(df['expiry_date_fresh'])
