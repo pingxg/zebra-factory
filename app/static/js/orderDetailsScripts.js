@@ -228,30 +228,18 @@ function scanQRCode() {
 
     const statusDiv = document.getElementById('scannerStatus');
 
-    // First check if the browser supports the permissions API
-    if (navigator.permissions && navigator.permissions.query) {
-        navigator.permissions.query({ name: 'camera' })
-            .then(permissionStatus => {
-                if (permissionStatus.state === 'granted') {
-                    // Permission already granted, start scanner directly
-                    startScanner();
-                } else {
-                    // Need to request permission
-                    navigator.mediaDevices.getUserMedia({ video: true })
-                        .then(stream => {
-                            stream.getTracks().forEach(track => track.stop());
-                            startScanner();
-                        })
-                        .catch(err => {
-                            console.error("Camera permission error:", err);
-                            statusDiv.textContent = "Please grant camera permission to scan QR codes";
-                        });
-                }
-            });
-    } else {
-        // Fallback for browsers that don't support permissions API
-        startScanner();
-    }
+    // First request camera access directly
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(stream => {
+            // Stop the stream immediately - we just needed to check permission
+            stream.getTracks().forEach(track => track.stop());
+            // Start the scanner
+            startScanner();
+        })
+        .catch(err => {
+            console.error("Camera permission error:", err);
+            statusDiv.textContent = "Please grant camera permission and try again";
+        });
 
     function startScanner() {
         const html5QrCode = new Html5Qrcode("reader");
@@ -266,10 +254,7 @@ function scanQRCode() {
         };
 
         html5QrCode.start(
-            {
-                facingMode: "environment",
-                frameRate: 30
-            },
+            { facingMode: "environment" },
             config,
             (decodedText) => {
                 // On Success
