@@ -244,7 +244,7 @@ function scanQRCode() {
     function startScanner() {
         const html5QrCode = new Html5Qrcode("reader");
         const config = {
-            fps: 30,
+            fps: 60,
             qrbox: { width: 200, height: 200 },
             aspectRatio: 1.0,
             disableFlip: true,
