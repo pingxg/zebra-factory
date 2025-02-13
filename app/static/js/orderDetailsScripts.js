@@ -205,14 +205,26 @@ function showDeleteImageConfirmation(imageId, presignedUrl, deleteUrl) {
     }
 }
 
-// Store permission state in localStorage
-function setPermissionState(state) {
-    localStorage.setItem('cameraPermission', state);
+// Cookie management functions
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
 }
 
-// Get stored permission state
-function getPermissionState() {
-    return localStorage.getItem('cameraPermission');
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
 }
 
 function scanQRCode() {
@@ -236,8 +248,25 @@ function scanQRCode() {
 
     const statusDiv = document.getElementById('scannerStatus');
 
-    // Start scanner directly
-    startScanner();
+    // Check if permission was previously granted
+    if (getCookie('cameraPermission') === 'granted') {
+        startScanner();
+    } else {
+        // Request camera access
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(stream => {
+                // Stop the stream immediately
+                stream.getTracks().forEach(track => track.stop());
+                // Store permission in cookie for 30 days
+                setCookie('cameraPermission', 'granted', 30);
+                startScanner();
+            })
+            .catch(err => {
+                console.error("Camera permission error:", err);
+                setCookie('cameraPermission', 'denied', 30);
+                statusDiv.textContent = "Please grant camera permission and try again";
+            });
+    }
 
     function startScanner() {
         const html5QrCode = new Html5Qrcode("reader");
@@ -281,10 +310,16 @@ function scanQRCode() {
             (errorMessage) => {
                 if (!errorMessage.includes("QR code parse error")) {
                     console.log("QR Error:", errorMessage);
+                    if (errorMessage.includes("permission")) {
+                        setCookie('cameraPermission', '', -1); // Delete cookie if permission error
+                    }
                 }
             }
         ).catch((err) => {
             console.error("Start failed:", err);
+            if (err.message && err.message.includes("permission")) {
+                setCookie('cameraPermission', '', -1); // Delete cookie if permission error
+            }
             statusDiv.textContent = `Error starting scanner: ${err.message || 'Please check camera permissions'}`;
         });
 
