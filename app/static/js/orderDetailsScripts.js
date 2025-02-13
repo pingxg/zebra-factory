@@ -205,27 +205,6 @@ function showDeleteImageConfirmation(imageId, presignedUrl, deleteUrl) {
     }
 }
 
-// Cookie management functions
-function setCookie(name, value, days) {
-    let expires = "";
-    if (days) {
-        const date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie = name + "=" + (value || "") + expires + "; path=/";
-}
-
-function getCookie(name) {
-    const nameEQ = name + "=";
-    const ca = document.cookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
-}
 
 function scanQRCode() {
     // Create a modal for the QR scanner
@@ -237,7 +216,7 @@ function scanQRCode() {
                 <div class="relative bg-white rounded-lg p-8 max-w-lg w-full">
                     <div id="reader"></div>
                     <div id="scannerStatus" class="mt-2 text-center text-gray-600"></div>
-                    <button id="closeScanner" class="mt-4 w-full bg-red-500 text-white py-2 px-4 rounded">
+                    <button id="closeScanner" class="mt-4 w-full bg-red-500 text-white py-2 px-4 rounded-lg">
                         Close Scanner
                     </button>
                 </div>
@@ -338,10 +317,17 @@ function scanQRCode() {
                 sessionStorage.removeItem('scannerActive');
             }).catch((err) => {
                 console.error("Stop failed:", err);
+                // Ensure the modal is removed even if stopping fails
                 document.body.removeChild(scannerModal);
             });
         });
     }
+
+    // Add this event listener to handle closing the modal if the scanner hasn't started
+    document.getElementById('closeScanner').addEventListener('click', () => {
+        document.body.removeChild(scannerModal);
+        sessionStorage.removeItem('scannerActive');
+    });
 }
 
 // Auto-reopen scanner after page refresh if it was active
