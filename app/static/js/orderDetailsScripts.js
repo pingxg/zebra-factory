@@ -236,46 +236,8 @@ function scanQRCode() {
 
     const statusDiv = document.getElementById('scannerStatus');
 
-    // First check browser's permission state
-    if (navigator.permissions && navigator.permissions.query) {
-        navigator.permissions.query({ name: 'camera' })
-            .then(permissionStatus => {
-                if (permissionStatus.state === 'granted') {
-                    setPermissionState('granted');
-                    startScanner();
-                } else if (getPermissionState() === 'granted') {
-                    startScanner();
-                } else {
-                    requestCameraPermission();
-                }
-
-                // Listen for permission changes
-                permissionStatus.onchange = function () {
-                    setPermissionState(this.state);
-                };
-            });
-    } else {
-        // Fallback if permissions API is not available
-        if (getPermissionState() === 'granted') {
-            startScanner();
-        } else {
-            requestCameraPermission();
-        }
-    }
-
-    function requestCameraPermission() {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-            .then(stream => {
-                stream.getTracks().forEach(track => track.stop());
-                setPermissionState('granted');
-                startScanner();
-            })
-            .catch(err => {
-                console.error("Camera permission error:", err);
-                setPermissionState('denied');
-                statusDiv.textContent = "Please grant camera permission and try again";
-            });
-    }
+    // Start scanner directly
+    startScanner();
 
     function startScanner() {
         const html5QrCode = new Html5Qrcode("reader");
@@ -318,16 +280,11 @@ function scanQRCode() {
             },
             (errorMessage) => {
                 if (!errorMessage.includes("QR code parse error")) {
-                    if (errorMessage.includes("permission")) {
-                        setPermissionState(null);
-                    }
+                    console.log("QR Error:", errorMessage);
                 }
             }
         ).catch((err) => {
             console.error("Start failed:", err);
-            if (err.message && err.message.includes("permission")) {
-                setPermissionState(null);
-            }
             statusDiv.textContent = `Error starting scanner: ${err.message || 'Please check camera permissions'}`;
         });
 
