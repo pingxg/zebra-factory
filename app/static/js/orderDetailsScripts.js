@@ -216,6 +216,7 @@ function scanQRCode() {
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
                 <div class="relative bg-white rounded-lg p-8 max-w-lg w-full">
                     <div id="reader"></div>
+                    <div id="scannerStatus" class="mt-2 text-center text-gray-600"></div>
                     <button id="closeScanner" class="mt-4 w-full bg-red-500 text-white py-2 px-4 rounded">
                         Close Scanner
                     </button>
@@ -225,46 +226,65 @@ function scanQRCode() {
     `;
     document.body.appendChild(scannerModal);
 
-    // Initialize QR scanner
-    const html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+    const statusDiv = document.getElementById('scannerStatus');
+
+    // Create instance of HTML5 QR code
+    const html5QrCode = new Html5Qrcode("reader");
+    const config = {
         fps: 10,
-        qrbox: { width: 250, height: 250 }
-    });
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0
+    };
 
-    // Success callback
-    function onScanSuccess(decodedText, decodedResult) {
-        // Stop scanner
-        html5QrcodeScanner.clear();
+    // Start scanning
+    html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText) => {
+            // On Success
+            console.log("Scanned value:", decodedText); // Debug log
 
-        // Parse the scanned number and format to 2 decimal places
-        try {
-            const scannedValue = parseFloat(decodedText);
-            if (!isNaN(scannedValue)) {
-                const formattedValue = scannedValue.toFixed(2);
-                document.getElementById('scale_reading').value = formattedValue;
-            } else {
-                console.warn('Invalid number format scanned');
+            try {
+                const scannedValue = parseFloat(decodedText);
+                if (!isNaN(scannedValue)) {
+                    const formattedValue = scannedValue.toFixed(2);
+                    document.getElementById('scale_reading').value = formattedValue;
+
+                    // Stop scanning and close modal
+                    html5QrCode.stop().then(() => {
+                        document.body.removeChild(scannerModal);
+
+                        // Submit the form
+                        const form = document.getElementById('addReading');
+                        const submitBtn = document.getElementById('submitBtn');
+                        if (form && submitBtn) {
+                            submitBtn.click(); // This will trigger the form submission
+                        }
+                    });
+                } else {
+                    statusDiv.textContent = 'Invalid number format scanned. Please try again.';
+                }
+            } catch (error) {
+                console.error('Error processing scanned value:', error);
+                statusDiv.textContent = 'Error processing scanned value. Please try again.';
             }
-        } catch (error) {
-            console.error('Error processing scanned value:', error);
+        },
+        (errorMessage) => {
+            // On Error
+            console.log("QR Error:", errorMessage); // Debug log
         }
-
-        // Remove scanner modal
-        document.body.removeChild(scannerModal);
-    }
-
-    // Error callback
-    function onScanFailure(error) {
-        // Handle scan failure if needed
-        console.warn(`QR scan error: ${error}`);
-    }
-
-    // Start scanner
-    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    ).catch((err) => {
+        console.error("Start failed:", err);
+        statusDiv.textContent = `Error starting scanner: ${err.message || 'Please check camera permissions'}`;
+    });
 
     // Close button handler
     document.getElementById('closeScanner').addEventListener('click', () => {
-        html5QrcodeScanner.clear();
-        document.body.removeChild(scannerModal);
+        html5QrCode.stop().then(() => {
+            document.body.removeChild(scannerModal);
+        }).catch((err) => {
+            console.error("Stop failed:", err);
+            document.body.removeChild(scannerModal);
+        });
     });
 }
