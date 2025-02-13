@@ -228,30 +228,48 @@ function scanQRCode() {
 
     const statusDiv = document.getElementById('scannerStatus');
 
-    // Check if we already have camera permission
-    navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-            // Stop the stream immediately - we just needed to check permission
-            stream.getTracks().forEach(track => track.stop());
-
-            // Now start the QR scanner
-            startScanner();
-        })
-        .catch(err => {
-            console.error("Camera permission error:", err);
-            statusDiv.textContent = "Please grant camera permission to scan QR codes";
-        });
+    // First check if the browser supports the permissions API
+    if (navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({ name: 'camera' })
+            .then(permissionStatus => {
+                if (permissionStatus.state === 'granted') {
+                    // Permission already granted, start scanner directly
+                    startScanner();
+                } else {
+                    // Need to request permission
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(stream => {
+                            stream.getTracks().forEach(track => track.stop());
+                            startScanner();
+                        })
+                        .catch(err => {
+                            console.error("Camera permission error:", err);
+                            statusDiv.textContent = "Please grant camera permission to scan QR codes";
+                        });
+                }
+            });
+    } else {
+        // Fallback for browsers that don't support permissions API
+        startScanner();
+    }
 
     function startScanner() {
         const html5QrCode = new Html5Qrcode("reader");
         const config = {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0
+            fps: 30,
+            qrbox: { width: 200, height: 200 },
+            aspectRatio: 1.0,
+            disableFlip: true,
+            experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true
+            }
         };
 
         html5QrCode.start(
-            { facingMode: "environment" },
+            {
+                facingMode: "environment",
+                frameRate: 30
+            },
             config,
             (decodedText) => {
                 // On Success
@@ -263,7 +281,7 @@ function scanQRCode() {
                         const formattedValue = scannedValue.toFixed(2);
                         document.getElementById('scale_reading').value = formattedValue;
 
-                        // Stop scanning and close modal
+                        // Stop scanning and close modal immediately
                         html5QrCode.stop().then(() => {
                             document.body.removeChild(scannerModal);
 
@@ -271,7 +289,7 @@ function scanQRCode() {
                             const form = document.getElementById('addReading');
                             const submitBtn = document.getElementById('submitBtn');
                             if (form && submitBtn) {
-                                submitBtn.click(); // This will trigger the form submission
+                                submitBtn.click();
                             }
                         });
                     } else {
@@ -283,8 +301,10 @@ function scanQRCode() {
                 }
             },
             (errorMessage) => {
-                // On Error
-                console.log("QR Error:", errorMessage); // Debug log
+                // Only log critical errors, ignore routine scanning errors
+                if (!errorMessage.includes("QR code parse error")) {
+                    console.log("QR Error:", errorMessage);
+                }
             }
         ).catch((err) => {
             console.error("Start failed:", err);
