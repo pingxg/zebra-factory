@@ -236,18 +236,38 @@ function scanQRCode() {
 
     const statusDiv = document.getElementById('scannerStatus');
 
-    // Check if we already have stored permission
-    if (getPermissionState() === 'granted') {
-        startScanner();
+    // First check browser's permission state
+    if (navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({ name: 'camera' })
+            .then(permissionStatus => {
+                if (permissionStatus.state === 'granted') {
+                    setPermissionState('granted');
+                    startScanner();
+                } else if (getPermissionState() === 'granted') {
+                    startScanner();
+                } else {
+                    requestCameraPermission();
+                }
+
+                // Listen for permission changes
+                permissionStatus.onchange = function () {
+                    setPermissionState(this.state);
+                };
+            });
     } else {
-        // Request camera access
+        // Fallback if permissions API is not available
+        if (getPermissionState() === 'granted') {
+            startScanner();
+        } else {
+            requestCameraPermission();
+        }
+    }
+
+    function requestCameraPermission() {
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
             .then(stream => {
-                // Stop the stream immediately - we just needed to check permission
                 stream.getTracks().forEach(track => track.stop());
-                // Store the permission state
                 setPermissionState('granted');
-                // Start the scanner
                 startScanner();
             })
             .catch(err => {
@@ -273,20 +293,15 @@ function scanQRCode() {
             { facingMode: "environment" },
             config,
             (decodedText) => {
-                // On Success
-                console.log("Scanned value:", decodedText); // Debug log
-
                 try {
                     const scannedValue = parseFloat(decodedText);
                     if (!isNaN(scannedValue)) {
                         const formattedValue = scannedValue.toFixed(2);
                         document.getElementById('scale_reading').value = formattedValue;
 
-                        // Stop scanning and close modal immediately
                         html5QrCode.stop().then(() => {
                             document.body.removeChild(scannerModal);
 
-                            // Submit the form
                             const form = document.getElementById('addReading');
                             const submitBtn = document.getElementById('submitBtn');
                             if (form && submitBtn) {
@@ -302,10 +317,7 @@ function scanQRCode() {
                 }
             },
             (errorMessage) => {
-                // Only log critical errors, ignore routine scanning errors
                 if (!errorMessage.includes("QR code parse error")) {
-                    console.log("QR Error:", errorMessage);
-                    // If we get a permission error, clear the stored state
                     if (errorMessage.includes("permission")) {
                         setPermissionState(null);
                     }
@@ -313,14 +325,12 @@ function scanQRCode() {
             }
         ).catch((err) => {
             console.error("Start failed:", err);
-            // If we get a permission error, clear the stored state
             if (err.message && err.message.includes("permission")) {
                 setPermissionState(null);
             }
             statusDiv.textContent = `Error starting scanner: ${err.message || 'Please check camera permissions'}`;
         });
 
-        // Close button handler
         document.getElementById('closeScanner').addEventListener('click', () => {
             html5QrCode.stop().then(() => {
                 document.body.removeChild(scannerModal);
