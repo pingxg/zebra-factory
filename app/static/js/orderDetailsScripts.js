@@ -228,63 +228,77 @@ function scanQRCode() {
 
     const statusDiv = document.getElementById('scannerStatus');
 
-    // Create instance of HTML5 QR code
-    const html5QrCode = new Html5Qrcode("reader");
-    const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0
-    };
+    // Check if we already have camera permission
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            // Stop the stream immediately - we just needed to check permission
+            stream.getTracks().forEach(track => track.stop());
 
-    // Start scanning
-    html5QrCode.start(
-        { facingMode: "environment" },
-        config,
-        (decodedText) => {
-            // On Success
-            console.log("Scanned value:", decodedText); // Debug log
-
-            try {
-                const scannedValue = parseFloat(decodedText);
-                if (!isNaN(scannedValue)) {
-                    const formattedValue = scannedValue.toFixed(2);
-                    document.getElementById('scale_reading').value = formattedValue;
-
-                    // Stop scanning and close modal
-                    html5QrCode.stop().then(() => {
-                        document.body.removeChild(scannerModal);
-
-                        // Submit the form
-                        const form = document.getElementById('addReading');
-                        const submitBtn = document.getElementById('submitBtn');
-                        if (form && submitBtn) {
-                            submitBtn.click(); // This will trigger the form submission
-                        }
-                    });
-                } else {
-                    statusDiv.textContent = 'Invalid number format scanned. Please try again.';
-                }
-            } catch (error) {
-                console.error('Error processing scanned value:', error);
-                statusDiv.textContent = 'Error processing scanned value. Please try again.';
-            }
-        },
-        (errorMessage) => {
-            // On Error
-            console.log("QR Error:", errorMessage); // Debug log
-        }
-    ).catch((err) => {
-        console.error("Start failed:", err);
-        statusDiv.textContent = `Error starting scanner: ${err.message || 'Please check camera permissions'}`;
-    });
-
-    // Close button handler
-    document.getElementById('closeScanner').addEventListener('click', () => {
-        html5QrCode.stop().then(() => {
-            document.body.removeChild(scannerModal);
-        }).catch((err) => {
-            console.error("Stop failed:", err);
-            document.body.removeChild(scannerModal);
+            // Now start the QR scanner
+            startScanner();
+        })
+        .catch(err => {
+            console.error("Camera permission error:", err);
+            statusDiv.textContent = "Please grant camera permission to scan QR codes";
         });
-    });
+
+    function startScanner() {
+        const html5QrCode = new Html5Qrcode("reader");
+        const config = {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+        };
+
+        html5QrCode.start(
+            { facingMode: "environment" },
+            config,
+            (decodedText) => {
+                // On Success
+                console.log("Scanned value:", decodedText); // Debug log
+
+                try {
+                    const scannedValue = parseFloat(decodedText);
+                    if (!isNaN(scannedValue)) {
+                        const formattedValue = scannedValue.toFixed(2);
+                        document.getElementById('scale_reading').value = formattedValue;
+
+                        // Stop scanning and close modal
+                        html5QrCode.stop().then(() => {
+                            document.body.removeChild(scannerModal);
+
+                            // Submit the form
+                            const form = document.getElementById('addReading');
+                            const submitBtn = document.getElementById('submitBtn');
+                            if (form && submitBtn) {
+                                submitBtn.click(); // This will trigger the form submission
+                            }
+                        });
+                    } else {
+                        statusDiv.textContent = 'Invalid number format scanned. Please try again.';
+                    }
+                } catch (error) {
+                    console.error('Error processing scanned value:', error);
+                    statusDiv.textContent = 'Error processing scanned value. Please try again.';
+                }
+            },
+            (errorMessage) => {
+                // On Error
+                console.log("QR Error:", errorMessage); // Debug log
+            }
+        ).catch((err) => {
+            console.error("Start failed:", err);
+            statusDiv.textContent = `Error starting scanner: ${err.message || 'Please check camera permissions'}`;
+        });
+
+        // Close button handler
+        document.getElementById('closeScanner').addEventListener('click', () => {
+            html5QrCode.stop().then(() => {
+                document.body.removeChild(scannerModal);
+            }).catch((err) => {
+                console.error("Stop failed:", err);
+                document.body.removeChild(scannerModal);
+            });
+        });
+    }
 }
