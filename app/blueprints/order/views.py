@@ -19,7 +19,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 @login_required
 @roles_required("admin")
 def order() -> str:
-    week_str: str = request.args.get("week", calculate_current_iso_week())
+    week_str: str = request.args.get("week", calculate_current_iso_week(date.today().strftime("%Y-%m-%d")))
 
     # Adjust the week based on button clicks
     if "prev_week" in request.args:

@@ -1,6 +1,3 @@
-
-
-
 document.addEventListener('DOMContentLoaded', (event) => {
     let customerNameSpan = document.querySelector(".customer-name");
     let containerWidth = customerNameSpan.parentElement.offsetWidth;
@@ -206,4 +203,68 @@ function showDeleteImageConfirmation(imageId, presignedUrl, deleteUrl) {
                 alert('Error deleting the image.');
             });
     }
+}
+
+
+
+function scanQRCode() {
+    // Create a modal for the QR scanner
+    const scannerModal = document.createElement('div');
+    scannerModal.innerHTML = `
+        <div class="fixed z-50 inset-0 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+                <div class="relative bg-white rounded-lg p-8 max-w-lg w-full">
+                    <div id="reader"></div>
+                    <button id="closeScanner" class="mt-4 w-full bg-red-500 text-white py-2 px-4 rounded">
+                        Close Scanner
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(scannerModal);
+
+    // Initialize QR scanner
+    const html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+        fps: 10,
+        qrbox: { width: 250, height: 250 }
+    });
+
+    // Success callback
+    function onScanSuccess(decodedText, decodedResult) {
+        // Stop scanner
+        html5QrcodeScanner.clear();
+
+        // Parse the scanned number and format to 2 decimal places
+        try {
+            const scannedValue = parseFloat(decodedText);
+            if (!isNaN(scannedValue)) {
+                const formattedValue = scannedValue.toFixed(2);
+                document.getElementById('scale_reading').value = formattedValue;
+            } else {
+                console.warn('Invalid number format scanned');
+            }
+        } catch (error) {
+            console.error('Error processing scanned value:', error);
+        }
+
+        // Remove scanner modal
+        document.body.removeChild(scannerModal);
+    }
+
+    // Error callback
+    function onScanFailure(error) {
+        // Handle scan failure if needed
+        console.warn(`QR scan error: ${error}`);
+    }
+
+    // Start scanner
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+
+    // Close button handler
+    document.getElementById('closeScanner').addEventListener('click', () => {
+        html5QrcodeScanner.clear();
+        document.body.removeChild(scannerModal);
+    });
 }
