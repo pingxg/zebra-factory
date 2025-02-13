@@ -248,8 +248,14 @@ function scanQRCode() {
 
     const statusDiv = document.getElementById('scannerStatus');
 
-    // Check if permission was previously granted
-    if (getCookie('cameraPermission') === 'granted') {
+    // Check if scanner was active before refresh
+    const wasScanning = sessionStorage.getItem('scannerActive');
+    if (wasScanning) {
+        sessionStorage.removeItem('scannerActive');
+    }
+
+    // Check if permission was previously granted in this session
+    if (sessionStorage.getItem('cameraPermission') === 'granted') {
         startScanner();
     } else {
         // Request camera access
@@ -257,13 +263,13 @@ function scanQRCode() {
             .then(stream => {
                 // Stop the stream immediately
                 stream.getTracks().forEach(track => track.stop());
-                // Store permission in cookie for 30 days
-                setCookie('cameraPermission', 'granted', 30);
+                // Store permission in sessionStorage
+                sessionStorage.setItem('cameraPermission', 'granted');
                 startScanner();
             })
             .catch(err => {
                 console.error("Camera permission error:", err);
-                setCookie('cameraPermission', 'denied', 30);
+                sessionStorage.removeItem('cameraPermission');
                 statusDiv.textContent = "Please grant camera permission and try again";
             });
     }
@@ -293,6 +299,9 @@ function scanQRCode() {
                         html5QrCode.stop().then(() => {
                             document.body.removeChild(scannerModal);
 
+                            // Set flag before submitting
+                            sessionStorage.setItem('scannerActive', 'true');
+
                             const form = document.getElementById('addReading');
                             const submitBtn = document.getElementById('submitBtn');
                             if (form && submitBtn) {
@@ -311,14 +320,14 @@ function scanQRCode() {
                 if (!errorMessage.includes("QR code parse error")) {
                     console.log("QR Error:", errorMessage);
                     if (errorMessage.includes("permission")) {
-                        setCookie('cameraPermission', '', -1); // Delete cookie if permission error
+                        sessionStorage.removeItem('cameraPermission');
                     }
                 }
             }
         ).catch((err) => {
             console.error("Start failed:", err);
             if (err.message && err.message.includes("permission")) {
-                setCookie('cameraPermission', '', -1); // Delete cookie if permission error
+                sessionStorage.removeItem('cameraPermission');
             }
             statusDiv.textContent = `Error starting scanner: ${err.message || 'Please check camera permissions'}`;
         });
@@ -326,6 +335,7 @@ function scanQRCode() {
         document.getElementById('closeScanner').addEventListener('click', () => {
             html5QrCode.stop().then(() => {
                 document.body.removeChild(scannerModal);
+                sessionStorage.removeItem('scannerActive');
             }).catch((err) => {
                 console.error("Stop failed:", err);
                 document.body.removeChild(scannerModal);
@@ -333,3 +343,10 @@ function scanQRCode() {
         });
     }
 }
+
+// Auto-reopen scanner after page refresh if it was active
+document.addEventListener('DOMContentLoaded', () => {
+    if (sessionStorage.getItem('scannerActive') === 'true') {
+        scanQRCode();
+    }
+});
