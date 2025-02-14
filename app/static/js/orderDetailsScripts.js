@@ -216,7 +216,7 @@ function scanQRCode() {
                 <div class="relative bg-white rounded-lg p-8 max-w-lg w-full">
                     <div id="reader"></div>
                     <div id="scannerStatus" class="mt-2 text-center text-gray-600"></div>
-                    <button id="closeScanner" class="mt-4 w-full bg-red-500 text-white py-2 px-4 rounded-lg">
+                    <button id="closeScanner" class="mt-4 w-full bg-red-500 text-white py-3 px-4 rounded-lg">
                         Close Scanner
                     </button>
                 </div>
@@ -256,12 +256,22 @@ function scanQRCode() {
     function startScanner() {
         const html5QrCode = new Html5Qrcode("reader");
         const config = {
-            fps: 60,
-            qrbox: { width: 200, height: 200 },
+            fps: 120,
+            qrbox: { width: 250, height: 250 },
             aspectRatio: 1.0,
             disableFlip: true,
             experimentalFeatures: {
                 useBarCodeDetectorIfSupported: true
+            },
+            formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+            verbose: false,
+            rememberLastUsedCamera: true,
+            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+            videoConstraints: {
+                width: { min: 640, ideal: 1280, max: 1920 },
+                height: { min: 480, ideal: 720, max: 1080 },
+                facingMode: "environment",
+                frameRate: { ideal: 120, min: 60 }
             }
         };
 
