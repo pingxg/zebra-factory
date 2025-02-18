@@ -227,51 +227,56 @@ function scanQRCode() {
 
     const statusDiv = document.getElementById('scannerStatus');
 
-    // Check if scanner was active before refresh
-    const wasScanning = sessionStorage.getItem('scannerActive');
-    if (wasScanning) {
-        sessionStorage.removeItem('scannerActive');
-    }
+    // Modified permission handling
+    async function requestCameraPermission() {
+        try {
+            const constraints = {
+                video: {
+                    facingMode: { exact: "environment" },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            };
 
-    // Check if permission was previously granted in this session
-    if (sessionStorage.getItem('cameraPermission') === 'granted') {
-        startScanner();
-    } else {
-        // Request camera access
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-            .then(stream => {
-                // Stop the stream immediately
-                stream.getTracks().forEach(track => track.stop());
-                // Store permission in sessionStorage
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            // Stop the stream right away
+            stream.getTracks().forEach(track => track.stop());
+            sessionStorage.setItem('cameraPermission', 'granted');
+            startScanner();
+        } catch (err) {
+            // If environment camera fails, try with any camera
+            try {
+                const fallbackConstraints = {
+                    video: true
+                };
+                const fallbackStream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+                fallbackStream.getTracks().forEach(track => track.stop());
                 sessionStorage.setItem('cameraPermission', 'granted');
                 startScanner();
-            })
-            .catch(err => {
-                console.error("Camera permission error:", err);
+            } catch (fallbackErr) {
+                console.error("Camera permission error:", fallbackErr);
                 sessionStorage.removeItem('cameraPermission');
-                statusDiv.textContent = "Please grant camera permission and try again";
-            });
+                statusDiv.textContent = "Camera permission denied. Please check your browser settings and try again.";
+            }
+        }
     }
 
     function startScanner() {
         const html5QrCode = new Html5Qrcode("reader");
         const config = {
-            fps: 120,
+            fps: 10, // Reduced FPS for better performance
             qrbox: { width: 250, height: 250 },
             aspectRatio: 1.0,
-            disableFlip: true,
             experimentalFeatures: {
                 useBarCodeDetectorIfSupported: true
             },
             formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
             verbose: false,
-            rememberLastUsedCamera: true,
-            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
             videoConstraints: {
-                width: { min: 640, ideal: 1280, max: 1920 },
-                height: { min: 480, ideal: 720, max: 1080 },
                 facingMode: "environment",
-                frameRate: { ideal: 120, min: 60 }
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                frameRate: { ideal: 30 } // Reduced frame rate
             }
         };
 
@@ -333,11 +338,24 @@ function scanQRCode() {
         });
     }
 
-    // Add this event listener to handle closing the modal if the scanner hasn't started
-    document.getElementById('closeScanner').addEventListener('click', () => {
-        document.body.removeChild(scannerModal);
-        sessionStorage.removeItem('scannerActive');
-    });
+    // Check if HTTPS is being used
+    if (window.location.protocol !== 'https:') {
+        statusDiv.textContent = "Camera access requires HTTPS. Please use a secure connection.";
+        return;
+    }
+
+    // Check if getUserMedia is supported
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        statusDiv.textContent = "Sorry, your browser doesn't support camera access.";
+        return;
+    }
+
+    // Initialize the scanner
+    if (sessionStorage.getItem('cameraPermission') === 'granted') {
+        startScanner();
+    } else {
+        requestCameraPermission();
+    }
 }
 
 // Auto-reopen scanner after page refresh if it was active
@@ -346,3 +364,6 @@ document.addEventListener('DOMContentLoaded', () => {
         scanQRCode();
     }
 });
+
+webView.getSettings().setJavaScriptEnabled(true);
+webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
