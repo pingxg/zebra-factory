@@ -142,7 +142,7 @@
 
             <div id="LohiOrders" class="orders-content">
                 {% for product_type, order_detailes in grouped_orders.items() %}
-                {% if "Lohi" in product_type %}
+                {% if product_type and "Lohi" in product_type %}
                 {% for priority, detailes in order_detailes.items() %}
                 <div class="flex items-center justify-center gap-2 my-4">
                     <hr class="w-full border-t border-gray-300">
@@ -214,7 +214,7 @@
 
             <div id="VegetableOrders" class="orders-content" style="display:none;">
                 {% for product_type, order_detailes in grouped_orders.items() %}
-                {% if "Vegetable" in product_type %}
+                {% if product_type and "Vegetable" in product_type %}
                 {% for priority, detailes in order_detailes.items() %}
                 <div class="flex items-center justify-center gap-2 my-4">
                     <hr class="w-full border-t border-gray-300">
@@ -280,7 +280,7 @@
 
             <div id="LogisticOrders" class="orders-content">
                 {% for product_type, order_detailes in grouped_orders.items() %}
-                {% if "Logistic" in product_type %}
+                {% if product_type and "Logistic" in product_type %}
                 {% for priority, detailes in order_detailes.items() %}
                 <div class="flex items-center justify-center gap-2 my-4">
                     <hr class="w-full border-t border-gray-300">

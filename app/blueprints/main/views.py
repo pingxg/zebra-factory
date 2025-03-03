@@ -168,7 +168,16 @@ def index():
                 subcategory_rowspan = 0
             # Reset category rowspan tracker for this category after processing
             category_rowspan_tracker[category] = 0
-        grouped_orders = {k: v for k, v in sorted(grouped_orders.items())}
+        print(grouped_details)
+        for key, value in grouped_details.items():
+            print(key)
+            for subkey, subvalue in value.items():
+                print(subkey)
+                for item, values in subvalue.items():
+                    print(item)
+                    print(values)
+        grouped_orders = {k: v for k, v in sorted(grouped_orders.items(), 
+                                                 key=lambda item: str(item[0]) if item[0] is not None else "")}
     return render_template(
         "main/index.html",
         grouped_orders=grouped_orders,
