@@ -122,82 +122,82 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
     return df
 
 def zebra_generator(df):
-    # zpl_template_x99_y63 = """
-    # ; Start of label
-    # ^XA
+    zpl_template_x99_y63 = """
+    ; Start of label
+    ^XA
 
-    # ; Set UTF-8 Character Encoding
-    # ^CI28
+    ; Set UTF-8 Character Encoding
+    ^CI28
 
-    # ; Draw the producer identifier
-    # ^FO200,50^GFA,1387,1387,19,,::::::::::S03MFC,:Q01FFM0FF8,P01F8O01F8,P0FCQ03F,O07CS03E,N07CU01F,M03CW01C,M0FM01F2O07,L018M0102O01C,L07N0102P06,K018N0102P018,K06O01F2Q06,K0EO01F2Q03,J018O0102Q018,J03P0102R0C,J06P0102R02,J0CP0102R01,I018gK018,I03gM0C,:I06gM06,I04gM02,I04O03018783CP03,I04O070188C46P03,I04O0502804C6P03,I04O010480I4P03,I04O010880838P03,I04O01188183CP03,I04O0110830C6P03,I04O011FC6082P02,I02O01008C0C6P06,I03O07C08FC7CP0C,I018gL08,I018gK018,J0CgK01,J06gK06,J03P07E84Q0C,J01CO04084P018,K0EO04084P03,K03O04048P0E,K01CN07878O038,L038M0403P0C,M0CM0403O038,M078L0403O0E,M01CL0403N078,N03EK07C3M07E,O03FS07E,P03EQ07E,Q07FO0FE,R07FEK03FE,T07KFE,,:::::::::^FS
+    ; Draw the producer identifier
+    ^FO200,50^GFA,1387,1387,19,,::::::::::S03MFC,:Q01FFM0FF8,P01F8O01F8,P0FCQ03F,O07CS03E,N07CU01F,M03CW01C,M0FM01F2O07,L018M0102O01C,L07N0102P06,K018N0102P018,K06O01F2Q06,K0EO01F2Q03,J018O0102Q018,J03P0102R0C,J06P0102R02,J0CP0102R01,I018gK018,I03gM0C,:I06gM06,I04gM02,I04O03018783CP03,I04O070188C46P03,I04O0502804C6P03,I04O010480I4P03,I04O010880838P03,I04O01188183CP03,I04O0110830C6P03,I04O011FC6082P02,I02O01008C0C6P06,I03O07C08FC7CP0C,I018gL08,I018gK018,J0CgK01,J06gK06,J03P07E84Q0C,J01CO04084P018,K0EO04084P03,K03O04048P0E,K01CN07878O038,L038M0403P0C,M0CM0403O038,M078L0403O0E,M01CL0403N078,N03EK07C3M07E,O03FS07E,P03EQ07E,Q07FO0FE,R07FEK03FE,T07KFE,,:::::::::^FS
 
-    # ; Add Producer info
-    # ^FO30,50^A0N,20,20^FDValmistaja / Tillverkare^FS
-    # ^FO30,75^A0N,25,25^FDSpartao Oy^FS
-    # ^FO30,110^A0N,20,20^FDY-tunnus: 2938534-6^FS
-    # ^FO30,130^A0N,20,20^FDOsoite: Nihtisillantie 3B, 02630 Espoo^FS
-    # ^FO30,150^A0N,20,20^FDPuh: +358 45 7831 9456^FS
+    ; Add Producer info
+    ^FO30,50^A0N,20,20^FDValmistaja / Tillverkare^FS
+    ^FO30,75^A0N,25,25^FDSpartao Oy^FS
+    ^FO30,110^A0N,20,20^FDY-tunnus: 2938534-6^FS
+    ^FO30,130^A0N,20,20^FDOsoite: Nihtisillantie 3B, 02630 Espoo^FS
+    ^FO30,150^A0N,20,20^FDPuh: +358 45 7831 9456^FS
 
-    # ; Add the Batch number
-    # ^FO350,50^A0N,20,20^FDEränumero / Batchnummer^FS
-    # ^FO350,75^A0N,25,25^FD{batch_number}^FS
-
-
-    # ; Add Product origin country
-    # ^FO350,115^A0N,20,20^FDAlkuperämaa / Ursprungslandet^FS
-    # ^FO350,140^A0N,30,30^FDNorja / Norge^FS
+    ; Add the Batch number
+    ^FO350,50^A0N,20,20^FDEränumero / Batchnummer^FS
+    ^FO350,75^A0N,25,25^FD{batch_number}^FS
 
 
-    # ; Add Priority
-    # ^FO600,50^A0N,20,20^FDEtusijalla / Prioritet^FS
-    # ^FO700,85^A0N,90,90^FD{priority}^FS
+    ; Add Product origin country
+    ^FO350,115^A0N,20,20^FDAlkuperämaa / Ursprungslandet^FS
+    ^FO350,140^A0N,30,30^FDNorja / Norge^FS
 
-    # ; Draw a line separator
-    # ^FO30,180^GB730,2,2^FS
 
-    # ; Add Product name
-    # ^FO30,195^A0N,20,20^FDAinesosat / Ingredienser^FS
-    # ^FO30,220^A0N,30,30^FDViljelty LOHI / Odlad LAX (Salmo Salar)^FS
+    ; Add Priority
+    ^FO600,50^A0N,20,20^FDEtusijalla / Prioritet^FS
+    ^FO700,85^A0N,90,90^FD{priority}^FS
 
-    # ; Add Product treatment
-    # ^FO540,195^A0N,20,20^FDTuote / Produkt^FS
-    # ^FO540,220^A0N,30,30^FD{product}^FS
+    ; Draw a line separator
+    ^FO30,180^GB730,2,2^FS
 
-    # ; Add Product note
-    # ^FO30,265^A0N,25,35^FDNOTE: {product_note}^FS
+    ; Add Product name
+    ^FO30,195^A0N,20,20^FDAinesosat / Ingredienser^FS
+    ^FO30,220^A0N,30,30^FDViljelty LOHI / Odlad LAX (Salmo Salar)^FS
 
-    # ; Add temperature
-    # ^FO30,305^A0N,20,20^FDSäilytys/ Förvaring^FS
-    # ^FO30,350^A0N,30,30^FD{temperature_info}^FS
+    ; Add Product treatment
+    ^FO540,195^A0N,20,20^FDTuote / Produkt^FS
+    ^FO540,220^A0N,30,30^FD{product}^FS
 
-    # ; Add an Expiration date
-    # ^FO240,305^A0N,20,20^FDViimeinen käyttöpäivä^FS
-    # ^FO240,325^A0N,20,20^FD/ Sista förbrukningsdag^FS
-    # ^FO240,350^A0N,20,20^FD{expiry_info}^FS
+    ; Add Product note
+    ^FO30,265^A0N,25,35^FDNOTE: {product_note}^FS
 
-    # ; Add net weight
-    # ^FO540,305^A0N,20,20^FDNettopaino / Nettovikt^FS
-    # ^FO540,350^A0N,30,30^FD{delivered} KG^FS
+    ; Add temperature
+    ^FO30,305^A0N,20,20^FDSäilytys/ Förvaring^FS
+    ^FO30,350^A0N,30,30^FD{temperature_info}^FS
 
-    # ; Draw a line separator
-    # ^FO30,400^GB730,2,2^FS
+    ; Add an Expiration date
+    ^FO240,305^A0N,20,20^FDViimeinen käyttöpäivä^FS
+    ^FO240,325^A0N,20,20^FD/ Sista förbrukningsdag^FS
+    ^FO240,350^A0N,20,20^FD{expiry_info}^FS
 
-    # ; Add order id
-    # ^FO30,415^A0N,20,20^FDTilausnumero^FS
-    # ^FO30,440^A0N,30,25^FD{order_id}^FS
+    ; Add net weight
+    ^FO540,305^A0N,20,20^FDNettopaino / Nettovikt^FS
+    ^FO540,350^A0N,30,30^FD{delivered} KG^FS
 
-    # ; Add recipient
-    # ^FO160,415^A0N,20,20^FDAsiakas / Kund^FS
-    # ^FO160,440^A0N,30,40^FD{store}^FS
+    ; Draw a line separator
+    ^FO30,400^GB730,2,2^FS
 
-    # ; Add box count
-    # ^FO490,415^A0N,20,20^FDLaatikoita yhteensä / Totala lådor^FS
-    # ^FO650,440^A0N,35,35^FD{box_count} CTN^FS
+    ; Add order id
+    ^FO30,415^A0N,20,20^FDTilausnumero^FS
+    ^FO30,440^A0N,30,25^FD{order_id}^FS
 
-    # ; End of label
-    # ^XZ
-    # """
+    ; Add recipient
+    ^FO160,415^A0N,20,20^FDAsiakas / Kund^FS
+    ^FO160,440^A0N,30,40^FD{store}^FS
+
+    ; Add box count
+    ^FO490,415^A0N,20,20^FDLaatikoita yhteensä / Totala lådor^FS
+    ^FO650,440^A0N,35,35^FD{box_count} CTN^FS
+
+    ; End of label
+    ^XZ
+    """
 
     # zpl_template_x55_y70 = """
     # ; Start of label
@@ -380,6 +380,125 @@ def zebra_generator(df):
     ; End of label
     ^XZ
     """
+
+    zpl_template_x110_y80 = """
+    ^XA
+
+    ; 设置 UTF-8 编码
+    ^CI28
+
+    ; 生产商标识图案（稍微上移）
+    ^FO260,80^GFA,1387,1387,19,,::::::::::S03MFC,:Q01FFM0FF8,P01F8O01F8,P0FCQ03F,O07CS03E,N07CU01F,M03CW01C,M0FM01F2O07,L018M0102O01C,L07N0102P06,K018N0102P018,K06O01F2Q06,K0EO01F2Q03,J018O0102Q018,J03P0102R0C,J06P0102R02,J0CP0102R01,I018gK018,I03gM0C,:I06gM06,I04gM02,I04O03018783CP03,I04O070188C46P03,I04O0502804C6P03,I04O010480I4P03,I04O010880838P03,I04O01188183CP03,I04O0110830C6P03,I04O011FC6082P02,I02O01008C0C6P06,I03O07C08FC7CP0C,I018gL08,I018gK018,J0CgK01,J06gK06,J03P07E84Q0C,J01CO04084P018,K0EO04084P03,K03O04048P0E,K01CN07878O038,L038M0403P0C,M0CM0403O038,M078L0403O0E,M01CL0403N078,N03EK07C3M07E,O03FS07E,P03EQ07E,Q07FO0FE,R07FEK03FE,T07KFE,,:::::::::^FS
+
+    ; **生产商信息（间距增大）**
+    ^FO30,90^A0N,24,24^FDValmistaja / Tillverkare^FS
+    ^FO30,120^A0N,30,30^FDSpartao Oy^FS
+    ^FO30,160^A0N,24,24^FDY-tunnus: 2938534-6^FS
+    ^FO30,190^A0N,24,24^FDOsoite: Nihtisillantie 3B, 02630 Espoo^FS
+    ^FO30,220^A0N,24,24^FDPuh: +358 45 7831 9456^FS
+
+    ; **批次号**
+    ^FO400,90^A0N,24,24^FDEränumero / Batchnummer^FS
+    ^FO400,120^A0N,32,32^FD{batch_number}^FS
+
+    ; **原产国**
+    ^FO400,170^A0N,24,24^FDAlkuperämaa / Ursprungslandet^FS
+    ^FO400,200^A0N,34,34^FDNorja / Norge^FS
+
+    ; **优先级（字体加大）**
+    ^FO700,90^A0N,24,24^FDEtusijalla / Prioritet^FS
+    ^FO720,140^A0N,100,100^FD{priority}^FS
+
+    ; **分隔线（加宽 + 下移）**
+    ^FO30,250^GB850,2,2^FS
+
+    ; **产品名称**
+    ^FO30,270^A0N,24,24^FDAinesosat / Ingredienser^FS
+    ^FO30,315^A0N,30,30^FDViljelty LOHI / Odlad LAX (Salmo Salar)^FS
+
+    ; **处理方式**
+    ^FO580,270^A0N,24,24^FDTuote / Produkt^FS
+    ^FO580,310^A0N,36,36^FD{product}^FS
+
+    ; **存储信息（间距增大）**
+    ^FO30,370^A0N,24,24^FDSäilytys / Förvaring^FS
+    ^FO30,430^A0N,30,30^FD{temperature_info}^FS
+
+    ; **过期日期**
+    ^FO280,370^A0N,24,24^FDViimeinen käyttöpäivä^FS
+    ^FO280,400^A0N,24,24^FD/ Sista förbrukningsdag^FS
+    ^FO280,430^A0N,32,32^FD{expiry_info}^FS
+
+    ; **净重**
+    ^FO580,370^A0N,24,24^FDNettopaino / Nettovikt^FS
+    ^FO580,420^A0N,36,36^FD{delivered} KG^FS
+
+    ; **分隔线**
+    ^FO30,480^GB850,2,2^FS
+
+    ; **订单编号**
+    ^FO30,500^A0N,24,24^FDTilausnumero^FS
+    ^FO30,540^A0N,36,36^FD{order_id}^FS
+
+    ; **收货方**
+    ^FO220,500^A0N,24,24^FDAsiakas / Kund^FS
+    ^FO220,540^A0N,36,40^FD{store}^FS
+
+    ; **盒数**
+    ^FO540,500^A0N,24,24^FDLaatikoita yhteensä / Totala lådor^FS
+    ^FO700,540^A0N,40,40^FD{box_count} CTN^FS
+
+    ^XZ
+    """
+
+    zpl_template_x110_y80_bp = """
+    ^XA
+
+    ; 设置 UTF-8 编码
+    ^CI28
+
+    ; **生产商信息**
+    ^FO30,40^A0N,26,26^FDValmistaja / Tillverkare^FS
+    ^FO30,80^A0N,34,34^FDSpartao Oy^FS
+    ^FO30,130^A0N,26,26^FDY-tunnus: 2938534-6^FS
+    ^FO30,160^A0N,26,23^FDOsoite: Nihtisillantie 3B, 02630 Espoo^FS
+    ^FO30,190^A0N,26,26^FDPuh: +358 45 7831 9456^FS
+
+    ; **批次号**
+    ^FO400,40^A0N,26,26^FDEränumero / Batchnummer^FS
+    ^FO400,80^A0N,38,38^FD{batch_number}^FS
+
+    ; **原产国**
+    ^FO400,140^A0N,26,26^FDAlkuperämaa / Ursprungslandet^FS
+    ^FO400,180^A0N,40,40^FDNorja / Norge^FS
+
+    ; **分隔线**
+    ^FO30,230^GB850,2,2^FS
+
+    ; **产品名称**
+    ^FO30,260^A0N,26,26^FDAinesosat / Ingredienser^FS
+    ^FO30,310^A0N,30,30^FDViljelty LOHI / Odlad LAX (Salmo Salar)^FS
+
+    ; **处理方式**
+    ^FO580,260^A0N,26,26^FDTuote / Produkt^FS
+    ^FO580,300^A0N,42,42^FD{product}^FS
+
+    ; **存储信息**
+    ^FO30,370^A0N,26,26^FDSäilytys / Förvaring^FS
+    ^FO30,410^A0N,40,40^FD{temperature_info}^FS
+
+    ; **过期日期**
+    ^FO400,370^A0N,26,26^FDViimeinen käyttöpäivä^FS
+    ^FO400,410^A0N,26,26^FD/ Sista förbrukningsdag^FS
+    ^FO400,450^A0N,38,38^FD{expiry_info}^FS
+
+    ; **产品类型**
+    ^FO30,510^A0N,26,26^FDLuokan 3 sivutuote / Klass 3 biprodukt^FS
+    ^FO30,550^A0N,42,42^FD3 luokan sivutuote, ei ihmisravinnoksi.^FS
+
+    ^XZ
+
+    """
     df['priority'] = df['priority'].str.split(' ').str[1]
     zpl_labels = []
     for _, row in df.iterrows():
@@ -393,9 +512,9 @@ def zebra_generator(df):
             product_name = f"{row['product']}"
 
         if row['product'] == "Frozen Lohi By-product":
-            template = zpl_template_x76_y102_bp
+            template = zpl_template_x110_y80_bp
         else:
-            template = zpl_template_x76_y102
+            template = zpl_template_x110_y80
         zpl_label = template.format(
             order_id=row['order_id'],
             store=row['store'],
