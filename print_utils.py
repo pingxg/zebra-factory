@@ -427,7 +427,7 @@ def zebra_generator(df):
     ; **过期日期**
     ^FO280,370^A0N,24,24^FDViimeinen käyttöpäivä^FS
     ^FO280,400^A0N,24,24^FD/ Sista förbrukningsdag^FS
-    ^FO280,430^A0N,32,32^FD{expiry_info}^FS
+    ^FO280,430^A0N,32,28^FD{expiry_info}^FS
 
     ; **净重**
     ^FO580,370^A0N,24,24^FDNettopaino / Nettovikt^FS
@@ -490,7 +490,7 @@ def zebra_generator(df):
     ; **过期日期**
     ^FO400,370^A0N,26,26^FDViimeinen käyttöpäivä^FS
     ^FO400,410^A0N,26,26^FD/ Sista förbrukningsdag^FS
-    ^FO400,450^A0N,38,38^FD{expiry_info}^FS
+    ^FO400,450^A0N,35,35^FD{expiry_info}^FS
 
     ; **产品类型**
     ^FO30,510^A0N,26,26^FDLuokan 3 sivutuote / Klass 3 biprodukt^FS
