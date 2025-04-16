@@ -407,7 +407,7 @@ def zebra_generator(df):
 
     ; **优先级（字体加大）**
     ^FO680,90^A0N,24,20^FDEtusijalla / Prioritet^FS
-    ^FO680,140^A0N,80,50^FD{priority}^FS
+    ^FO670,130^A0N,120,90^FD{priority}^FS
 
     ; **分隔线（加宽 + 下移）**
     ^FO30,250^GB850,2,2^FS
@@ -441,12 +441,12 @@ def zebra_generator(df):
     ^FO30,540^A0N,36,36^FD{order_id}^FS
 
     ; **收货方**
-    ^FO220,500^A0N,24,24^FDAsiakas / Kund^FS
-    ^FO220,540^A0N,36,40^FD{store}^FS
+    ^FO200,500^A0N,24,24^FDAsiakas / Kund^FS
+    ^FO200,540^A0N,36,35^FD{store}^FS
 
     ; **盒数**
     ^FO540,500^A0N,24,24^FDLaatikoita yhteensä / Totala lådor^FS
-    ^FO680,540^A0N,40,25^FD{box_count} CTN^FS
+    ^FO720,540^A0N,40,25^FD{box_count} CTN^FS
 
     ^XZ
 
