@@ -398,16 +398,16 @@ def zebra_generator(df):
     ^FO30,220^A0N,24,24^FDPuh: +358 45 7831 9456^FS
 
     ; **批次号**
-    ^FO400,90^A0N,24,24^FDEränumero / Batchnummer^FS
-    ^FO400,120^A0N,32,32^FD{batch_number}^FS
+    ^FO400,90^A0N,24,20^FDEränumero / Batchnummer^FS
+    ^FO400,120^A0N,32,26^FD{batch_number}^FS
 
     ; **原产国**
-    ^FO400,170^A0N,24,24^FDAlkuperämaa / Ursprungslandet^FS
-    ^FO400,200^A0N,34,34^FDNorja / Norge^FS
+    ^FO400,170^A0N,24,20^FDAlkuperämaa / Ursprungslandet^FS
+    ^FO400,200^A0N,34,28^FDNorja / Norge^FS
 
     ; **优先级（字体加大）**
-    ^FO700,90^A0N,24,24^FDEtusijalla / Prioritet^FS
-    ^FO720,140^A0N,100,100^FD{priority}^FS
+    ^FO680,90^A0N,24,20^FDEtusijalla / Prioritet^FS
+    ^FO680,140^A0N,80,50^FD{priority}^FS
 
     ; **分隔线（加宽 + 下移）**
     ^FO30,250^GB850,2,2^FS
@@ -417,21 +417,21 @@ def zebra_generator(df):
     ^FO30,315^A0N,30,30^FDViljelty LOHI / Odlad LAX (Salmo Salar)^FS
 
     ; **处理方式**
-    ^FO580,270^A0N,24,24^FDTuote / Produkt^FS
-    ^FO580,310^A0N,36,36^FD{product}^FS
+    ^FO580,270^A0N,24,20^FDTuote / Produkt^FS
+    ^FO580,310^A0N,36,28^FD{product}^FS
 
     ; **存储信息（间距增大）**
     ^FO30,370^A0N,24,24^FDSäilytys / Förvaring^FS
     ^FO30,430^A0N,30,30^FD{temperature_info}^FS
 
     ; **过期日期**
-    ^FO280,370^A0N,24,24^FDViimeinen käyttöpäivä^FS
-    ^FO280,400^A0N,24,24^FD/ Sista förbrukningsdag^FS
-    ^FO280,430^A0N,32,28^FD{expiry_info}^FS
+    ^FO280,370^A0N,24,20^FDViimeinen käyttöpäivä^FS
+    ^FO280,400^A0N,24,20^FD/ Sista förbrukningsdag^FS
+    ^FO280,430^A0N,32,26^FD{expiry_info}^FS
 
     ; **净重**
-    ^FO580,370^A0N,24,24^FDNettopaino / Nettovikt^FS
-    ^FO580,420^A0N,36,36^FD{delivered} KG^FS
+    ^FO580,370^A0N,24,20^FDNettopaino / Nettovikt^FS
+    ^FO580,420^A0N,36,28^FD{delivered} KG^FS
 
     ; **分隔线**
     ^FO30,480^GB850,2,2^FS
@@ -446,9 +446,10 @@ def zebra_generator(df):
 
     ; **盒数**
     ^FO540,500^A0N,24,24^FDLaatikoita yhteensä / Totala lådor^FS
-    ^FO700,540^A0N,40,40^FD{box_count} CTN^FS
+    ^FO680,540^A0N,40,25^FD{box_count} CTN^FS
 
     ^XZ
+
     """
 
     zpl_template_x110_y80_bp = """
