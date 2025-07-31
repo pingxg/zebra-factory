@@ -13,22 +13,20 @@ import os
 def add(order_id):
     if request.method == 'POST':
         scale_reading = float(request.form['scale_reading'])
-        try:
-            batch_number = int(request.form['batch_number'])
-        except ValueError:
-            # flash('Batch number not specified! Using the previous batch number.', 'info')
-            batch_number = (
-                db.session.query(
-                    MaterialInfo.batch_number, 
-                )
-                .order_by(MaterialInfo.date.desc())
-                .first()
-            )
+
+        # Get the batch number directly from the form as a string.
+        # The try-except block is no longer needed as we now handle alphanumeric batch numbers.
+        batch_number = request.form.get('batch_number')
+
+        if not batch_number:
+            flash('Batch number is missing!', 'error')
+            return redirect(url_for('order.order_detail', order_id=order_id))
 
         weight = Weight(
-            order_id=order_id, 
-            quantity=scale_reading, 
-            production_time=datetime.now(pytz.timezone(os.environ.get('TIMEZONE'))),
+            order_id=order_id,
+            quantity=scale_reading,
+            production_time=datetime.now(
+                pytz.timezone(os.environ.get('TIMEZONE'))),
             batch_number=batch_number
         )
         db.session.add(weight)
@@ -37,8 +35,6 @@ def add(order_id):
         return redirect(url_for('order.order_detail', order_id=order_id))
 
     return redirect(url_for('order.order_detail', order_id=order_id))
-
-
 
 
 @weight_bp.route('/edit/<int:weight_id>', methods=['GET', 'POST'])
@@ -70,8 +66,6 @@ def edit(weight_id):
             db.session.rollback()  # Rollback in case of any error
             return jsonify(success=False, error=str(e)), 500
 
-
-    
 
 @weight_bp.route('/delete/<int:weight_id>', methods=['POST'])
 @roles_required('admin', 'cutter')
