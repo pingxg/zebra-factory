@@ -297,18 +297,37 @@ function scanQRCode() {
                 let batchNumber = sessionStorage.getItem('scannedBatchNumber');
 
                 if (decodedResult.result.format.formatName === 'QR_CODE') {
-                    const scannedValue = parseFloat(decodedText);
-                    if (!isNaN(scannedValue)) {
-                        const formattedValue = scannedValue.toFixed(2);
-                        sessionStorage.setItem('scannedWeight', formattedValue);
-                        weight = formattedValue;
-                        let statusMessage = `Weight: ${weight} scanned. Now scan batch number barcode.`;
-                        if (batchNumber) {
-                            statusMessage += ` (Batch: ${batchNumber} already scanned)`;
+                    if (decodedText.includes(',')) {
+                        const parts = decodedText.split(',');
+                        if (parts.length === 2) {
+                            const weightPart = parseFloat(parts[0]);
+                            const batchPart = parts[1].trim();
+
+                            if (!isNaN(weightPart) && !isNaN(parseInt(batchPart, 10)) && isFinite(batchPart)) {
+                                const formattedWeight = weightPart.toFixed(2);
+                                sessionStorage.setItem('scannedWeight', formattedWeight);
+                                sessionStorage.setItem('scannedBatchNumber', batchPart);
+                                statusDiv.textContent = `Weight: ${formattedWeight} and Batch: ${batchPart} scanned.`;
+                            } else {
+                                statusDiv.textContent = 'Invalid combined QR Code. Format must be "weight,batch_number".';
+                            }
+                        } else {
+                            statusDiv.textContent = 'Invalid combined QR Code format. Please try again.';
                         }
-                        statusDiv.textContent = statusMessage;
                     } else {
-                        statusDiv.textContent = 'Invalid QR Code for weight. Please try again.';
+                        const scannedValue = parseFloat(decodedText);
+                        if (!isNaN(scannedValue)) {
+                            const formattedValue = scannedValue.toFixed(2);
+                            sessionStorage.setItem('scannedWeight', formattedValue);
+                            weight = formattedValue;
+                            let statusMessage = `Weight: ${weight} scanned. Now scan batch number barcode.`;
+                            if (batchNumber) {
+                                statusMessage += ` (Batch: ${batchNumber} already scanned)`;
+                            }
+                            statusDiv.textContent = statusMessage;
+                        } else {
+                            statusDiv.textContent = 'Invalid QR Code for weight. Please try again.';
+                        }
                     }
                 } else { // It's a barcode for batch number
                     if (!isNaN(parseInt(decodedText, 10)) && isFinite(decodedText)) {
