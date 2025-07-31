@@ -219,7 +219,19 @@ function scanQRCode() {
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
                 <div class="relative bg-white rounded-lg p-8 max-w-lg w-full">
                     <div id="reader"></div>
-                    <div id="scannerStatus" class="mt-2 text-center text-gray-600">Scan QR code for weight or barcode for batch number.</div>
+
+                    <div class="flex justify-around my-4">
+                        <div id="weightIndicator" class="text-center">
+                            <i class="fas fa-question-circle text-gray-400 text-4xl"></i>
+                            <p class="text-gray-600">Weight</p>
+                        </div>
+                        <div id="batchIndicator" class="text-center">
+                            <i class="fas fa-question-circle text-gray-400 text-4xl"></i>
+                            <p class="text-gray-600">Batch Number</p>
+                        </div>
+                    </div>
+
+                    <div id="scannerStatus" class="mt-2 text-center text-gray-600">Scan QR code for weight or batch number.</div>
                     <button id="closeScanner" class="mt-4 w-full bg-red-500 text-white py-3 px-4 rounded-lg">
                         Close Scanner
                     </button>
@@ -268,8 +280,8 @@ function scanQRCode() {
     function startScanner() {
         const html5QrCode = new Html5Qrcode("reader");
         const config = {
-            fps: 20, // Increased FPS for faster scanning
-            qrbox: { width: 300, height: 150 }, // Rectangular box for better barcode scanning
+            fps: 30, // A balanced FPS for performance and battery life.
+            qrbox: { width: 250, height: 250 }, // A square box is optimal for QR codes.
             experimentalFeatures: {
                 useBarCodeDetectorIfSupported: true
             },
@@ -279,7 +291,7 @@ function scanQRCode() {
             verbose: false,
             videoConstraints: {
                 facingMode: "environment",
-                width: { ideal: 640 }, // Lower resolution for faster processing
+                width: { ideal: 640 }, // Lower resolution for faster processing.
                 height: { ideal: 480 },
             }
         };
@@ -288,69 +300,59 @@ function scanQRCode() {
             { facingMode: "environment" },
             config,
             (decodedText, decodedResult) => {
-                let weight = sessionStorage.getItem('scannedWeight');
-                let batchNumber = sessionStorage.getItem('scannedBatchNumber');
-
-                // Case 1: Combined QR code "weight,batch_number"
+                // Determine what was scanned and update session storage
                 if (decodedText.includes(',')) {
                     const parts = decodedText.split(',');
                     if (parts.length === 2) {
                         const weightPart = parseFloat(parts[0]);
                         const batchPart = parts[1].trim();
-
                         if (!isNaN(weightPart) && batchPart) {
-                            const formattedWeight = weightPart.toFixed(2);
-                            sessionStorage.setItem('scannedWeight', formattedWeight);
+                            sessionStorage.setItem('scannedWeight', weightPart.toFixed(2));
                             sessionStorage.setItem('scannedBatchNumber', batchPart);
-                            statusDiv.textContent = `Weight: ${formattedWeight} and Batch: ${batchPart} scanned.`;
-                        } else {
-                            statusDiv.textContent = 'Invalid combined QR Code. Format must be "weight,batch_number".';
                         }
-                    } else {
-                        statusDiv.textContent = 'Invalid combined QR Code format. Please try again.';
                     }
-                }
-                // Case 2: QR code is a number (float or int), so it's a weight
-                else if (!isNaN(parseFloat(decodedText)) && isFinite(decodedText)) {
-                    const weightValue = parseFloat(decodedText);
-                    const formattedValue = weightValue.toFixed(2);
-                    sessionStorage.setItem('scannedWeight', formattedValue);
-                    weight = formattedValue;
-                    let statusMessage = `Weight: ${weight} scanned. Now scan batch number QR code.`;
-                    if (batchNumber) {
-                        statusMessage += ` (Batch: ${batchNumber} already scanned)`;
-                    }
-                    statusDiv.textContent = statusMessage;
-                }
-                // Case 3: QR code is not a number, so it's a batch number
-                else {
-                    const batchValue = decodedText;
-                    sessionStorage.setItem('scannedBatchNumber', batchValue);
-                    batchNumber = batchValue;
-                    let statusMessage = `Batch Number: ${batchNumber} scanned. Now scan weight QR code.`;
-                    if (weight) {
-                        statusMessage += ` (Weight: ${weight} already scanned)`;
-                    }
-                    statusDiv.textContent = statusMessage;
+                } else if (!isNaN(parseFloat(decodedText)) && isFinite(decodedText)) {
+                    // If the code is a number, it's a weight
+                    sessionStorage.setItem('scannedWeight', parseFloat(decodedText).toFixed(2));
+                } else {
+                    // Otherwise, it's a batch number
+                    sessionStorage.setItem('scannedBatchNumber', decodedText);
                 }
 
-                if (sessionStorage.getItem('scannedWeight') && sessionStorage.getItem('scannedBatchNumber')) {
-                    document.getElementById('scale_reading').value = sessionStorage.getItem('scannedWeight');
-                    document.getElementById('batch_number').value = sessionStorage.getItem('scannedBatchNumber');
+                const weight = sessionStorage.getItem('scannedWeight');
+                const batchNumber = sessionStorage.getItem('scannedBatchNumber');
+
+                // Update visual indicators
+                const weightIcon = document.querySelector('#weightIndicator i');
+                const batchIcon = document.querySelector('#batchIndicator i');
+
+                // Only take action when both values are present
+                if (weight && batchNumber) {
+                    weightIcon.className = 'fas fa-check-circle text-green-500 text-4xl';
+                    batchIcon.className = 'fas fa-check-circle text-green-500 text-4xl';
+                    statusDiv.textContent = 'Weight and Batch Number scanned. Submitting...';
+
+                    document.getElementById('scale_reading').value = weight;
+                    document.getElementById('batch_number').value = batchNumber;
 
                     html5QrCode.stop().then(() => {
                         document.body.removeChild(scannerModal);
-
                         sessionStorage.removeItem('scannedWeight');
                         sessionStorage.removeItem('scannedBatchNumber');
-
                         sessionStorage.setItem('scannerActive', 'true');
-
                         const form = document.getElementById('addReading');
                         if (form) {
                             form.submit();
                         }
                     });
+                }
+                // Otherwise, update the status to guide the user for the next scan.
+                else if (weight) {
+                    weightIcon.className = 'fas fa-check-circle text-green-500 text-4xl';
+                    statusDiv.textContent = 'Weight scanned. Please scan the Batch Number QR code.';
+                } else if (batchNumber) {
+                    batchIcon.className = 'fas fa-check-circle text-green-500 text-4xl';
+                    statusDiv.textContent = 'Batch Number scanned. Please scan the Weight QR code.';
                 }
             },
             (errorMessage) => {
