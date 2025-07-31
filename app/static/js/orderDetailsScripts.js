@@ -11,11 +11,23 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('addReading'); // Make sure your form has this ID
+    if (!form) return;
+
     const submitBtn = document.getElementById('submitBtn');
+    const originalBtnHTML = submitBtn.innerHTML;
+
     form.onsubmit = function () {
+        const scaleReading = document.getElementById('scale_reading').value.trim();
+        const batchNumber = document.getElementById('batch_number').value.trim();
+
+        if (scaleReading === '' || batchNumber === '') {
+            alert('Both scale reading and batch number must be filled out.');
+            return false; // Prevent form submission
+        }
+
         submitBtn.disabled = true; // Disable the button
         submitBtn.innerText = 'Processing...'; // Optional: Change button text
-
+        return true; // Allow form submission
     };
 });
 
