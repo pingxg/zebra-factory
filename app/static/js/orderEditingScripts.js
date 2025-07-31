@@ -7,60 +7,62 @@ const selectFieldsDataCache = {
 };
 
 async function populateSelectFields() {
-    const endpoints = {
-        customers: '/customer/get-active-customers',
-        products: '/product/get-active-products',
-        // fishSizes: '/customer/get-fish-sizes',
-    };
+    const fieldConfigs = [{
+        key: 'customers',
+        endpoint: '/customer/get-active-customers',
+        elementId: 'customersSelect',
+        isDatalist: true
+    }, {
+        key: 'products',
+        endpoint: '/product/get-active-products',
+        elementId: 'productsSelect'
+    }, {
+        key: 'customers',
+        endpoint: '/customer/get-active-customers',
+        elementId: 'updateCustomersSelect',
+        isDatalist: true,
+        cacheKey: 'customers'
+    }, {
+        key: 'products',
+        endpoint: '/product/get-active-products',
+        elementId: 'updateProductsSelect',
+        cacheKey: 'products'
+    }];
 
-    for (const [key, value] of Object.entries(endpoints)) {
-        const select = document.getElementById(`${key}Select`);
-        // Clear existing options before appending new ones
-        select.innerHTML = '';
-        // Add a default "Select" option
-        const defaultOption = new Option(`Select`, '');
-        select.appendChild(defaultOption);
-
-        // Use cached data if available
-        if (!selectFieldsDataCache[key]) {
+    for (const config of fieldConfigs) {
+        const cacheKey = config.cacheKey || config.key;
+        if (!selectFieldsDataCache[cacheKey]) {
             try {
-                const response = await fetch(value);
-                selectFieldsDataCache[key] = await response.json();
+                const response = await fetch(config.endpoint);
+                selectFieldsDataCache[cacheKey] = await response.json();
             } catch (error) {
-                console.error(`Failed to fetch ${key}:`, error);
+                console.error(`Failed to fetch ${cacheKey}:`, error);
             }
         }
 
-        // Proceed to populate the select field with cached data
-        selectFieldsDataCache[key].forEach(item => {
-            const option = new Option(item);
-            select.appendChild(option);
-        });
-    }
-    const updateEndpoints = {
-        customers: '/customer/get-active-customers',
-        products: '/product/get-active-products',
-    };
+        const data = selectFieldsDataCache[cacheKey];
+        if (!data) continue;
 
-    for (const [key, value] of Object.entries(updateEndpoints)) {
-        const select = document.getElementById(`update${key.charAt(0).toUpperCase() + key.slice(1)}Select`);
-        select.innerHTML = '';
-        const defaultOption = new Option(`Select`, '');
-        select.appendChild(defaultOption);
+        const element = document.getElementById(config.elementId);
 
-        if (!selectFieldsDataCache[key]) {
-            try {
-                const response = await fetch(value);
-                selectFieldsDataCache[key] = await response.json();
-            } catch (error) {
-                console.error(`Failed to fetch ${key}:`, error);
-            }
+        if (config.isDatalist) {
+            const datalistId = element.getAttribute('list');
+            const datalist = document.getElementById(datalistId);
+            datalist.innerHTML = '';
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item;
+                datalist.appendChild(option);
+            });
+        } else {
+            element.innerHTML = '';
+            const defaultOption = new Option('Select', '');
+            element.appendChild(defaultOption);
+            data.forEach(item => {
+                const option = new Option(item);
+                element.appendChild(option);
+            });
         }
-
-        selectFieldsDataCache[key].forEach(item => {
-            const option = new Option(item);
-            select.appendChild(option);
-        });
     }
 }
 
