@@ -207,6 +207,12 @@ function showDeleteImageConfirmation(imageId, presignedUrl, deleteUrl) {
 
 
 function scanQRCode() {
+    // Check if the order is already complete
+    if (typeof isOrderComplete !== 'undefined' && isOrderComplete) {
+        showFlash('Order is already complete. Cannot add more readings.', 'error');
+        return; // Stop the function from proceeding
+    }
+
     // Clear previous scan data from session storage
     sessionStorage.removeItem('scannedWeight');
     sessionStorage.removeItem('scannedBatchNumber');

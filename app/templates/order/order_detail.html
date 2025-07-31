@@ -180,7 +180,8 @@
 
                 <!-- "Scan QR code to add reading" Button -->
                 <button type="button" onclick="scanQRCode();"
-                    class="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-4 rounded-lg w-full transition duration-300 ease-in-out transform mb-3 hover:from-blue-600 hover:to-blue-700">
+                    class="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-4 rounded-lg w-full transition duration-300 ease-in-out transform mb-3 {{ 'opacity-50 cursor-not-allowed' if order[6] > order[5]|float*completion_threshold_upper|float else 'hover:from-blue-600 hover:to-blue-700' }}"
+                    {{ 'disabled' if not order[6] <=order[5]|float*completion_threshold_upper|float else '' }}>
                     <i class="fa-solid fa-qrcode"></i> Scan QR Code
                 </button>
 
@@ -230,6 +231,7 @@
                 // Pass customer name and date to JavaScript
                 const customerName = "{{ order[1] }}";
                 const date = "{{ order[2] }}";
+                const isOrderComplete = {{ (order[6] > order[5] | float * completion_threshold_upper | float) | tojson }};
             </script>
             <!-- Dropzone area -->
             <form id="upload-widget" class="dropzone border-2 border-dashed border-blue-600 rounded-lg bg-gray-200">
