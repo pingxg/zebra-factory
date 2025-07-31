@@ -207,6 +207,10 @@ function showDeleteImageConfirmation(imageId, presignedUrl, deleteUrl) {
 
 
 function scanQRCode() {
+    // Clear previous scan data from session storage
+    sessionStorage.removeItem('scannedWeight');
+    sessionStorage.removeItem('scannedBatchNumber');
+
     // Create a modal for the QR scanner
     const scannerModal = document.createElement('div');
     scannerModal.innerHTML = `
@@ -215,7 +219,7 @@ function scanQRCode() {
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
                 <div class="relative bg-white rounded-lg p-8 max-w-lg w-full">
                     <div id="reader"></div>
-                    <div id="scannerStatus" class="mt-2 text-center text-gray-600"></div>
+                    <div id="scannerStatus" class="mt-2 text-center text-gray-600">Scan QR code for weight or barcode for batch number.</div>
                     <button id="closeScanner" class="mt-4 w-full bg-red-500 text-white py-3 px-4 rounded-lg">
                         Close Scanner
                     </button>
@@ -270,7 +274,12 @@ function scanQRCode() {
             experimentalFeatures: {
                 useBarCodeDetectorIfSupported: true
             },
-            formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.QR_CODE,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.UPC_A
+            ],
             verbose: false,
             videoConstraints: {
                 facingMode: "environment",
@@ -283,35 +292,60 @@ function scanQRCode() {
         html5QrCode.start(
             { facingMode: "environment" },
             config,
-            (decodedText) => {
-                try {
+            (decodedText, decodedResult) => {
+                let weight = sessionStorage.getItem('scannedWeight');
+                let batchNumber = sessionStorage.getItem('scannedBatchNumber');
+
+                if (decodedResult.result.format.formatName === 'QR_CODE') {
                     const scannedValue = parseFloat(decodedText);
                     if (!isNaN(scannedValue)) {
                         const formattedValue = scannedValue.toFixed(2);
-                        document.getElementById('scale_reading').value = formattedValue;
-
-                        html5QrCode.stop().then(() => {
-                            document.body.removeChild(scannerModal);
-
-                            // Set flag before submitting
-                            sessionStorage.setItem('scannerActive', 'true');
-
-                            const form = document.getElementById('addReading');
-                            const submitBtn = document.getElementById('submitBtn');
-                            if (form && submitBtn) {
-                                submitBtn.click();
-                            }
-                        });
+                        sessionStorage.setItem('scannedWeight', formattedValue);
+                        weight = formattedValue;
+                        let statusMessage = `Weight: ${weight} scanned. Now scan batch number barcode.`;
+                        if (batchNumber) {
+                            statusMessage += ` (Batch: ${batchNumber} already scanned)`;
+                        }
+                        statusDiv.textContent = statusMessage;
                     } else {
-                        statusDiv.textContent = 'Invalid number format scanned. Please try again.';
+                        statusDiv.textContent = 'Invalid QR Code for weight. Please try again.';
                     }
-                } catch (error) {
-                    console.error('Error processing scanned value:', error);
-                    statusDiv.textContent = 'Error processing scanned value. Please try again.';
+                } else { // It's a barcode for batch number
+                    if (!isNaN(parseInt(decodedText, 10)) && isFinite(decodedText)) {
+                        sessionStorage.setItem('scannedBatchNumber', decodedText);
+                        batchNumber = decodedText;
+                        let statusMessage = `Batch Number: ${batchNumber} scanned. Now scan weight QR code.`;
+                        if (weight) {
+                            statusMessage += ` (Weight: ${weight} already scanned)`;
+                        }
+                        statusDiv.textContent = statusMessage;
+                    } else {
+                        statusDiv.textContent = 'Invalid Barcode for batch number. Please try again.';
+                    }
+                }
+
+                if (sessionStorage.getItem('scannedWeight') && sessionStorage.getItem('scannedBatchNumber')) {
+                    document.getElementById('scale_reading').value = sessionStorage.getItem('scannedWeight');
+                    document.getElementById('batch_number').value = sessionStorage.getItem('scannedBatchNumber');
+
+                    html5QrCode.stop().then(() => {
+                        document.body.removeChild(scannerModal);
+
+                        sessionStorage.removeItem('scannedWeight');
+                        sessionStorage.removeItem('scannedBatchNumber');
+
+                        sessionStorage.setItem('scannerActive', 'true');
+
+                        const form = document.getElementById('addReading');
+                        if (form) {
+                            form.submit();
+                        }
+                    });
                 }
             },
             (errorMessage) => {
-                if (!errorMessage.includes("QR code parse error")) {
+                // Non-critical errors can be logged without alerting the user
+                if (!errorMessage.includes("code parse error")) {
                     console.log("QR Error:", errorMessage);
                     if (errorMessage.includes("permission")) {
                         sessionStorage.removeItem('cameraPermission');
@@ -330,27 +364,25 @@ function scanQRCode() {
             html5QrCode.stop().then(() => {
                 document.body.removeChild(scannerModal);
                 sessionStorage.removeItem('scannerActive');
+                sessionStorage.removeItem('scannedWeight');
+                sessionStorage.removeItem('scannedBatchNumber');
             }).catch((err) => {
                 console.error("Stop failed:", err);
-                // Ensure the modal is removed even if stopping fails
                 document.body.removeChild(scannerModal);
             });
         });
     }
 
-    // Check if HTTPS is being used
-    if (window.location.protocol !== 'https:') {
+    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
         statusDiv.textContent = "Camera access requires HTTPS. Please use a secure connection.";
         return;
     }
 
-    // Check if getUserMedia is supported
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         statusDiv.textContent = "Sorry, your browser doesn't support camera access.";
         return;
     }
 
-    // Initialize the scanner
     if (sessionStorage.getItem('cameraPermission') === 'granted') {
         startScanner();
     } else {
@@ -365,5 +397,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-webView.getSettings().setJavaScriptEnabled(true);
-webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
+// The following lines seem to be related to a webview and might not be used in a standard web browser context.
+// If they cause errors, they might need to be removed or placed inside a condition that checks for the webview environment.
+try {
+    webView.getSettings().setJavaScriptEnabled(true);
+    webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
+} catch (e) {
+    console.log("Not in a webView environment or webView is not defined.");
+}
