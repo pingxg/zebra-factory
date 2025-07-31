@@ -300,6 +300,16 @@ function scanQRCode() {
             { facingMode: "environment" },
             config,
             (decodedText, decodedResult) => {
+                // Log the raw scanned data to the console for debugging
+                console.log("Scanned Data:", decodedText);
+
+                // A more robust check to ensure the entire string is a number (float or int).
+                const isPurelyNumeric = (str) => {
+                    const trimmedStr = str.trim();
+                    if (trimmedStr === "") return false;
+                    return !isNaN(trimmedStr) && !isNaN(parseFloat(trimmedStr));
+                }
+
                 // Determine what was scanned and update session storage
                 if (decodedText.includes(',')) {
                     const parts = decodedText.split(',');
@@ -311,12 +321,12 @@ function scanQRCode() {
                             sessionStorage.setItem('scannedBatchNumber', batchPart);
                         }
                     }
-                } else if (!isNaN(parseFloat(decodedText)) && isFinite(decodedText)) {
-                    // If the code is a number, it's a weight
+                } else if (isPurelyNumeric(decodedText)) {
+                    // It's a weight if it's a valid number
                     sessionStorage.setItem('scannedWeight', parseFloat(decodedText).toFixed(2));
                 } else {
                     // Otherwise, it's a batch number
-                    sessionStorage.setItem('scannedBatchNumber', decodedText);
+                    sessionStorage.setItem('scannedBatchNumber', decodedText.trim());
                 }
 
                 const weight = sessionStorage.getItem('scannedWeight');
