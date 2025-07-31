@@ -21,73 +21,57 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 document.addEventListener('DOMContentLoaded', function () {
-    const editBtns = document.querySelectorAll('.edit-btn');
-    const editModal = document.getElementById('editModal');
-    const editInput = document.getElementById('editWeightInput');
-    const saveEditBtn = document.getElementById('saveEdit');
-    const cancelEditBtn = document.getElementById('cancelEdit');
-    let currentEditingWeightId = null;
+    // Handler for editing weight records
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function (event) {
+            event.preventDefault();
 
-    editBtns.forEach(btn => {
-        btn.addEventListener('click', function () {
-            event.preventDefault();  // Prevent the default behavior
-            currentEditingWeightId = this.getAttribute('data-weight-id');
-            order_id = this.getAttribute('data-order-id');
+            const weightId = this.getAttribute('data-weight-id');
             const currentWeight = this.getAttribute('data-current-weight');
-            editInput.value = currentWeight;
-            editModal.classList.remove('hidden');
+
+            const newWeight = prompt("Enter the new weight:", currentWeight);
+
+            if (newWeight !== null && newWeight.trim() !== '' && !isNaN(newWeight)) {
+                fetch(`/weight/edit/${weightId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ edit_weight: newWeight }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert('Error updating weight: ' + (data.error || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Fetch error:", error);
+                        alert('An error occurred while updating the weight.');
+                    });
+            } else if (newWeight !== null) { // User entered something, but it wasn't a valid number
+                alert("Invalid input. Please enter a valid number for the weight.");
+            }
         });
     });
 
-    saveEditBtn.addEventListener('click', function () {
-        console.log("Save button clicked");  // Add this line
+    // Handler for deleting weight records
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function (event) {
+            event.preventDefault();
+            const deleteUrl = this.getAttribute('data-delete-url');
 
-        const newValue = editInput.value;
-        const response = fetch(`/weight/edit/${currentEditingWeightId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ edit_weight: newValue }),
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                console.log("Response:", response);  // Log the response
-                return response.json();
-            })
-            .then(data => {
-                console.log("Data:", data);  // Log the data
-                if (data.success) {
-                    window.location.reload();  // Refresh the page to show the updated value
-                } else {
-                    alert('Error updating weight.');
-                }
-            })
-            .catch(error => {
-                console.log("Fetch error:", error);  // Log the error
-            });
+            if (confirm('Are you sure you want to delete this weight record?')) {
+                // Create a temporary form to submit the DELETE request
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = deleteUrl;
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
     });
-
-    cancelEditBtn.addEventListener('click', function () {
-        editModal.classList.add('hidden');
-    });
-});
-
-
-
-function showDeleteConfirmation(deleteUrl) {
-    // Set the form's action to the provided delete URL
-    document.getElementById('deleteForm').action = deleteUrl;
-
-    // Show the delete confirmation modal
-    document.getElementById('deleteConfirmationModal').classList.remove('hidden');
-}
-
-document.getElementById('cancelDelete').addEventListener('click', function () {
-    // Hide the delete confirmation modal
-    document.getElementById('deleteConfirmationModal').classList.add('hidden');
 });
 
 
