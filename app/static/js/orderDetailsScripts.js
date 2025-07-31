@@ -28,29 +28,57 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const weightId = this.getAttribute('data-weight-id');
             const currentWeight = this.getAttribute('data-current-weight');
+            const currentBatchNumber = this.getAttribute('data-current-batch-number');
 
-            const newWeight = prompt("Enter the new weight:", currentWeight);
+            // Prompt for new weight
+            const newWeightStr = prompt("Enter the new weight (leave blank to keep current):", currentWeight);
 
-            if (newWeight !== null && newWeight.trim() !== '' && !isNaN(newWeight)) {
-                fetch(`/weight/edit/${weightId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ edit_weight: newWeight }),
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            window.location.reload();
-                        } else {
-                            alert('Error updating weight: ' + (data.error || 'Unknown error'));
-                        }
+            // If user did not cancel the weight prompt
+            if (newWeightStr !== null) {
+                // Prompt for new batch number
+                const newBatchNumberStr = prompt("Enter the new batch number (leave blank to keep current):", currentBatchNumber);
+
+                // If user did not cancel the batch number prompt
+                if (newBatchNumberStr !== null) {
+                    const newWeight = newWeightStr.trim();
+                    const newBatchNumber = newBatchNumberStr.trim();
+
+                    const isWeightChanged = newWeight !== '' && newWeight !== currentWeight;
+                    const isBatchChanged = newBatchNumber !== '' && newBatchNumber !== currentBatchNumber;
+
+                    if (!isWeightChanged && !isBatchChanged) {
+                        // No alert needed if nothing changed, just do nothing.
+                        return;
+                    }
+
+                    // Validate weight if changed
+                    if (isWeightChanged && isNaN(newWeight)) {
+                        alert("Invalid input. Please enter a valid number for the weight.");
+                        return;
+                    }
+
+                    const payload = {};
+                    if (isWeightChanged) payload.edit_weight = newWeight;
+                    if (isBatchChanged) payload.edit_batch_number = newBatchNumber;
+
+                    fetch(`/weight/edit/${weightId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
                     })
-                    .catch(error => {
-                        console.error("Fetch error:", error);
-                        alert('An error occurred while updating the weight.');
-                    });
-            } else if (newWeight !== null) { // User entered something, but it wasn't a valid number
-                alert("Invalid input. Please enter a valid number for the weight.");
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                window.location.reload();
+                            } else {
+                                alert('Error updating record: ' + (data.error || 'Unknown error'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Fetch error:", error);
+                            alert('An error occurred while updating the record.');
+                        });
+                }
             }
         });
     });

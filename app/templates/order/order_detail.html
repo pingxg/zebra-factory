@@ -128,25 +128,28 @@
             <div class="mb-6 bg-gradient-to-r from-gray-100 to-gray-200 p-6 rounded-lg shadow-md">
                 {% for weight in weight_details %}
                 <div class="mb-3 flex justify-between items-center border-b border-gray-300 pb-3">
+                    <!-- Production Time -->
                     <div class="text-gray-700 font-medium">
                         {{ loop.index }}.
                     </div>
-                    <div class="text-gray-700 font-medium absolute left-1/2 transform -translate-x-1/2">
-                        {{ "%.2f"|format(weight[1]) }} kg
+                    <!-- Weight and Batch Number -->
+                    <div class="flex items-baseline">
+                        <span class="text-gray-700 font-medium">{{ "%.2f"|format(weight[1])}} kg</span>
+                        {% if weight[3] and weight[3] != '' and weight[3] != '0'%}
+                        <span class="text-xs text-gray-500 ml-1">({{ weight[3]|upper }})</span>
+                        {% endif %}
                     </div>
 
-
-                    <div class="flex">
-                        <form action="{{ url_for('weight.edit', weight_id=weight[0]) }}" method="post"
-                            class="inline-block mr-2">
-                            <button title="Edit"
-                                class="flex items-center p-2 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-full hover:from-blue-500 hover:to-blue-600 transition duration-300 ease-in-out edit-btn"
-                                data-weight-id="{{ weight[0] }}" data-current-weight="{{ weight[1] }}"
-                                data-order-id="{{ order[0] }}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </form>
-
+                    <!-- Action Buttons -->
+                    <div class="flex items-center space-x-2">
+                        <!-- Edit Button -->
+                        <button title="Edit"
+                            class="flex items-center p-2 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-full hover:from-blue-500 hover:to-blue-600 transition duration-300 ease-in-out edit-btn"
+                            data-weight-id="{{ weight[0] }}" data-current-weight="{{ weight[1] }}"
+                            data-current-batch-number="{{ weight[3] }}" data-order-id="{{ order[0] }}">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                        <!-- Delete Button -->
                         <button title="Delete"
                             class="flex items-center p-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-full hover:from-red-500 hover:to-red-600 transition duration-300 ease-in-out delete-btn"
                             data-delete-url="{{ url_for('weight.delete', weight_id=weight[0]) }}">

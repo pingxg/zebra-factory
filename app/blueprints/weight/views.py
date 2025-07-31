@@ -47,23 +47,27 @@ def edit(weight_id):
 
     if request.method == 'POST':
         data = request.get_json()
-        edit_val = data.get('edit_weight')
-        if edit_val is None:
-            flash('No edit value provided!', 'error')
-            return jsonify(success=False, error="No edit value provided"), 400
+        edit_weight = data.get('edit_weight')
+        edit_batch_number = data.get('edit_batch_number')
+
+        if edit_weight is None and edit_batch_number is None:
+            return jsonify(success=False, error="No new data provided."), 400
 
         try:
-            edit_val = float(edit_val)  # Adjust according to your data type
-            weight.quantity = edit_val
+            if edit_weight is not None:
+                weight.quantity = float(edit_weight)
+            if edit_batch_number is not None:
+                weight.batch_number = str(edit_batch_number)
+
             db.session.commit()
-            flash('Weight updated successfully!', 'success')
+            flash('Record updated successfully!', 'success')
             return jsonify(success=True)
         except ValueError:
             flash('Invalid value for weight.', 'error')
-            return jsonify(success=False, error="Invalid value provided"), 400
+            return jsonify(success=False, error="Invalid value for weight."), 400
         except Exception as e:
-            flash('An error occurred while updating the weight.', 'error')
-            db.session.rollback()  # Rollback in case of any error
+            db.session.rollback()
+            flash('An error occurred while updating the record.', 'error')
             return jsonify(success=False, error=str(e)), 500
 
 

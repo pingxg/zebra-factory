@@ -19,7 +19,8 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 @login_required
 @roles_required("admin")
 def order() -> str:
-    week_str: str = request.args.get("week", calculate_current_iso_week(date.today().strftime("%Y-%m-%d")))
+    week_str: str = request.args.get(
+        "week", calculate_current_iso_week(date.today().strftime("%Y-%m-%d")))
 
     # Adjust the week based on button clicks
     if "prev_week" in request.args:
@@ -41,7 +42,8 @@ def order() -> str:
                 Order.product,
                 (func.coalesce(Order.price * 1.14, 0)).label("price"),
                 Order.quantity,
-                (func.coalesce(func.sum(Weight.quantity), 0)).label("total_produced"),
+                (func.coalesce(func.sum(Weight.quantity), 0)).label(
+                    "total_produced"),
             )
             .filter(Order.date.between(start_date, end_date))
             .outerjoin(Weight, Order.id == Weight.order_id)
@@ -83,7 +85,8 @@ def order_detail(order_id: int) -> str:
                 Order.product,
                 (func.coalesce(Order.price * 1.14, 0)).label("price"),
                 Order.quantity,
-                (func.coalesce(func.sum(Weight.quantity), 0)).label("total_produced"),
+                (func.coalesce(func.sum(Weight.quantity), 0)).label(
+                    "total_produced"),
                 Customer.priority,
                 Customer.packing,
                 case(
@@ -107,7 +110,8 @@ def order_detail(order_id: int) -> str:
         )
 
         weight_details = (
-            db.session.query(Weight.id, Weight.quantity, Weight.production_time)
+            db.session.query(Weight.id, Weight.quantity,
+                             Weight.production_time, Weight.batch_number)
             .filter(Weight.order_id == order_id)
             .order_by(Weight.production_time.asc())
             .all()
