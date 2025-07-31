@@ -268,9 +268,8 @@ function scanQRCode() {
     function startScanner() {
         const html5QrCode = new Html5Qrcode("reader");
         const config = {
-            fps: 10, // Reduced FPS for better performance
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0,
+            fps: 20, // Increased FPS for faster scanning
+            qrbox: { width: 300, height: 150 }, // Rectangular box for better barcode scanning
             experimentalFeatures: {
                 useBarCodeDetectorIfSupported: true
             },
@@ -283,9 +282,8 @@ function scanQRCode() {
             verbose: false,
             videoConstraints: {
                 facingMode: "environment",
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                frameRate: { ideal: 30 } // Reduced frame rate
+                width: { ideal: 640 }, // Lower resolution for faster processing
+                height: { ideal: 480 },
             }
         };
 
