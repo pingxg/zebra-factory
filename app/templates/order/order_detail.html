@@ -168,7 +168,10 @@
                 placeholder="Enter scale reading">
 
                 <!-- Input Box for Batch Number -->
-                <input type="hidden" id="batch_number" name="batch_number">
+                <input type="text" id="batch_number" name="batch_number"
+                    class="border border-gray-300 px-3 py-2 h-12 text-gray-700 w-full rounded mb-4 {{ 'opacity-50 cursor-not-allowed' if order[6] > order[5]|float*completion_threshold_upper|float else '' }}"
+                    placeholder="Or enter batch number manually" {{ 'disabled' if not order[6]
+                    <=order[5]|float*completion_threshold_upper|float else '' }}>
 
 
                 <!-- "Add Reading" Button -->

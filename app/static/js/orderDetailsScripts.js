@@ -249,6 +249,14 @@ function scanQRCode() {
 
     const statusDiv = document.getElementById('scannerStatus');
 
+    // Check for manually entered batch number when scanner starts
+    const batchNumberInput = document.getElementById('batch_number');
+    if (batchNumberInput.value.trim()) {
+        sessionStorage.setItem('scannedBatchNumber', batchNumberInput.value.trim());
+        document.querySelector('#batchIndicator i').className = 'fas fa-check-circle text-green-500 text-4xl';
+        statusDiv.textContent = 'Batch Number provided. Please scan the Weight QR code.';
+    }
+
     // Modified permission handling
     async function requestCameraPermission() {
         try {
