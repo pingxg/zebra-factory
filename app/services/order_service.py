@@ -25,7 +25,8 @@ class OrderService:
                             func.length(Customer.fish_size) == 0,
                             Order.fish_size,
                         ),  # If Customer.fish_size is empty, use Order.fish_size
-                        else_=func.coalesce(Order.fish_size, Customer.fish_size),
+                        else_=func.coalesce(
+                            Order.fish_size, Customer.fish_size),
                     ).label("fish_size"),
                     Order.note,
                 )
@@ -62,7 +63,8 @@ class OrderService:
                 customer=order_data.get("customer"),
                 product=order_data.get("product"),
                 price=round(float(order_data.get("price")) / 1.14, 4),
-                date=datetime.strptime(order_data.get("date"), "%Y-%m-%d").date(),
+                date=datetime.strptime(
+                    order_data.get("date"), "%Y-%m-%d").date(),
             ).first()
 
             if existing_order:
@@ -82,7 +84,8 @@ class OrderService:
                 price=round(float(order_data.get("price")) / 1.14, 4),
                 quantity=float(order_data.get("quantity")),
                 fish_size=order_data.get("fishSize"),
-                date=datetime.strptime(order_data.get("date"), "%Y-%m-%d").date(),
+                date=datetime.strptime(
+                    order_data.get("date"), "%Y-%m-%d").date(),
                 note=order_data.get("note"),
             )
             db.session.add(new_order)
@@ -104,6 +107,9 @@ class OrderService:
         try:
             order = Order.query.filter_by(id=order_id).first()
             if order:
+                order.customer = data["customer"]
+                order.product = data["product"]
+                order.date = datetime.strptime(data["date"], "%Y-%m-%d").date()
                 order.price = data["price"] / 1.14
                 order.quantity = data["quantity"]
                 order.fish_size = data["fish_size"]

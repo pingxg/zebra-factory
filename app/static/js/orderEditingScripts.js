@@ -37,9 +37,34 @@ async function populateSelectFields() {
             select.appendChild(option);
         });
     }
+    const updateEndpoints = {
+        customers: '/customer/get-active-customers',
+        products: '/product/get-active-products',
+    };
+
+    for (const [key, value] of Object.entries(updateEndpoints)) {
+        const select = document.getElementById(`update${key.charAt(0).toUpperCase() + key.slice(1)}Select`);
+        select.innerHTML = '';
+        const defaultOption = new Option(`Select`, '');
+        select.appendChild(defaultOption);
+
+        if (!selectFieldsDataCache[key]) {
+            try {
+                const response = await fetch(value);
+                selectFieldsDataCache[key] = await response.json();
+            } catch (error) {
+                console.error(`Failed to fetch ${key}:`, error);
+            }
+        }
+
+        selectFieldsDataCache[key].forEach(item => {
+            const option = new Option(item);
+            select.appendChild(option);
+        });
+    }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     populateSelectFields();
 });
 
@@ -53,9 +78,9 @@ async function populateUpdateModal(orderId) {
         // Get the JSON data from the response
         const orderDetails = await response.json();
         document.getElementById('hiddenOrderID').value = orderDetails.id;
-        document.getElementById('displayCustomerName').textContent = orderDetails.customer;
-        document.getElementById('displayOrderDate').textContent = orderDetails.date;
-        document.getElementById('displayProduct').textContent = orderDetails.product;
+        document.getElementById('updateCustomersSelect').value = orderDetails.customer;
+        document.getElementById('updateOrderDateInput').value = orderDetails.date;
+        document.getElementById('updateProductsSelect').value = orderDetails.product;
         document.getElementById('updateOrderPriceInput').value = parseFloat(orderDetails.price).toFixed(2);
         document.getElementById('updateOrderQuantityInput').value = parseFloat(orderDetails.quantity).toFixed(2);
         document.getElementById('noteInput').value = orderDetails.note;
@@ -73,12 +98,12 @@ async function populateUpdateModal(orderId) {
                 // Handle cases where the order's fish size isn't in the available options
                 console.warn(`Fish size "${orderDetails.fish_size}" not found in select options`);
             }
-        }    
+        }
         openModal('updateOrderModal'); // Use this function to open the modal after populating it
     } catch (error) {
         console.error('Error fetching order details:', error);
-    }    
-}    
+    }
+}
 
 
 function populateAddOrderModal(date = null, customer = null) {
@@ -89,7 +114,7 @@ function populateAddOrderModal(date = null, customer = null) {
     if (customer) document.getElementById('customersSelect').value = customer;
     // Handle enabling/disabling or showing/hiding fields as needed
     openModal('addOrderModal'); // Open the modal
-}    
+}
 
 
 
@@ -126,17 +151,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const updateOrderForm = document.getElementById('updateOrderForm');
     const deleteOrderBtn = document.getElementById('deleteOrderBtn');
     const saveOrderUpdateBtn = document.getElementById('saveOrderUpdateBtn');
     const saveEditOrderUpdateBtn = document.getElementById('saveEditOrderUpdateBtn');
 
-    saveOrderUpdateBtn.addEventListener('click', function() {
+    saveOrderUpdateBtn.addEventListener('click', function () {
         event.preventDefault(); // Prevents the default action if it's a submit button.
         const formData = new FormData(updateOrderForm);
         const orderData = {
             id: parseInt(formData.get('id')),
+            customer: formData.get('customer'),
+            date: formData.get('date'),
+            product: formData.get('product'),
             price: parseFloat(formData.get('price')),
             quantity: parseFloat(formData.get('quantity')),
             fish_size: formData.get('fishSize'),
@@ -149,26 +177,26 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify(orderData),
         })
-        .then(data => {
-            if (data.status === 200) {
-                window.location.reload();  // Refresh the page to show the updated value
-            } else {
-                console.log('Error updating order.');
-                window.location.reload();
-            }
-        })
-        .catch(error => {
-            console.log("Fetch error:", error);  // Log the error
-        });
+            .then(data => {
+                if (data.status === 200) {
+                    window.location.reload();  // Refresh the page to show the updated value
+                } else {
+                    console.log('Error updating order.');
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.log("Fetch error:", error);  // Log the error
+            });
     });
 
 
-    saveEditOrderUpdateBtn.addEventListener('click', function() {
+    saveEditOrderUpdateBtn.addEventListener('click', function () {
         const formData = new FormData(updateOrderForm);
         window.location.href = `/order/${parseInt(formData.get('id'))}`; // Redirect to the order detail page
     });
 
-    deleteOrderBtn.addEventListener('click', function(event) {
+    deleteOrderBtn.addEventListener('click', function (event) {
         event.preventDefault(); // Prevents the default action if it's a submit button.
         // Show confirmation dialog
         const userConfirmed = confirm("Are you sure you want to delete this order?\nAll weight details will be lost!");
@@ -183,25 +211,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
             },
         })
-        .then(data => {
-            console.log(data);
-            if (data.status === 200) {
-                window.location.reload();  // Refresh the page to show the updated value
-            } else if (data.status === 403) {
-                console.log('Failed to delete order.', 'error');
-                toastr.error('Access denied. You do not have permission to add an order.');
-                window.location.reload();
-            }
-        })
-        .catch(error => {
-            console.log("Fetch error:", error);  // Log the error
-        });
+            .then(data => {
+                console.log(data);
+                if (data.status === 200) {
+                    window.location.reload();  // Refresh the page to show the updated value
+                } else if (data.status === 403) {
+                    console.log('Failed to delete order.', 'error');
+                    toastr.error('Access denied. You do not have permission to add an order.');
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.log("Fetch error:", error);  // Log the error
+            });
     });
 });
 
 
 
-document.getElementById('addOrderForm').addEventListener('submit', async function(event) {
+document.getElementById('addOrderForm').addEventListener('submit', async function (event) {
     event.preventDefault(); // Prevent the default form submission
 
     const form = event.target;
@@ -215,18 +243,18 @@ document.getElementById('addOrderForm').addEventListener('submit', async functio
             },
             body: JSON.stringify(data),
         })
-        .then(data => {
-            const response = data.json();
-            if (data.status === 200) {
-                window.location.reload();  // Refresh the page to show the updated value
-            } else {
-                console.log('Failed to add order.', 'error');
-                window.location.reload();
-            }
-        })
-        .catch(error => {
-            console.log("Fetch error:", error);  // Log the error
-        });
+            .then(data => {
+                const response = data.json();
+                if (data.status === 200) {
+                    window.location.reload();  // Refresh the page to show the updated value
+                } else {
+                    console.log('Failed to add order.', 'error');
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.log("Fetch error:", error);  // Log the error
+            });
         closeModal('addOrderModal'); // Assuming closeModal is your function to close the modal
 
     } catch (error) {
@@ -257,16 +285,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // DOMContentLoaded listener to setup event listeners once the document is fully loaded
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('cancelAddOrderBtn').addEventListener('click', function(event) {
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('cancelAddOrderBtn').addEventListener('click', function (event) {
         event.preventDefault(); // Prevents the default action if it's a submit button.
         closeModal('addOrderModal');
     });
 });
 
 // DOMContentLoaded listener to setup event listeners once the document is fully loaded
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('cancelOrderUpdateBtn').addEventListener('click', function(event) {
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('cancelOrderUpdateBtn').addEventListener('click', function (event) {
         event.preventDefault(); // Prevents the default action if it's a submit button.
         closeModal('updateOrderModal');
     });
@@ -274,14 +302,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 // DOMContentLoaded listener to setup event listeners once the document is fully loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const productsSelect = document.getElementById('productsSelect');
     const fishSizesSelect = document.getElementById('fishSizesSelect');
 
-    productsSelect.addEventListener('change', function(event) {
+    productsSelect.addEventListener('change', function (event) {
         // Assuming the presence of "lohi" is checked in the option's text
         const selectedOptionText = productsSelect.options[productsSelect.selectedIndex].text.toLowerCase();
-        
+
         // Check if "lohi" is present in the selected option's text
         if (selectedOptionText.includes("lohi")) {
             fishSizesSelect.disabled = false; // Enable fishSizesSelect if "lohi" is present
