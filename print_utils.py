@@ -65,7 +65,8 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 o.quantity AS weight, 
                 w.quantity AS delivered,
                 c.priority,
-                COUNT(*) OVER () AS box_count
+                COUNT(*) OVER () AS box_count,
+                c.hide_company_name
             FROM
                 salmon_orders o
             LEFT JOIN 
@@ -392,7 +393,7 @@ def zebra_generator(df):
 
     ; **生产商信息（间距增大）**
     ^FO30,90^A0N,24,24^FDValmistaja / Tillverkare^FS
-    ^FO30,120^A0N,30,30^FDSpartao Oy^FS
+    ^FO30,120^A0N,30,30^FD{company_display}^FS
     ^FO30,160^A0N,24,24^FDY-tunnus: 2938534-6^FS
     ^FO30,190^A0N,24,24^FDOsoite: Nihtisillantie 3B, 02630 Espoo^FS
     ^FO30,220^A0N,24,24^FDPuh: +358 45 7831 9456^FS
@@ -460,7 +461,7 @@ def zebra_generator(df):
 
     ; **生产商信息**
     ^FO30,40^A0N,26,26^FDValmistaja / Tillverkare^FS
-    ^FO30,80^A0N,34,34^FDSpartao Oy^FS
+    ^FO30,80^A0N,34,34^FD{company_display}^FS
     ^FO30,130^A0N,26,26^FDY-tunnus: 2938534-6^FS
     ^FO30,160^A0N,26,23^FDOsoite: Nihtisillantie 3B, 02630 Espoo^FS
     ^FO30,190^A0N,26,26^FDPuh: +358 45 7831 9456^FS
@@ -501,6 +502,7 @@ def zebra_generator(df):
 
     """
     df['priority'] = df['priority'].str.split(' ').str[1]
+    df['company_display'] = df['hide_company_name'].apply(lambda x: "" if x == 1 else "Spartao Oy")
     zpl_labels = []
     for _, row in df.iterrows():
         if 'Frozen' in row['product']:
@@ -527,6 +529,7 @@ def zebra_generator(df):
             batch_number=row['date_z'].replace(".",""),
             priority=row['priority'],
             box_count=row['box_count'],
+            company_display=row['company_display']
         )
         zpl_labels.append(zpl_label)
     return zpl_labels
