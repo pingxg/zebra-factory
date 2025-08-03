@@ -463,8 +463,8 @@ def zebra_generator(df):
     ^FO30,40^A0N,26,26^FDValmistaja / Tillverkare^FS
     ^FO30,80^A0N,34,34^FD{company_display}^FS
     ^FO30,130^A0N,26,26^FDY-tunnus: 2938534-6^FS
-    ^FO30,160^A0N,26,23^FDOsoite: Nihtisillantie 3B, 02630 Espoo^FS
-    ^FO30,190^A0N,26,26^FDPuh: +358 45 7831 9456^FS
+    ^FO30,160^A0N,26,23^FDOsoite:D{company_address}^FS
+    ^FO30,190^A0N,26,26^FDPuh: D{company_phone}^FS
 
     ; **批次号**
     ^FO400,40^A0N,26,26^FDEränumero / Batchnummer^FS
@@ -504,8 +504,8 @@ def zebra_generator(df):
     df['priority'] = df.apply(lambda row: "" if row['hide_company_name'] == 1 else row['priority'].split(' ')[1], axis=1)
     
     df['company_display'] = df['hide_company_name'].apply(lambda x: "" if x == 1 else "Spartao Oy")
-    df['company_address'] = df['company_address'].apply(lambda x: "Maalarinkuja 2, 06150 Porvoo" if x == 1 else "Nihtisillantie 3B, 02630 Espoo")
-    df['company_phone'] = df['company_phone'].apply(lambda x: "+358 319 521 9900" if x == 1 else "+358 45 7831 9456")
+    df['company_address'] = df['hide_company_name'].apply(lambda x: "Maalarinkuja 2, 06150 Porvoo" if x == 1 else "Nihtisillantie 3B, 02630 Espoo")
+    df['company_phone'] = df['hide_company_name'].apply(lambda x: "+358 319 521 9900" if x == 1 else "+358 45 7831 9456")
     zpl_labels = []
     for _, row in df.iterrows():
         if 'Frozen' in row['product']:
@@ -534,7 +534,7 @@ def zebra_generator(df):
             box_count=row['box_count'],
             company_display=row['company_display'],
             company_address=row['company_address'],
-            phone=row['company_phone']
+            company_phone=row['company_phone']
         )
         zpl_labels.append(zpl_label)
     return zpl_labels
