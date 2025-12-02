@@ -18,9 +18,9 @@ def add(order_id):
         # The try-except block is no longer needed as we now handle alphanumeric batch numbers.
         batch_number = request.form.get('batch_number')
 
-        if not batch_number:
-            flash('Batch number is missing!', 'error')
-            return redirect(url_for('order.order_detail', order_id=order_id))
+        # if not batch_number:
+        #     flash('Batch number is missing!', 'error')
+        #     return redirect(url_for('order.order_detail', order_id=order_id))
 
         weight = Weight(
             order_id=order_id,

@@ -18,10 +18,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     form.onsubmit = function () {
         const scaleReading = document.getElementById('scale_reading').value.trim();
-        const batchNumber = document.getElementById('batch_number').value.trim();
+        // const batchNumber = document.getElementById('batch_number').value.trim();
 
-        if (scaleReading === '' || batchNumber === '') {
-            alert('Both scale reading and batch number must be filled out.');
+        if (scaleReading === '') {
+            alert('Scale reading must be filled out.');
             return false; // Prevent form submission
         }
 
@@ -452,9 +452,9 @@ function scanQRCode() {
 
 // Auto-reopen scanner after page refresh if it was active
 document.addEventListener('DOMContentLoaded', () => {
-    if (sessionStorage.getItem('scannerActive') === 'true') {
-        scanQRCode();
-    }
+   if (sessionStorage.getItem('scannerActive') === 'true') {
+       scanQRCode();
+   }
 });
 
 // The following lines seem to be related to a webview and might not be used in a standard web browser context.
