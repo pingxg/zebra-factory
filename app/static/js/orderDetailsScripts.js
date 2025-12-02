@@ -255,10 +255,10 @@ function scanQRCode() {
                             <i class="fas fa-question-circle text-gray-400 text-4xl"></i>
                             <p class="text-gray-600">Weight</p>
                         </div>
-                        <div id="batchIndicator" class="text-center">
-                            <i class="fas fa-question-circle text-gray-400 text-4xl"></i>
-                            <p class="text-gray-600">Batch Number</p>
-                        </div>
+                        // <div id="batchIndicator" class="text-center">
+                        //     <i class="fas fa-question-circle text-gray-400 text-4xl"></i>
+                        //     <p class="text-gray-600">Batch Number</p>
+                        // </div>
                     </div>
 
                     <div id="scannerStatus" class="mt-2 text-center text-gray-600">Scan QR code for weight or batch number.</div>
@@ -353,10 +353,10 @@ function scanQRCode() {
                     const parts = decodedText.split(',');
                     if (parts.length === 2) {
                         const weightPart = parseFloat(parts[0]);
-                        const batchPart = parts[1].trim();
-                        if (!isNaN(weightPart) && batchPart) {
+                        // const batchPart = parts[1].trim();
+                        if (!isNaN(weightPart)) {
                             sessionStorage.setItem('scannedWeight', weightPart.toFixed(2));
-                            sessionStorage.setItem('scannedBatchNumber', batchPart);
+                            // sessionStorage.setItem('scannedBatchNumber', batchPart);
                         }
                     }
                 } else if (isPurelyNumeric(decodedText)) {
@@ -364,15 +364,15 @@ function scanQRCode() {
                     sessionStorage.setItem('scannedWeight', parseFloat(decodedText).toFixed(2));
                 } else {
                     // Otherwise, it's a batch number
-                    sessionStorage.setItem('scannedBatchNumber', decodedText.trim());
+                    // sessionStorage.setItem('scannedBatchNumber', decodedText.trim());
                 }
 
                 const weight = sessionStorage.getItem('scannedWeight');
-                const batchNumber = sessionStorage.getItem('scannedBatchNumber');
+                // const batchNumber = sessionStorage.getItem('scannedBatchNumber');
 
                 // Update visual indicators
                 const weightIcon = document.querySelector('#weightIndicator i');
-                const batchIcon = document.querySelector('#batchIndicator i');
+                // const batchIcon = document.querySelector('#batchIndicator i');
 
                 // Only take action when both values are present
                 if (weight && batchNumber) {
@@ -381,12 +381,12 @@ function scanQRCode() {
                     statusDiv.textContent = 'Weight and Batch Number scanned. Submitting...';
 
                     document.getElementById('scale_reading').value = weight;
-                    document.getElementById('batch_number').value = batchNumber;
+                    // document.getElementById('batch_number').value = batchNumber;
 
                     html5QrCode.stop().then(() => {
                         document.body.removeChild(scannerModal);
                         sessionStorage.removeItem('scannedWeight');
-                        sessionStorage.removeItem('scannedBatchNumber');
+                        // sessionStorage.removeItem('scannedBatchNumber');
                         sessionStorage.setItem('scannerActive', 'true');
                         const form = document.getElementById('addReading');
                         if (form) {
@@ -397,11 +397,12 @@ function scanQRCode() {
                 // Otherwise, update the status to guide the user for the next scan.
                 else if (weight) {
                     weightIcon.className = 'fas fa-check-circle text-green-500 text-4xl';
-                    statusDiv.textContent = 'Weight scanned. Please scan the Batch Number QR code.';
-                } else if (batchNumber) {
-                    batchIcon.className = 'fas fa-check-circle text-green-500 text-4xl';
-                    statusDiv.textContent = 'Batch Number scanned. Please scan the Weight QR code.';
-                }
+                    statusDiv.textContent = 'Weight scanned. Submitting...';
+                } 
+                // else if (batchNumber) {
+                //     batchIcon.className = 'fas fa-check-circle text-green-500 text-4xl';
+                //     statusDiv.textContent = 'Batch Number scanned. Please scan the Weight QR code.';
+                // }
             },
             (errorMessage) => {
                 // Non-critical errors can be logged without alerting the user
