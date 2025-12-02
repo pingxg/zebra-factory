@@ -255,13 +255,9 @@ function scanQRCode() {
                             <i class="fas fa-question-circle text-gray-400 text-4xl"></i>
                             <p class="text-gray-600">Weight</p>
                         </div>
-                        // <div id="batchIndicator" class="text-center">
-                        //     <i class="fas fa-question-circle text-gray-400 text-4xl"></i>
-                        //     <p class="text-gray-600">Batch Number</p>
-                        // </div>
                     </div>
 
-                    <div id="scannerStatus" class="mt-2 text-center text-gray-600">Scan QR code for weight or batch number.</div>
+                    <div id="scannerStatus" class="mt-2 text-center text-gray-600">Scan QR code for weight.</div>
                     <button id="closeScanner" class="mt-4 w-full bg-red-500 text-white py-3 px-4 rounded-lg">
                         Close Scanner
                     </button>
@@ -375,13 +371,11 @@ function scanQRCode() {
                 // const batchIcon = document.querySelector('#batchIndicator i');
 
                 // Only take action when both values are present
-                if (weight && batchNumber) {
+                if (weight) {
                     weightIcon.className = 'fas fa-check-circle text-green-500 text-4xl';
-                    batchIcon.className = 'fas fa-check-circle text-green-500 text-4xl';
-                    statusDiv.textContent = 'Weight and Batch Number scanned. Submitting...';
+                    statusDiv.textContent = 'Weight scanned. Submitting...';
 
                     document.getElementById('scale_reading').value = weight;
-                    // document.getElementById('batch_number').value = batchNumber;
 
                     html5QrCode.stop().then(() => {
                         document.body.removeChild(scannerModal);
