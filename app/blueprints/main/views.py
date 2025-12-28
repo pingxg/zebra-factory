@@ -53,7 +53,10 @@ def index():
                 Order.customer,
                 Order.date,
                 Order.product,
-                (func.coalesce(Order.price * 1.14, 0)).label("price"),
+                (func.coalesce(Order.price * case(
+                    (Order.date >= '2026-01-01', 1.135),
+                    else_=1.14
+                ), 0)).label("price"),
                 Order.quantity,
                 (func.coalesce(func.sum(Weight.quantity), 0)).label("total_produced"),
                 Customer.priority,

@@ -14,7 +14,10 @@ class OrderService:
                     Order.customer,
                     Order.date,
                     Order.product,
-                    (func.coalesce(Order.price * 1.14, 0)).label("price"),
+                    (func.coalesce(Order.price * case(
+                        (Order.date >= '2026-01-01', 1.135),
+                        else_=1.14
+                    ), 0)).label("price"),
                     Order.quantity,
                     case(
                         (
@@ -62,7 +65,8 @@ class OrderService:
             existing_order = Order.query.filter_by(
                 customer=order_data.get("customer"),
                 product=order_data.get("product"),
-                price=round(float(order_data.get("price")) / 1.14, 4),
+                price=round(float(order_data.get("price")) / (1.135 if datetime.strptime(
+                    order_data.get("date"), "%Y-%m-%d").date() >= datetime(2026, 1, 1).date() else 1.14), 4),
                 date=datetime.strptime(
                     order_data.get("date"), "%Y-%m-%d").date(),
             ).first()
@@ -81,7 +85,8 @@ class OrderService:
             new_order = Order(
                 customer=order_data.get("customer"),
                 product=order_data.get("product"),
-                price=round(float(order_data.get("price")) / 1.14, 4),
+                price=round(float(order_data.get("price")) / (1.135 if datetime.strptime(
+                    order_data.get("date"), "%Y-%m-%d").date() >= datetime(2026, 1, 1).date() else 1.14), 4),
                 quantity=float(order_data.get("quantity")),
                 fish_size=order_data.get("fishSize"),
                 date=datetime.strptime(
@@ -110,7 +115,7 @@ class OrderService:
                 order.customer = data["customer"]
                 order.product = data["product"]
                 order.date = datetime.strptime(data["date"], "%Y-%m-%d").date()
-                order.price = data["price"] / 1.14
+                order.price = data["price"] / (1.135 if order.date >= datetime(2026, 1, 1).date() else 1.14)
                 order.quantity = data["quantity"]
                 order.fish_size = data["fish_size"]
                 order.note = data["note"]

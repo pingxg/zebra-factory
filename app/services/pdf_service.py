@@ -1,5 +1,5 @@
 from collections import defaultdict
-from sqlalchemy import func
+from sqlalchemy import func, case
 from ..models import Customer, Order, Weight, Product
 from .. import db
 
@@ -23,7 +23,10 @@ def get_data_for_pdf(date, customer=None):
         Customer.note,
         Customer.priority,
         Product.display_name,
-        (func.coalesce(Order.price * 1.14, 0)).label("price"),
+        (func.coalesce(Order.price * case(
+            (Order.date >= '2026-01-01', 1.135),
+            else_=1.14
+        ), 0)).label("price"),
         Order.quantity.label("weight"),
         subquery.c.delivered,
     ) \

@@ -61,7 +61,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 o.date, 
                 p.display_name AS product,
                 p.note AS product_note,
-                COALESCE(o.price * 1.14, 0) AS price, 
+                COALESCE(o.price * CASE WHEN o.date >= '2026-01-01' THEN 1.135 ELSE 1.14 END, 0) AS price, 
                 o.quantity AS weight, 
                 w.quantity AS delivered,
                 c.priority,
