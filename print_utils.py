@@ -22,7 +22,7 @@ db_config = {
     'host': os.environ.get('DB_HOST'),
     'database': os.environ.get('DB_NAME'),
     'port': os.environ.get('DB_PORT'),
-    'autocommit':True,
+    'autocommit': True,
 }
 
 
@@ -31,12 +31,14 @@ engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 session = Session()
 
+
 def print_zebra(zpl_data=None, printer_name=os.environ.get('ZEBRA_PRINTER_NAME')):
     # Open the printer
     hprinter = win32print.OpenPrinter(printer_name)
     try:
         # Start the print job
-        pdc = win32print.StartDocPrinter(hprinter, 1, ("ZPL Document", None, "RAW"))
+        pdc = win32print.StartDocPrinter(
+            hprinter, 1, ("ZPL Document", None, "RAW"))
 
         # Send raw data to the printer
         win32print.WritePrinter(hprinter, zpl_data.encode())
@@ -45,7 +47,6 @@ def print_zebra(zpl_data=None, printer_name=os.environ.get('ZEBRA_PRINTER_NAME')
         win32print.EndDocPrinter(hprinter)
     finally:
         win32print.ClosePrinter(hprinter)
-
 
 
 def pdf_render_print(order_id, file_type, folder_path="temp"):
@@ -80,7 +81,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
         """)
     try:
         result = session.execute(query, {'order_id': order_id})
-        
+
         df = pd.DataFrame(result.fetchall(), columns=result.keys())
         df['expiry_date_fresh'] = df['date'] + pd.Timedelta(days=6)
         df['expiry_date_frozen'] = df['date'] + pd.Timedelta(days=180)
@@ -91,21 +92,25 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
 
         df['date_z'] = df['date'].dt.strftime("%Y.%m.%d")
         df['date'] = df['date'].dt.strftime("%Y.%m.%d, %a")
-        
-        df['expiry_date_z_fresh'] = df['expiry_date_fresh'].dt.strftime("%Y.%m.%d")
-        df['expiry_date_fresh'] = df['expiry_date_fresh'].dt.strftime("%Y.%m.%d, %a")
 
-        df['expiry_date_z_frozen'] = df['expiry_date_frozen'].dt.strftime("%Y.%m.%d")
-        df['expiry_date_frozen'] = df['expiry_date_frozen'].dt.strftime("%Y.%m.%d, %a")
+        df['expiry_date_z_fresh'] = df['expiry_date_fresh'].dt.strftime(
+            "%Y.%m.%d")
+        df['expiry_date_fresh'] = df['expiry_date_fresh'].dt.strftime(
+            "%Y.%m.%d, %a")
+
+        df['expiry_date_z_frozen'] = df['expiry_date_frozen'].dt.strftime(
+            "%Y.%m.%d")
+        df['expiry_date_frozen'] = df['expiry_date_frozen'].dt.strftime(
+            "%Y.%m.%d, %a")
 
         delivery_note_data = {}
         for column in df.columns:
-            if column == 'delivered' and len(df)>1:
-                delivery_note_data[column] = round(df[column].sum(),2)
+            if column == 'delivered' and len(df) > 1:
+                delivery_note_data[column] = round(df[column].sum(), 2)
             else:
                 delivery_note_data[column] = df[column].iloc[0]
 
-        if file_type =="zpl":
+        if file_type == "zpl":
             zebra_print_list = zebra_generator(df)
             for i in zebra_print_list:
                 print_zebra(zpl_data=i)
@@ -121,6 +126,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
         # Close the session properly
         session.close()
     return df
+
 
 def zebra_generator(df):
     # zpl_template_x99_y63 = """
@@ -144,11 +150,9 @@ def zebra_generator(df):
     # ^FO350,50^A0N,20,20^FDEränumero / Batchnummer^FS
     # ^FO350,75^A0N,25,25^FD{batch_number}^FS
 
-
     # ; Add Product origin country
     # ^FO350,115^A0N,20,20^FDAlkuperämaa / Ursprungslandet^FS
     # ^FO350,140^A0N,30,30^FDNorja / Norge^FS
-
 
     # ; Add Priority
     # ^FO600,50^A0N,20,20^FDEtusijalla / Prioritet^FS
@@ -206,7 +210,6 @@ def zebra_generator(df):
 
     # ^FO335,160^GFA,1750,1750,14,,:::::::::::::::P0IF,O07001C,N018I03,N02K0C,N0CK02,M018K01,M02M08,M04M06,M08M02,L01N01,L03O08,L02O04,L04O06,L08O02,L08O01,K01P01,K03Q08,K02Q0C,K06Q04,K04Q04,K0CQ02,K08Q02,K08Q01,J01R01,:J01S08,J02S08,:J02S04,:J04S04,J04L04L04,J04L02L02,J04J03FFL02,J08S02,::J087FCP02,J08C66004,J08842005M01,J08842I08L01,J08842I0400FFC01,J0884200C3I04401,J0884203FDI04401,J08802M04401,I01Q04401,:I01I060386J0401,J080180241L01,J080300241L01,J08FC0022100FFC01,J080400211L01,J08030021EL01,J0800CP01,J08006,J08J01EEL02,J08J0239L02,J08J0211L02,J04J0211L02,:J04J01EE,J04S04,:J02S04,:J02S08,J01S08,:J01R01,K08Q01,K08Q02,:K04Q02,K04Q04,K02Q04,K02Q08,K01Q08,K01P01,L08O03,L04O02,L04O04,L02O08,L01N018,M08M01,M0CM02,M06M04,M03L018,N08K03,N06K06,N03J018,O0EI06,O03C078,P03F8,,:::::::::::::::^FS
 
-
     # ; Set UTF-8 Character Encoding
     # ^CI28
 
@@ -224,7 +227,6 @@ def zebra_generator(df):
     # ; Add Priority
     # ^FO390,445^A0R,15,12^FDEtusijalla / Prioritet^FS
     # ^FO280,460^A0R,80,80^FD{priority}^FS
-
 
     # ; Add Product origin country
     # ^FO340,275^A0R,15,12^FDAlkuperämaa / Ursprungslandet^FS
@@ -262,7 +264,6 @@ def zebra_generator(df):
     # ; Add box count
     # ^FO70,330^A0R,15,15^FDLaatikoita yhteensä / Totala lådor^FS
     # ^FO30,460^A0R,30,30^FD{box_count} CTN^FS
-
 
     # ; End of label
     # ^XZ
@@ -462,7 +463,7 @@ def zebra_generator(df):
     ; **生产商信息**
     ^FO30,40^A0N,26,26^FDValmistaja / Tillverkare^FS
     ^FO30,80^A0N,34,34^FD{company_display}^FS
-    ^FO30,130^A0N,26,26^FDY-tunnus: 2938534-6^FS
+    ^FO30,130^A0N,26,26^FDY-tunnus: 3559618-2^FS
     ^FO30,160^A0N,26,23^FDOsoite:D{company_address}^FS
     ^FO30,190^A0N,26,26^FDPuh: D{company_phone}^FS
 
@@ -501,17 +502,21 @@ def zebra_generator(df):
     ^XZ
 
     """
-    df['priority'] = df.apply(lambda row: "" if row['hide_company_name'] == 1 else row['priority'].split(' ')[1], axis=1)
-    
-    df['company_display'] = df['hide_company_name'].apply(lambda x: "" if x == 1 else "Spartao Oy")
-    df['company_address'] = df['hide_company_name'].apply(lambda x: "Maalarinkuja 2, 06150 Porvoo" if x == 1 else "Nihtisillantie 3B, 02630 Espoo")
-    df['company_phone'] = df['hide_company_name'].apply(lambda x: "+358 319 521 9900" if x == 1 else "+358 45 7831 9456")
+    df['priority'] = df.apply(lambda row: "" if row['hide_company_name']
+                              == 1 else row['priority'].split(' ')[1], axis=1)
+
+    df['company_display'] = df['hide_company_name'].apply(
+        lambda x: "" if x == 1 else "Maku Pro Oy")
+    df['company_address'] = df['hide_company_name'].apply(
+        lambda x: "Maalarinkuja 2, 06150 Porvoo" if x == 1 else "Nihtisillantie 3B, 02630 Espoo")
+    df['company_phone'] = df['hide_company_name'].apply(
+        lambda x: "+358 319 521 9900" if x == 1 else "+358 45 7831 9456")
     zpl_labels = []
     for _, row in df.iterrows():
         if 'Frozen' in row['product']:
             temperature_info = "<-18°C"
             expiry_info = f"{row['expiry_date_z_frozen']}"
-            product_name = f"{row['product'].replace('Lohi ','')}"
+            product_name = f"{row['product'].replace('Lohi ', '')}"
         elif 'Frozen' not in row['product']:
             temperature_info = "0°C - +2°C"
             expiry_info = f"{row['date_z']}-{row['expiry_date_z_fresh']}"
@@ -529,7 +534,7 @@ def zebra_generator(df):
             delivered=row['delivered'],
             temperature_info=temperature_info,
             expiry_info=expiry_info,
-            batch_number=row['date_z'].replace(".",""),
+            batch_number=row['date_z'].replace(".", ""),
             priority=row['priority'],
             box_count=row['box_count'],
             company_display=row['company_display'],
