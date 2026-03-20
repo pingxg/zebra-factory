@@ -6,21 +6,43 @@ from ...utils.auth_decorators import roles_required
 from datetime import datetime
 import pytz
 import os
+import re
+
+
+def _normalize_batch_number(raw_batch_number):
+    if raw_batch_number is None:
+        return None
+    normalized = str(raw_batch_number).strip().upper()
+    return normalized or None
+
+
+def _is_valid_batch_number(batch_number):
+    if not batch_number:
+        return False
+    # Batch QR is expected to start with letters and include numeric suffix.
+    return bool(re.fullmatch(r"[A-Z]+[0-9]+", batch_number))
 
 
 @weight_bp.route('/add/<int:order_id>', methods=['GET', 'POST'])
 @roles_required('admin', 'cutter')
 def add(order_id):
     if request.method == 'POST':
-        scale_reading = float(request.form['scale_reading'])
+        scale_reading_raw = request.form.get('scale_reading', '').strip()
+        batch_number = _normalize_batch_number(request.form.get('batch_number'))
 
-        # Get the batch number directly from the form as a string.
-        # The try-except block is no longer needed as we now handle alphanumeric batch numbers.
-        batch_number = request.form.get('batch_number')
+        if not scale_reading_raw:
+            flash('Weight is missing!', 'error')
+            return redirect(url_for('order.order_detail', order_id=order_id))
 
-        # if not batch_number:
-        #     flash('Batch number is missing!', 'error')
-        #     return redirect(url_for('order.order_detail', order_id=order_id))
+        try:
+            scale_reading = float(scale_reading_raw)
+        except ValueError:
+            flash('Invalid weight format. Please scan a valid float value.', 'error')
+            return redirect(url_for('order.order_detail', order_id=order_id))
+
+        if not _is_valid_batch_number(batch_number):
+            flash('Batch number is missing or invalid. Expected letters followed by numbers.', 'error')
+            return redirect(url_for('order.order_detail', order_id=order_id))
 
         weight = Weight(
             order_id=order_id,
@@ -48,7 +70,7 @@ def edit(weight_id):
     if request.method == 'POST':
         data = request.get_json()
         edit_weight = data.get('edit_weight')
-        edit_batch_number = data.get('edit_batch_number')
+        edit_batch_number = _normalize_batch_number(data.get('edit_batch_number'))
 
         if edit_weight is None and edit_batch_number is None:
             return jsonify(success=False, error="No new data provided."), 400
@@ -57,6 +79,8 @@ def edit(weight_id):
             if edit_weight is not None:
                 weight.quantity = float(edit_weight)
             if edit_batch_number is not None:
+                if not _is_valid_batch_number(edit_batch_number):
+                    return jsonify(success=False, error="Invalid batch number. Use letters followed by numbers."), 400
                 weight.batch_number = str(edit_batch_number)
 
             db.session.commit()

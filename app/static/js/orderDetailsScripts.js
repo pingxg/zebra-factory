@@ -10,24 +10,90 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 
 document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('addReading'); // Make sure your form has this ID
+    const form = document.getElementById('addReading');
     if (!form) return;
 
     const submitBtn = document.getElementById('submitBtn');
-    const originalBtnHTML = submitBtn.innerHTML;
+    const scaleInput = document.getElementById('scale_reading');
+    const batchInput = document.getElementById('batch_number');
+    const statusMessage = document.getElementById('addReadingStatus');
 
-    form.onsubmit = function () {
-        const scaleReading = document.getElementById('scale_reading').value.trim();
-        // const batchNumber = document.getElementById('batch_number').value.trim();
+    const isFloatValue = (value) => {
+        if (!value) return false;
+        const normalized = value.trim();
+        if (normalized === '') return false;
+        const numericValue = Number(normalized);
+        return !Number.isNaN(numericValue) && Number.isFinite(numericValue);
+    };
 
-        if (scaleReading === '') {
-            alert('Scale reading must be filled out.');
-            return false; // Prevent form submission
+    const isBatchValue = (value) => /^[A-Za-z]+[0-9]+$/.test((value || '').trim());
+
+    const showStatus = (message) => {
+        if (!statusMessage) return;
+        statusMessage.textContent = message;
+        statusMessage.classList.remove('hidden');
+    };
+
+    const hideStatus = () => {
+        if (!statusMessage) return;
+        statusMessage.textContent = '';
+        statusMessage.classList.add('hidden');
+    };
+
+    const validateInputs = () => {
+        const scaleReading = scaleInput ? scaleInput.value.trim() : '';
+        const batchNumber = batchInput ? batchInput.value.trim() : '';
+
+        if (batchInput && batchNumber) {
+            batchInput.value = batchNumber.toUpperCase();
         }
 
-        submitBtn.disabled = true; // Disable the button
-        submitBtn.innerText = 'Processing...'; // Optional: Change button text
-        return true; // Allow form submission
+        if (!scaleReading && !batchNumber) {
+            showStatus('Please provide both weight and batch number.');
+            return false;
+        }
+        if (!scaleReading) {
+            showStatus('Weight is missing. Scan or enter a float value.');
+            return false;
+        }
+        if (!batchNumber) {
+            showStatus('Batch number is missing. Scan or enter letters followed by numbers.');
+            return false;
+        }
+        if (!isFloatValue(scaleReading)) {
+            showStatus('Weight format is invalid. Use a float value.');
+            return false;
+        }
+        if (!isBatchValue(batchNumber)) {
+            showStatus('Batch format is invalid. Expected letters followed by numbers, e.g. AB123.');
+            return false;
+        }
+
+        hideStatus();
+        return true;
+    };
+
+    if (scaleInput) {
+        scaleInput.addEventListener('input', validateInputs);
+    }
+    if (batchInput) {
+        batchInput.addEventListener('input', validateInputs);
+        batchInput.addEventListener('blur', () => {
+            if (batchInput.value.trim()) {
+                batchInput.value = batchInput.value.trim().toUpperCase();
+            }
+            validateInputs();
+        });
+    }
+
+    form.onsubmit = function () {
+        if (!validateInputs()) {
+            return false;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Processing...';
+        return true;
     };
 });
 
@@ -255,9 +321,13 @@ function scanQRCode() {
                             <i class="fas fa-question-circle text-gray-400 text-4xl"></i>
                             <p class="text-gray-600">Weight</p>
                         </div>
+                        <div id="batchIndicator" class="text-center">
+                            <i class="fas fa-question-circle text-gray-400 text-4xl"></i>
+                            <p class="text-gray-600">Batch Number</p>
+                        </div>
                     </div>
 
-                    <div id="scannerStatus" class="mt-2 text-center text-gray-600">Scan QR code for weight.</div>
+                    <div id="scannerStatus" class="mt-2 text-center text-gray-600">Scan both QR codes (weight + batch number), any order.</div>
                     <button id="closeScanner" class="mt-4 w-full bg-red-500 text-white py-3 px-4 rounded-lg">
                         Close Scanner
                     </button>
@@ -268,14 +338,55 @@ function scanQRCode() {
     document.body.appendChild(scannerModal);
 
     const statusDiv = document.getElementById('scannerStatus');
-
-    // Check for manually entered batch number when scanner starts
+    const weightIcon = document.querySelector('#weightIndicator i');
+    const batchIcon = document.querySelector('#batchIndicator i');
+    const scaleInput = document.getElementById('scale_reading');
     const batchNumberInput = document.getElementById('batch_number');
-    if (batchNumberInput.value.trim()) {
-        sessionStorage.setItem('scannedBatchNumber', batchNumberInput.value.trim());
-        document.querySelector('#batchIndicator i').className = 'fas fa-check-circle text-green-500 text-4xl';
-        statusDiv.textContent = 'Batch Number provided. Please scan the Weight QR code.';
+
+    const isPurelyNumeric = (str) => {
+        const trimmedStr = (str || '').trim();
+        if (trimmedStr === "") return false;
+        const numericValue = Number(trimmedStr);
+        return !Number.isNaN(numericValue) && Number.isFinite(numericValue);
+    };
+
+    const isBatchCode = (str) => /^[A-Za-z]+[0-9]+$/.test((str || '').trim());
+
+    const updateIndicatorsAndStatus = () => {
+        const weight = sessionStorage.getItem('scannedWeight');
+        const batchNumber = sessionStorage.getItem('scannedBatchNumber');
+
+        if (weight) {
+            weightIcon.className = 'fas fa-check-circle text-green-500 text-4xl';
+        }
+        if (batchNumber) {
+            batchIcon.className = 'fas fa-check-circle text-green-500 text-4xl';
+        }
+
+        if (!weight && !batchNumber) {
+            statusDiv.textContent = 'Waiting for scan...';
+            return;
+        }
+        if (!weight) {
+            statusDiv.textContent = 'Batch number scanned. Please scan weight QR code.';
+            return;
+        }
+        if (!batchNumber) {
+            statusDiv.textContent = 'Weight scanned. Please scan batch number QR code.';
+            return;
+        }
+
+        statusDiv.textContent = 'Weight and batch number scanned. Submitting...';
+    };
+
+    // Respect any manual values that are already present.
+    if (scaleInput && isPurelyNumeric(scaleInput.value.trim())) {
+        sessionStorage.setItem('scannedWeight', Number.parseFloat(scaleInput.value.trim()).toFixed(2));
     }
+    if (batchNumberInput && isBatchCode(batchNumberInput.value.trim())) {
+        sessionStorage.setItem('scannedBatchNumber', batchNumberInput.value.trim().toUpperCase());
+    }
+    updateIndicatorsAndStatus();
 
     // Modified permission handling
     async function requestCameraPermission() {
@@ -334,69 +445,36 @@ function scanQRCode() {
             { facingMode: "environment" },
             config,
             (decodedText, decodedResult) => {
-                // Log the raw scanned data to the console for debugging
                 console.log("Scanned Data:", decodedText);
 
-                // A more robust check to ensure the entire string is a number (float or int).
-                const isPurelyNumeric = (str) => {
-                    const trimmedStr = str.trim();
-                    if (trimmedStr === "") return false;
-                    return !isNaN(trimmedStr) && !isNaN(parseFloat(trimmedStr));
-                }
-
-                // Determine what was scanned and update session storage
-                if (decodedText.includes(',')) {
-                    const parts = decodedText.split(',');
-                    if (parts.length === 2) {
-                        const weightPart = parseFloat(parts[0]);
-                        // const batchPart = parts[1].trim();
-                        if (!isNaN(weightPart)) {
-                            sessionStorage.setItem('scannedWeight', weightPart.toFixed(2));
-                            // sessionStorage.setItem('scannedBatchNumber', batchPart);
-                        }
-                    }
-                } else if (isPurelyNumeric(decodedText)) {
-                    // It's a weight if it's a valid number
-                    sessionStorage.setItem('scannedWeight', parseFloat(decodedText).toFixed(2));
+                const scannedText = (decodedText || '').trim();
+                if (isPurelyNumeric(scannedText)) {
+                    sessionStorage.setItem('scannedWeight', Number.parseFloat(scannedText).toFixed(2));
+                } else if (/^[A-Za-z]/.test(scannedText) && isBatchCode(scannedText)) {
+                    sessionStorage.setItem('scannedBatchNumber', scannedText.toUpperCase());
                 } else {
-                    // Otherwise, it's a batch number
-                    // sessionStorage.setItem('scannedBatchNumber', decodedText.trim());
+                    statusDiv.textContent = 'Unrecognized QR format. Batch must be letters+numbers, weight must be float.';
+                    return;
                 }
 
                 const weight = sessionStorage.getItem('scannedWeight');
-                // const batchNumber = sessionStorage.getItem('scannedBatchNumber');
+                const batchNumber = sessionStorage.getItem('scannedBatchNumber');
 
-                // Update visual indicators
-                const weightIcon = document.querySelector('#weightIndicator i');
-                // const batchIcon = document.querySelector('#batchIndicator i');
+                updateIndicatorsAndStatus();
 
-                // Only take action when both values are present
-                if (weight) {
-                    weightIcon.className = 'fas fa-check-circle text-green-500 text-4xl';
-                    statusDiv.textContent = 'Weight scanned. Submitting...';
-
-                    document.getElementById('scale_reading').value = weight;
-
+                if (weight && batchNumber) {
+                    if (scaleInput) scaleInput.value = weight;
+                    if (batchNumberInput) batchNumberInput.value = batchNumber;
                     html5QrCode.stop().then(() => {
                         document.body.removeChild(scannerModal);
                         sessionStorage.removeItem('scannedWeight');
-                        // sessionStorage.removeItem('scannedBatchNumber');
-                        sessionStorage.setItem('scannerActive', 'true');
+                        sessionStorage.removeItem('scannedBatchNumber');
                         const form = document.getElementById('addReading');
                         if (form) {
                             form.submit();
                         }
                     });
                 }
-                // Otherwise, update the status to guide the user for the next scan.
-                else if (weight) {
-                    weightIcon.className = 'fas fa-check-circle text-green-500 text-4xl';
-                    statusDiv.textContent = 'Weight scanned. Submitting...';
-                } 
-                // else if (batchNumber) {
-                //     batchIcon.className = 'fas fa-check-circle text-green-500 text-4xl';
-                //     statusDiv.textContent = 'Batch Number scanned. Please scan the Weight QR code.';
-                // }
             },
             (errorMessage) => {
                 // Non-critical errors can be logged without alerting the user
@@ -444,13 +522,6 @@ function scanQRCode() {
         requestCameraPermission();
     }
 }
-
-// Auto-reopen scanner after page refresh if it was active
-document.addEventListener('DOMContentLoaded', () => {
-   if (sessionStorage.getItem('scannerActive') === 'true') {
-       scanQRCode();
-   }
-});
 
 // The following lines seem to be related to a webview and might not be used in a standard web browser context.
 // If they cause errors, they might need to be removed or placed inside a condition that checks for the webview environment.

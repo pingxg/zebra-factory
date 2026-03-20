@@ -94,7 +94,7 @@ class Weight(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey('salmon_orders.id'), nullable=False)
     quantity = db.Column(db.Float)
     production_time = db.Column(db.DateTime)
-    batch_number = db.Column(db.Integer)
+    batch_number = db.Column(db.String(64))
 
 
 class Product(db.Model):
@@ -128,4 +128,4 @@ class MaterialInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     farmer = db.Column(db.String)
     date = db.Column(db.Date)
-    batch_number = db.Column(db.Integer, db.ForeignKey('salmon_order_weight.batch_number'))
+    batch_number = db.Column(db.String(64), db.ForeignKey('salmon_order_weight.batch_number'))
