@@ -1,5 +1,7 @@
 from io import BytesIO
 from datetime import datetime
+from collections import OrderedDict
+from types import SimpleNamespace
 
 import pandas as pd
 from flask import render_template, request, send_file, url_for
@@ -9,6 +11,56 @@ from ... import db
 from ...models import Customer, Order, Weight
 from ...utils.auth_decorators import roles_required
 from . import traceability_bp
+
+
+def _aggregate_rows_by_order(rows):
+    grouped_rows = OrderedDict()
+
+    for row in rows:
+        if row.order_id not in grouped_rows:
+            grouped_rows[row.order_id] = {
+                "order_id": row.order_id,
+                "order_date": row.order_date,
+                "product": row.product,
+                "ordered_quantity": row.ordered_quantity,
+                "order_note": row.order_note,
+                "customer_name": row.customer_name,
+                "company": row.company,
+                "phone": row.phone,
+                "email": row.email,
+                "priority": row.priority,
+                "packing": row.packing,
+                "weight_ids": [],
+                "total_weight_quantity": 0,
+                "batch_numbers": [],
+                "latest_production_time": None,
+            }
+
+        grouped = grouped_rows[row.order_id]
+
+        if row.weight_id is not None:
+            grouped["weight_ids"].append(str(row.weight_id))
+        if row.weight_quantity is not None:
+            grouped["total_weight_quantity"] += row.weight_quantity
+        if row.batch_number:
+            batch = row.batch_number.upper()
+            if batch not in grouped["batch_numbers"]:
+                grouped["batch_numbers"].append(batch)
+        if row.production_time and (
+            grouped["latest_production_time"] is None
+            or row.production_time > grouped["latest_production_time"]
+        ):
+            grouped["latest_production_time"] = row.production_time
+
+    aggregated = []
+    for grouped in grouped_rows.values():
+        weight_record_count = len(grouped["weight_ids"])
+        grouped["weight_ids"] = ", ".join(grouped["weight_ids"])
+        grouped["weight_record_count"] = weight_record_count
+        grouped["batch_numbers"] = ", ".join(grouped["batch_numbers"])
+        aggregated.append(SimpleNamespace(**grouped))
+
+    return aggregated
 
 
 def _build_filtered_query(args):
@@ -49,6 +101,7 @@ def _build_filtered_query(args):
         filters.append(
             or_(
                 cast(Order.id, String).ilike(keyword_like),
+                cast(Weight.id, String).ilike(keyword_like),
                 Order.customer.ilike(keyword_like),
                 Order.product.ilike(keyword_like),
                 Customer.company.ilike(keyword_like),
@@ -125,13 +178,15 @@ def index():
 
     if searched:
         base_query = _build_filtered_query(request.args)
-        total_records = base_query.order_by(None).count()
+        aggregated_rows = _aggregate_rows_by_order(base_query.all())
+
+        total_records = len(aggregated_rows)
         total_pages = max(1, (total_records + per_page - 1) // per_page) if total_records else 1
         page = min(page, total_pages)
 
-        rows = (
-            base_query.limit(per_page).offset((page - 1) * per_page).all()
-        )
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        rows = aggregated_rows[start_idx:end_idx]
         if total_records:
             start_record = (page - 1) * per_page + 1
             end_record = min(page * per_page, total_records)
@@ -180,7 +235,7 @@ def index():
 def export():
     rows = []
     if request.args.get("searched") == "1":
-        rows = _build_filtered_query(request.args).all()
+        rows = _aggregate_rows_by_order(_build_filtered_query(request.args).all())
 
     data = []
     for row in rows:
@@ -196,10 +251,11 @@ def export():
                 "Packing": row.packing,
                 "Product": row.product,
                 "Ordered Quantity (kg)": row.ordered_quantity,
-                "Weight Record ID": row.weight_id,
-                "Weight Quantity (kg)": row.weight_quantity,
-                "Batch Number": row.batch_number,
-                "Production Time": row.production_time,
+                "Weight Record Count": row.weight_record_count,
+                "Weight IDs": row.weight_ids,
+                "Total Weight Quantity (kg)": row.total_weight_quantity,
+                "Batch Numbers": row.batch_numbers,
+                "Latest Production Time": row.latest_production_time,
                 "Order Note": row.order_note,
             }
         )

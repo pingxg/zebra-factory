@@ -27,6 +27,12 @@
         letter-spacing: 0.03em;
         text-transform: uppercase;
     }
+
+    .trace-agg-text {
+        font-size: 0.75rem;
+        line-height: 1.35;
+        color: #374151;
+    }
 </style>
 {% endblock %}
 
@@ -53,7 +59,7 @@
                 <div>
                     <label class="trace-label">Global Search</label>
                     <input type="text" name="keyword" value="{{ filters.get('keyword', '') }}"
-                        placeholder="batch / order / customer / product / phone / email" class="trace-input">
+                        placeholder="batch / order / weight id / customer / product / phone / email" class="trace-input">
                 </div>
                 <div>
                     <label class="trace-label">Order ID</label>
@@ -122,7 +128,7 @@
                 <h2 class="text-xl font-semibold text-gray-800">Results</h2>
                 <span class="text-sm text-gray-600">
                     {% if searched %}
-                    {{ total_records }} records | page {{ page }} / {{ total_pages }}
+                    {{ total_records }} orders | page {{ page }} / {{ total_pages }}
                     {% else %}
                     Click Search to load results.
                     {% endif %}
@@ -141,13 +147,11 @@
                             <th class="border px-3 py-2 text-left whitespace-nowrap">Email</th>
                             <th class="border px-3 py-2 text-left whitespace-nowrap">Product</th>
                             <th class="border px-3 py-2 text-left whitespace-nowrap">Ordered (kg)</th>
-                            <th class="border px-3 py-2 text-left whitespace-nowrap">Weight ID</th>
-                            <th class="border px-3 py-2 text-left whitespace-nowrap">Weight (kg)</th>
-                            <th class="border px-3 py-2 text-left whitespace-nowrap">Batch</th>
-                            <th class="border px-3 py-2 text-left whitespace-nowrap">Production Time</th>
-                            <th class="border px-3 py-2 text-left whitespace-nowrap">Priority</th>
-                            <th class="border px-3 py-2 text-left whitespace-nowrap">Packing</th>
-                            <th class="border px-3 py-2 text-left">Order Note</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Weight Count</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Weight IDs</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Total Weight (kg)</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Batches</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Latest Production Time</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -167,24 +171,24 @@
                             <td class="border px-3 py-2">{{ row.email or '' }}</td>
                             <td class="border px-3 py-2">{{ row.product or '' }}</td>
                             <td class="border px-3 py-2">{{ row.ordered_quantity or '' }}</td>
-                            <td class="border px-3 py-2">{{ row.weight_id or '' }}</td>
-                            <td class="border px-3 py-2">{{ row.weight_quantity or '' }}</td>
-                            <td class="border px-3 py-2 font-semibold">{{ (row.batch_number or '')|upper }}</td>
-                            <td class="border px-3 py-2">{{ row.production_time or '' }}</td>
-                            <td class="border px-3 py-2">{{ row.priority or '' }}</td>
-                            <td class="border px-3 py-2">{{ row.packing or '' }}</td>
-                            <td class="border px-3 py-2">{{ row.order_note or '' }}</td>
+                            <td class="border px-3 py-2">{{ row.weight_record_count }}</td>
+                            <td class="border px-3 py-2 trace-agg-text">{{ row.weight_ids or '' }}</td>
+                            <td class="border px-3 py-2">
+                                {{ '%.2f'|format(row.total_weight_quantity) if row.weight_record_count else '' }}
+                            </td>
+                            <td class="border px-3 py-2 trace-agg-text font-semibold">{{ row.batch_numbers or '' }}</td>
+                            <td class="border px-3 py-2 trace-agg-text">{{ row.latest_production_time or '' }}</td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="15" class="border px-3 py-10 text-center text-gray-500">
+                            <td colspan="13" class="border px-3 py-10 text-center text-gray-500">
                                 No records found for the current filters.
                             </td>
                         </tr>
                         {% endfor %}
                         {% else %}
                         <tr>
-                            <td colspan="15" class="border px-3 py-10 text-center text-gray-500">
+                            <td colspan="13" class="border px-3 py-10 text-center text-gray-500">
                                 No query executed yet. Set filters and click Search.
                             </td>
                         </tr>
@@ -196,7 +200,7 @@
             {% if searched and total_pages > 1 %}
             <div class="mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div class="text-sm text-gray-600">
-                    Showing {{ start_record }} - {{ end_record }} of {{ total_records }}
+                    Showing {{ start_record }} - {{ end_record }} of {{ total_records }} orders
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     {% if prev_url %}
