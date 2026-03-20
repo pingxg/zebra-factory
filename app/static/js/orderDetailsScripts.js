@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // If user did not cancel the batch number prompt
                 if (newBatchNumberStr !== null) {
                     const newWeight = newWeightStr.trim();
-                    const newBatchNumber = newBatchNumberStr.trim();
+                    const newBatchNumber = newBatchNumberStr.trim().toUpperCase();
 
                     const isWeightChanged = newWeight !== '' && newWeight !== currentWeight;
                     const isBatchChanged = newBatchNumber !== '' && newBatchNumber !== currentBatchNumber;
@@ -132,6 +132,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Validate weight if changed
                     if (isWeightChanged && isNaN(newWeight)) {
                         alert("Invalid input. Please enter a valid number for the weight.");
+                        return;
+                    }
+                    if (isBatchChanged && !/^[A-Za-z]+[0-9]+$/.test(newBatchNumber)) {
+                        alert("Invalid batch number. Use letters followed by numbers, e.g. AB123.");
                         return;
                     }
 

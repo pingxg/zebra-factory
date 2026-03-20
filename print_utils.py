@@ -65,6 +65,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 COALESCE(o.price * CASE WHEN o.date >= '2026-01-01' THEN 1.135 ELSE 1.14 END, 0) AS price, 
                 o.quantity AS weight, 
                 w.quantity AS delivered,
+                w.batch_number AS batch_number,
                 c.priority,
                 COUNT(*) OVER () AS box_count,
                 c.hide_company_name
@@ -526,6 +527,13 @@ def zebra_generator(df):
             template = zpl_template_x110_y80_bp
         else:
             template = zpl_template_x110_y80
+
+        raw_batch_number = row.get('batch_number')
+        if pd.notna(raw_batch_number) and str(raw_batch_number).strip() not in ("", "0", "None", "nan"):
+            label_batch_number = str(raw_batch_number).strip().upper()
+        else:
+            label_batch_number = row['date_z'].replace(".", "")
+
         zpl_label = template.format(
             order_id=row['order_id'],
             store=row['store'],
@@ -534,7 +542,7 @@ def zebra_generator(df):
             delivered=row['delivered'],
             temperature_info=temperature_info,
             expiry_info=expiry_info,
-            batch_number=row['date_z'].replace(".", ""),
+            batch_number=label_batch_number,
             priority=row['priority'],
             box_count=row['box_count'],
             company_display=row['company_display'],
