@@ -31,7 +31,7 @@ def _build_filtered_query(args):
             Customer.customer.label("customer_name"),
             Customer.company.label("company"),
             Customer.phone.label("phone"),
-            Customer.address.label("address"),
+            Customer.email.label("email"),
             Customer.priority.label("priority"),
             Customer.packing.label("packing"),
             Weight.id.label("weight_id"),
@@ -53,6 +53,7 @@ def _build_filtered_query(args):
                 Order.product.ilike(keyword_like),
                 Customer.company.ilike(keyword_like),
                 Customer.phone.ilike(keyword_like),
+                Customer.email.ilike(keyword_like),
                 Weight.batch_number.ilike(keyword_like),
             )
         )
@@ -190,7 +191,7 @@ def export():
                 "Customer Name": row.customer_name,
                 "Company": row.company,
                 "Phone": row.phone,
-                "Address": row.address,
+                "Email": row.email,
                 "Priority": row.priority,
                 "Packing": row.packing,
                 "Product": row.product,
