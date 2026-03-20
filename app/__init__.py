@@ -12,6 +12,7 @@ from .blueprints.deliverynote import deliverynote_bp
 from .blueprints.customer import customer_bp
 from .blueprints.product import product_bp
 from .blueprints.print import print_bp
+from .blueprints.traceability import traceability_bp
 from .blueprints.error_handling import error_handling_bp
 
 
@@ -64,6 +65,7 @@ def create_app() -> Flask:
     app.register_blueprint(deliverynote_bp, url_prefix='/deliverynote')
     app.register_blueprint(customer_bp, url_prefix='/customer')
     app.register_blueprint(product_bp, url_prefix='/product')
+    app.register_blueprint(traceability_bp, url_prefix='/traceability')
     
 
 

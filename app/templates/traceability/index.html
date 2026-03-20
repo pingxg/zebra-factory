@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block head_content %}
+<title>Traceability</title>
+<style>
+    .trace-input {
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        padding: 0.65rem 0.75rem;
+        width: 100%;
+        background: #f9fafb;
+        transition: all 0.2s ease;
+    }
+
+    .trace-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .trace-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #4b5563;
+        margin-bottom: 0.35rem;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<body>
+    <div class="pt-20 md:pt-24 container mx-auto p-4 md:p-8">
+        <div
+            class="bg-gradient-to-r from-gray-100 to-gray-200 shadow-md rounded-lg px-6 py-6 mb-6 border border-gray-200">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-1">Traceability</h1>
+                    <p class="text-sm text-gray-600">Search orders and weight records by batch, order, customer, date
+                        range, phone, and product.</p>
+                </div>
+                <span class="text-xs bg-white border border-gray-300 text-gray-600 px-3 py-1.5 rounded-full">
+                    Admin Only
+                </span>
+            </div>
+
+            <form method="GET" action="{{ url_for('traceability.index') }}"
+                class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input type="hidden" name="searched" value="1">
+                <div>
+                    <label class="trace-label">Global Search</label>
+                    <input type="text" name="keyword" value="{{ filters.get('keyword', '') }}"
+                        placeholder="batch / order / customer / product / phone" class="trace-input">
+                </div>
+                <div>
+                    <label class="trace-label">Order ID</label>
+                    <input type="text" name="order_id" value="{{ filters.get('order_id', '') }}"
+                        placeholder="e.g. 12345" class="trace-input">
+                </div>
+                <div>
+                    <label class="trace-label">Batch Number</label>
+                    <input type="text" name="batch_number" value="{{ filters.get('batch_number', '') }}"
+                        placeholder="e.g. HT1234" class="trace-input uppercase">
+                </div>
+                <div>
+                    <label class="trace-label">Customer / Company</label>
+                    <input type="text" name="customer" value="{{ filters.get('customer', '') }}"
+                        placeholder="Customer name" class="trace-input">
+                </div>
+                <div>
+                    <label class="trace-label">Product</label>
+                    <input type="text" name="product" value="{{ filters.get('product', '') }}" placeholder="Product"
+                        class="trace-input">
+                </div>
+                <div>
+                    <label class="trace-label">Phone</label>
+                    <input type="text" name="phone" value="{{ filters.get('phone', '') }}" placeholder="+358..."
+                        class="trace-input">
+                </div>
+                <div>
+                    <label class="trace-label">Date From</label>
+                    <input type="date" id="trace_date_from" name="date_from" value="{{ filters.get('date_from', '') }}"
+                        class="trace-input">
+                </div>
+                <div>
+                    <label class="trace-label">Date To</label>
+                    <input type="date" id="trace_date_to" name="date_to" value="{{ filters.get('date_to', '') }}"
+                        class="trace-input">
+                </div>
+                <div>
+                    <label class="trace-label">Rows Per Page</label>
+                    <select name="per_page" class="trace-input">
+                        <option value="25" {% if per_page==25 %}selected{% endif %}>25 / page</option>
+                        <option value="50" {% if per_page==50 %}selected{% endif %}>50 / page</option>
+                        <option value="100" {% if per_page==100 %}selected{% endif %}>100 / page</option>
+                        <option value="200" {% if per_page==200 %}selected{% endif %}>200 / page</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-3 flex flex-wrap gap-2 pt-1">
+                    <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-lg shadow-sm">
+                        Search
+                    </button>
+                    <a href="{{ url_for('traceability.index') }}"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2.5 px-5 rounded-lg">
+                        Reset
+                    </a>
+                    <a href="{{ url_for('traceability.export', **filters) if searched else '#' }}"
+                        class="font-semibold py-2.5 px-5 rounded-lg {{ 'bg-green-600 hover:bg-green-700 text-white shadow-sm' if searched else 'bg-gray-300 text-gray-500 cursor-not-allowed' }}">
+                        Export Excel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg px-6 py-6 border border-gray-200">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Results</h2>
+                <span class="text-sm text-gray-600">
+                    {% if searched %}
+                    {{ total_records }} records | page {{ page }} / {{ total_pages }}
+                    {% else %}
+                    Click Search to load results.
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-100 text-gray-700">
+                        <tr>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Order ID</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Order Date</th>
+                            <th class="border px-3 py-2 text-left">Customer</th>
+                            <th class="border px-3 py-2 text-left">Company</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Phone</th>
+                            <th class="border px-3 py-2 text-left">Address</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Product</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Ordered (kg)</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Weight ID</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Weight (kg)</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Batch</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Production Time</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Priority</th>
+                            <th class="border px-3 py-2 text-left whitespace-nowrap">Packing</th>
+                            <th class="border px-3 py-2 text-left">Order Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if searched %}
+                        {% for row in rows %}
+                        <tr class="hover:bg-blue-50">
+                            <td class="border px-3 py-2">
+                                <a href="{{ url_for('order.order_detail', order_id=row.order_id) }}"
+                                    class="text-blue-700 hover:underline">
+                                    {{ row.order_id }}
+                                </a>
+                            </td>
+                            <td class="border px-3 py-2">{{ row.order_date }}</td>
+                            <td class="border px-3 py-2">{{ row.customer_name or '' }}</td>
+                            <td class="border px-3 py-2">{{ row.company or '' }}</td>
+                            <td class="border px-3 py-2">{{ row.phone or '' }}</td>
+                            <td class="border px-3 py-2">{{ row.address or '' }}</td>
+                            <td class="border px-3 py-2">{{ row.product or '' }}</td>
+                            <td class="border px-3 py-2">{{ row.ordered_quantity or '' }}</td>
+                            <td class="border px-3 py-2">{{ row.weight_id or '' }}</td>
+                            <td class="border px-3 py-2">{{ row.weight_quantity or '' }}</td>
+                            <td class="border px-3 py-2 font-semibold">{{ (row.batch_number or '')|upper }}</td>
+                            <td class="border px-3 py-2">{{ row.production_time or '' }}</td>
+                            <td class="border px-3 py-2">{{ row.priority or '' }}</td>
+                            <td class="border px-3 py-2">{{ row.packing or '' }}</td>
+                            <td class="border px-3 py-2">{{ row.order_note or '' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="15" class="border px-3 py-10 text-center text-gray-500">
+                                No records found for the current filters.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="15" class="border px-3 py-10 text-center text-gray-500">
+                                No query executed yet. Set filters and click Search.
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if searched and total_pages > 1 %}
+            <div class="mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div class="text-sm text-gray-600">
+                    Showing {{ start_record }} - {{ end_record }} of {{ total_records }}
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    {% if prev_url %}
+                    <a href="{{ prev_url }}"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg">
+                        Previous
+                    </a>
+                    {% endif %}
+                    {% for page_link in page_links %}
+                    <a href="{{ page_link.url }}"
+                        class="font-semibold py-2 px-4 rounded-lg {{ 'bg-blue-600 text-white' if page_link.is_current else 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100' }}">
+                        {{ page_link.number }}
+                    </a>
+                    {% endfor %}
+                    {% if next_url %}
+                    <a href="{{ next_url }}"
+                        class="bg-gray-800 hover:bg-black text-white font-semibold py-2 px-4 rounded-lg">
+                        Next
+                    </a>
+                    {% endif %}
+
+                    <form method="GET" action="{{ url_for('traceability.index') }}" class="flex items-center gap-2 ml-0 md:ml-2">
+                        {% for key, value in filters.items() %}
+                        {% if key != 'page' and value is not none and value|string|trim != '' %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                        {% endif %}
+                        {% endfor %}
+                        <label for="jump_page" class="text-sm text-gray-600 whitespace-nowrap">Go to page</label>
+                        <input id="jump_page" type="number" name="page" min="1" max="{{ total_pages }}" value="{{ page }}"
+                            class="w-24 border border-gray-300 rounded-lg px-2 py-2 text-sm bg-white">
+                        <button type="submit"
+                            class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-3 rounded-lg">
+                            Go
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof flatpickr !== 'undefined') {
+            flatpickr('#trace_date_from', { dateFormat: 'Y-m-d', allowInput: true });
+            flatpickr('#trace_date_to', { dateFormat: 'Y-m-d', allowInput: true });
+        }
+    });
+</script>
+{% endblock %}
