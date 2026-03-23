@@ -535,7 +535,7 @@ def zebra_generator(df):
             delivered=row['delivered'],
             temperature_info=temperature_info,
             expiry_info=expiry_info,
-            batch_number=row['batch_number'] if pd.notna(row['batch_number']) else row['date_z'].replace(".", ""),
+            batch_number=row['batch_number'] if pd.notna(row['batch_number']) and row['batch_number'] != '' else row['date_z'].replace(".", ""),
             priority=row['priority'],
             box_count=row['box_count'],
             company_display=row['company_display'],
