@@ -1,5 +1,5 @@
 Flask-SocketIO==5.3.7
-eventlet==0.37.0
+eventlet==0.40.3
 Flask==3.0.3
 python-dotenv==1.0.1
 pytz==2024.2
@@ -13,7 +13,7 @@ Flask-Login==0.6.3
 SQLAlchemy==2.0.35
 Werkzeug==3.0.6
 MarkupSafe==2.1.5
-xhtml2pdf==0.2.16
+xhtml2pdf==0.2.17
 pdfrw==0.4
 reportlab==4.2.4
 numpy==2.1.1
