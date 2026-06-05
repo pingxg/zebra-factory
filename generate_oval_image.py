@@ -28,8 +28,8 @@ except IOError:
 # Calculate text positions
 # FI
 text1 = "FI"
-# 1428
-text2 = "1428"
+# 1430
+text2 = "1430"
 # EY
 text3 = "EY"
 
