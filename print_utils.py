@@ -83,10 +83,12 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
         df = pd.DataFrame(result.fetchall(), columns=result.keys())
         df['expiry_date_fresh'] = df['date'] + pd.Timedelta(days=6)
         df['expiry_date_frozen'] = df['date'] + pd.Timedelta(days=180)
+        df['expiry_date_short'] = df['date'] + pd.Timedelta(days=1)
 
         df['date'] = pd.to_datetime(df['date'])
         df['expiry_date_fresh'] = pd.to_datetime(df['expiry_date_fresh'])
         df['expiry_date_frozen'] = pd.to_datetime(df['expiry_date_frozen'])
+        df['expiry_date_short'] = pd.to_datetime(df['expiry_date_short'])
 
         df['date_z'] = df['date'].dt.strftime("%Y.%m.%d")
         df['date'] = df['date'].dt.strftime("%Y.%m.%d, %a")
@@ -99,6 +101,11 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
         df['expiry_date_z_frozen'] = df['expiry_date_frozen'].dt.strftime(
             "%Y.%m.%d")
         df['expiry_date_frozen'] = df['expiry_date_frozen'].dt.strftime(
+            "%Y.%m.%d, %a")
+
+        df['expiry_date_z_short'] = df['expiry_date_short'].dt.strftime(
+            "%Y.%m.%d")
+        df['expiry_date_short'] = df['expiry_date_short'].dt.strftime(
             "%Y.%m.%d, %a")
 
         delivery_note_data = {}
@@ -525,7 +532,10 @@ def zebra_generator(df):
             product_name = f"{row['product'].replace('Lohi ', '')}"
         elif 'Frozen' not in row['product']:
             temperature_info = "0°C - +2°C"
-            expiry_info = f"{row['date_z']}-{row['expiry_date_z_fresh']}"
+            if 'Lohi Head' in row['product'] or 'Lohi Bones' in row['product']:
+                expiry_info = f"{row['date_z']}-{row['expiry_date_z_short']}"
+            else:
+                expiry_info = f"{row['date_z']}-{row['expiry_date_z_fresh']}"
             product_name = f"{row['product']}"
 
         if row['product'] == "Frozen Lohi By-product":
