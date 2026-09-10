@@ -401,7 +401,7 @@ def zebra_generator(df):
     ^FO30,90^A0N,24,24^FDValmistaja / Tillverkare^FS
     ^FO30,120^A0N,30,30^FD{company_display}^FS
     ^FO30,160^A0N,24,24^FDY-tunnus: 3559618-2^FS
-    ^FO30,190^A0N,24,24^FDOsoite: {company_address}^FS
+    ^FO30,190^A0N,24,18^FDOsoite: {company_address}^FS
     ^FO30,220^A0N,24,24^FDPuh: {company_phone}^FS
 
     ; **批次号**
