@@ -473,7 +473,7 @@ def zebra_generator(df):
     ^FO30,80^A0N,34,34^FD{company_display}^FS
     ^FO30,130^A0N,26,26^FDY-tunnus: 3559618-2^FS
     ^FO30,160^A0N,26,23^FDOsoite:D{company_address}^FS
-    ^FO30,190^A0N,26,26^FDPuh: D{company_phone}^FS
+    ^FO30,190^A0N,26,26^FDPuh: {company_phone}^FS
 
     ; **批次号**
     ^FO400,40^A0N,26,26^FDEränumero / Batchnummer^FS
@@ -521,9 +521,7 @@ def zebra_generator(df):
     df['company_address'] = df['hide_company_name'].apply(
         lambda x: "Maalarinkuja 2, 06150 Porvoo" if x == 1 else "Juvan Teollisuuskatu 30, 02920 Espoo"
     )
-    df['company_phone'] = df['hide_company_name'].apply(
-        lambda x: "+358 319 521 9900" if x == 1 else "+358 50 394 8318"
-    )
+    df['company_phone'] = "04578319456"
     zpl_labels = []
     for _, row in df.iterrows():
         if 'Frozen' in row['product']:
