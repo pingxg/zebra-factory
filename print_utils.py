@@ -57,6 +57,7 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
                 c.company AS customer,
                 c.phone AS phone,
                 o.date, 
+                o.product AS product_key,
                 p.display_name AS product,
                 p.note AS product_note,
                 COALESCE(o.price * CASE WHEN o.date >= '2026-01-01' THEN 1.135 ELSE 1.14 END, 0) AS price, 
@@ -84,11 +85,13 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
         df['expiry_date_fresh'] = df['date'] + pd.Timedelta(days=6)
         df['expiry_date_frozen'] = df['date'] + pd.Timedelta(days=180)
         df['expiry_date_short'] = df['date'] + pd.Timedelta(days=1)
+        df['expiry_date_kuha'] = df['date'] + pd.Timedelta(days=7)
 
         df['date'] = pd.to_datetime(df['date'])
         df['expiry_date_fresh'] = pd.to_datetime(df['expiry_date_fresh'])
         df['expiry_date_frozen'] = pd.to_datetime(df['expiry_date_frozen'])
         df['expiry_date_short'] = pd.to_datetime(df['expiry_date_short'])
+        df['expiry_date_kuha'] = pd.to_datetime(df['expiry_date_kuha'])
 
         df['date_z'] = df['date'].dt.strftime("%Y.%m.%d")
         df['date'] = df['date'].dt.strftime("%Y.%m.%d, %a")
@@ -106,6 +109,11 @@ def pdf_render_print(order_id, file_type, folder_path="temp"):
         df['expiry_date_z_short'] = df['expiry_date_short'].dt.strftime(
             "%Y.%m.%d")
         df['expiry_date_short'] = df['expiry_date_short'].dt.strftime(
+            "%Y.%m.%d, %a")
+
+        df['expiry_date_z_kuha'] = df['expiry_date_kuha'].dt.strftime(
+            "%Y.%m.%d")
+        df['expiry_date_kuha'] = df['expiry_date_kuha'].dt.strftime(
             "%Y.%m.%d, %a")
 
         delivery_note_data = {}
@@ -510,6 +518,59 @@ def zebra_generator(df):
     ^XZ
 
     """
+
+    zpl_template_gutted_kuha = """
+    ^XA
+    ^CI28
+
+    ; FI 1430 EY
+    ^FO730,12^GFA,1200,1200,15,,:R01JFC,Q0NF8,P0PF8,O0IFEJ03IF8,N07FF8M0IF,M03FFP07FE,M0FFR07F8,L03F8S0FE,L0FET03F8,K03FV07E,K0FCV01F8,J01FX07C,J03EM07FC4M03E,J0F8M07FC4N0F8,I01EN06004N03C,I03CN06004N01E,I078N06004O0F,I0FO06004O078,001CO07F84O01C,0038O07F84P0E,0078O06004P0F,00FP06004P078,01EP06004P03C,01CP06004P01C,038P06004Q0E,038gK0E,07gL07,0FgL0780EgL038:1CN03801C1F00FN01C1CN07803C3FC1F8M01C1CN0F803C79C39CM01C1CM01F807C71E30EM01C38M03F80FC01C70EN0E38M03380FC01C70EN0E38M02381DC07870EN0E38N03819C07870EN0E38N03839C01E70EN0E38N03871C00E70EN0E:38N038IF00E70EN0E38N038IF70E70EN0E1CN03801C79E39CM01C1CN03801C3FC1F8M01C1CN03801C1F00FN01C1CgL01C0EgL038:0FgL07807gL07,038gK0E,038O07FEC02P0E,01CO07FC606O01C,01EO060030CO03C,00FO0600198O078,0078N0600198O0F,0038N06I0FP0E,001CN07FC06O01C,I0FN07FC06O078,I078M06I06O0F,I03CM06I06N01E,I01EM06I06N03C,J0F8L07FE06N0F8,J03EL07FE06M03E,J01FX07C,K0FCV01F8,K03FV07E,L0FET03F8,L03F8S0FE,M0FFR07F8,M03FFP07FE,N07FF8M0IF,O0IFEJ03IF8,P0PF8,Q0NF8,R01JFC,,^FS
+
+    ^FO20,16^A0N,32,22^FDKUHA / GÖS (Sander lucioperca)^FS
+    ^FO20,56^A0N,22,12^FDTuore, kokonainen ja perattu kala / Färsk, hel och rensad fisk^FS
+
+    ^FO20,108^A0N,22,12^FDLaji / Art: Kuha (Sander lucioperca) / Gös (Sander lucioperca)^FS
+    ^FO20,148^A0N,22,12^FDTuotantomenetelmä / Produktionsmetod:^FS
+    ^FO20,188^A0N,22,12^FDPyydetty makeasta vedestä / Fångad i sötvatten^FS
+    ^FO20,228^A0N,22,12^FDPyyntialue / Fångstområde: Peipsijärvi, Viro / Peipussjön, Estland^FS
+    ^FO20,268^A0N,22,12^FDPyyntiväline / Fiskeredskap: Merrat ja rysät / Tinor och fällor^FS
+    ^FO20,308^A0N,22,12^FDNettopaino / Nettovikt: {delivered} kg^FS
+    ^FO20,348^A0N,22,12^FDViimeinen käyttöpäivä / Sista förbrukningsdag: {expiry_info}^FS
+    ^FO20,388^A0N,22,12^FDSäilytys / Förvaring: Säilytä 0-2 °C / Förvaras vid 0-2 °C^FS
+    ^FO20,428^A0N,22,12^FDErätunnus / Partikod: {batch_number}^FS
+    ^FO20,468^A0N,22,12^FDPakkaaja / Förpackare: {company_display}^FS
+    ^FO20,508^A0N,22,12^FDOsoite / Adress: {company_address}^FS
+    ^FO20,548^A0N,22,12^FDPuh. / Tel. {company_phone}^FS
+
+    ^XZ
+    """
+
+    zpl_template_lohi_part = """
+    ^XA
+    ^CI28
+
+    ; FI 1430 EY
+    ^FO730,12^GFA,1200,1200,15,,:R01JFC,Q0NF8,P0PF8,O0IFEJ03IF8,N07FF8M0IF,M03FFP07FE,M0FFR07F8,L03F8S0FE,L0FET03F8,K03FV07E,K0FCV01F8,J01FX07C,J03EM07FC4M03E,J0F8M07FC4N0F8,I01EN06004N03C,I03CN06004N01E,I078N06004O0F,I0FO06004O078,001CO07F84O01C,0038O07F84P0E,0078O06004P0F,00FP06004P078,01EP06004P03C,01CP06004P01C,038P06004Q0E,038gK0E,07gL07,0FgL0780EgL038:1CN03801C1F00FN01C1CN07803C3FC1F8M01C1CN0F803C79C39CM01C1CM01F807C71E30EM01C38M03F80FC01C70EN0E38M03380FC01C70EN0E38M02381DC07870EN0E38N03819C07870EN0E38N03839C01E70EN0E38N03871C00E70EN0E:38N038IF00E70EN0E38N038IF70E70EN0E1CN03801C79E39CM01C1CN03801C3FC1F8M01C1CN03801C1F00FN01C1CgL01C0EgL038:0FgL07807gL07,038gK0E,038O07FEC02P0E,01CO07FC606O01C,01EO060030CO03C,00FO0600198O078,0078N0600198O0F,0038N06I0FP0E,001CN07FC06O01C,I0FN07FC06O078,I078M06I06O0F,I03CM06I06N01E,I01EM06I06N03C,J0F8L07FE06N0F8,J03EL07FE06M03E,J01FX07C,K0FCV01F8,K03FV07E,L0FET03F8,L03F8S0FE,M0FFR07F8,M03FFP07FE,N07FF8M0IF,O0IFEJ03IF8,P0PF8,Q0NF8,R01JFC,,^FS
+
+    ^FO20,16^A0N,32,22^FDLOHI / LAX (Salmo salar)^FS
+    ^FO20,54^A0N,22,12^FD{subtitle_fi}^FS
+    ^FO20,80^A0N,22,12^FD{subtitle_sv}^FS
+
+    ^FO20,116^A0N,22,12^FDLaji / Art: Lohi (Salmo salar) / Lax (Salmo salar)^FS
+    ^FO20,154^A0N,22,12^FDTuotantomenetelmä / Produktionsmetod: Kasvatettu / Odlad^FS
+    ^FO20,192^A0N,22,12^FDKasvatusmaa / Odlingsland: Norja / Norge^FS
+    ^FO20,230^A0N,22,12^FDNettopaino / Nettovikt: {delivered} kg^FS
+    ^FO20,268^A0N,22,12^FDViimeinen käyttöpäivä / Sista förbrukningsdag: {expiry_info}^FS
+    ^FO20,306^A0N,22,12^FDSäilytys / Förvaring: Säilytä 0-2 °C / Förvaras vid 0-2 °C^FS
+    ^FO20,344^A0N,22,12^FDKäyttöohje / Bruksanvisning: Kypsennä huolellisesti ennen käyttöä /^FS
+    ^FO20,382^A0N,22,12^FDTillaga ordentligt före förtäring^FS
+    ^FO20,420^A0N,22,12^FDErätunnus / Partikod: {batch_number}^FS
+    ^FO20,458^A0N,22,12^FDValmistaja / Tillverkare: {company_display}^FS
+    ^FO20,496^A0N,22,12^FDOsoite / Adress: {company_address}^FS
+    ^FO20,534^A0N,22,12^FDPuh. / Tel. {company_phone}^FS
+
+    ^XZ
+    """
     df['priority'] = df.apply(
         lambda row: "" if row['hide_company_name'] == 1 else row['priority'].split(' ')[1],
         axis=1
@@ -524,21 +585,42 @@ def zebra_generator(df):
     df['company_phone'] = "04578319456"
     zpl_labels = []
     for _, row in df.iterrows():
-        if 'Frozen' in row['product']:
+        product_text = "" if pd.isna(row['product']) else str(row['product'])
+        product_key = "" if pd.isna(row.get('product_key')) else str(row['product_key'])
+        subtitle_fi = ""
+        subtitle_sv = ""
+        product_names = {product_text.strip(), product_key.strip()}
+        if "Gutted Kuha" in product_names:
+            template = zpl_template_gutted_kuha
+            temperature_info = "0-2 °C"
+            expiry_info = f"{row['expiry_date_z_kuha']}"
+            product_name = "Gutted Kuha"
+        elif "Lohi Bones" in product_text or "Lohi Bones" in product_key:
+            template = zpl_template_lohi_part
+            temperature_info = "0-2 °C"
+            expiry_info = f"{row['expiry_date_z_short']}"
+            product_name = "Lohi Bones"
+            subtitle_fi = "Tuoreet lohenrangat elintarvikekäyttöön/"
+            subtitle_sv = "Färska laxryggben för livsmedelsbruk"
+        elif "Lohi Head" in product_text or "Lohi Head" in product_key:
+            template = zpl_template_lohi_part
+            temperature_info = "0-2 °C"
+            expiry_info = f"{row['expiry_date_z_short']}"
+            product_name = "Lohi Head"
+            subtitle_fi = "Tuoreet lohenpäät elintarvikekäyttöön/"
+            subtitle_sv = "Färska laxhuvuden för livsmedelsbruk"
+        elif 'Frozen' in row['product']:
             temperature_info = "<-18°C"
             expiry_info = f"{row['expiry_date_z_frozen']}"
             product_name = f"{row['product'].replace('Lohi ', '')}"
-        elif 'Frozen' not in row['product']:
-            temperature_info = "0°C - +2°C"
-            if 'Lohi Head' in row['product'] or 'Lohi Bones' in row['product']:
-                expiry_info = f"{row['date_z']}-{row['expiry_date_z_short']}"
+            if row['product'] == "Frozen Lohi By-product":
+                template = zpl_template_x110_y80_bp
             else:
-                expiry_info = f"{row['date_z']}-{row['expiry_date_z_fresh']}"
-            product_name = f"{row['product']}"
-
-        if row['product'] == "Frozen Lohi By-product":
-            template = zpl_template_x110_y80_bp
+                template = zpl_template_x110_y80
         else:
+            temperature_info = "0°C - +2°C"
+            expiry_info = f"{row['date_z']}-{row['expiry_date_z_fresh']}"
+            product_name = f"{row['product']}"
             template = zpl_template_x110_y80
 
         raw_batch_number = row.get('batch_number')
@@ -560,7 +642,9 @@ def zebra_generator(df):
             box_count=row['box_count'],
             company_display=row['company_display'],
             company_address=row['company_address'],
-            company_phone=row['company_phone']
+            company_phone=row['company_phone'],
+            subtitle_fi=subtitle_fi,
+            subtitle_sv=subtitle_sv,
         )
         zpl_labels.append(zpl_label)
     return zpl_labels
